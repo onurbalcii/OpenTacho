@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="tr" data-theme="vangogh">
+<head>
+<meta charset="utf-8">
+<script>
+  // Tema ve dil, ilk boyamadan önce URL'nin #theme=..&lang=.. kısmından okunur (Python ekler);
+  // böylece açılışta Van Gogh görünüp sonra seçili temaya atlama olmaz.
+  (() => {
+    const h = new URLSearchParams(location.hash.slice(1)), t = h.get("theme"), l = h.get("lang");
+    if (t) document.documentElement.dataset.theme = t;
+    if (l) document.documentElement.lang = l;
+  })();
+</script>
+<title>OpenTacho Mini</title>
+<style>
+  :root {
+    --gold: #fdca4f; --gold-line: rgba(253,202,79,.78); --gold-soft: rgba(253,202,79,.16);
+    --sky: #7cc0ef; --duty: #f3b979; --yard: #cdb0ff; --bad: #ff6b6b; --warn: #ffa94d;
+    --text: #f6efdc; --muted: rgba(246,239,220,.72); --dim: rgba(246,239,220,.42);
+    --bg: linear-gradient(160deg, rgba(22,38,104,.97), rgba(8,14,46,.98));
+    --line: rgba(255,255,255,.12); --track: rgba(3,8,30,.65); --act-bg: rgba(3,8,30,.35);
+    --display: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  }
+  html[data-theme="dark"] {
+    --gold: #7aa7ff; --gold-line: rgba(122,167,255,.55); --gold-soft: rgba(122,167,255,.16);
+    --sky: #6fd3c7; --duty: #f0b56b; --yard: #c9a2ff;
+    --text: #e9edf5; --muted: rgba(233,237,245,.7); --dim: rgba(233,237,245,.4);
+    --bg: #171b22; --line: rgba(255,255,255,.12); --track: #0b0e12; --act-bg: #0f1216;
+  }
+  html[data-theme="light"] {
+    --gold: #2b5fd9; --gold-line: rgba(43,95,217,.45); --gold-soft: rgba(43,95,217,.12);
+    --sky: #0f8f83; --duty: #c2680a; --yard: #7a48d6; --bad: #d63b3b; --warn: #d97a06;
+    --text: #1b1f2a; --muted: rgba(27,31,42,.68); --dim: rgba(27,31,42,.38);
+    --bg: #ffffff; --line: #d9dee8; --track: #e3e7ef; --act-bg: #f7f8fb;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { font-family: var(--sans); color: var(--text); background: transparent; overflow: hidden;
+         -webkit-user-select: none; user-select: none; cursor: move; }
+  svg { display: block; }
+  .ic svg, .flag > svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .ic { display: block; }
+
+  .strip { position: relative; height: 100%; display: flex; align-items: center; gap: 12px; padding: 0 10px 0 12px;
+           background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+  html[data-theme="vangogh"] .frame { display: block; }
+  .frame .fr { x: 4px; y: 4px; width: calc(100% - 8px); height: calc(100% - 8px); rx: 13px; ry: 13px; fill: none;
+               stroke: var(--gold-line); stroke-width: 1.4; filter: url(#wobble); opacity: .85; }
+
+  /* durum halkası + ana değer */
+  .DRIVING { --tone: var(--gold); } .ON_DUTY { --tone: var(--duty); } .OFF_DUTY { --tone: var(--sky); }
+  .YARD_MOVE { --tone: var(--yard); } .OFF_JOB { --tone: var(--muted); }
+  .strip.warn { --tone: var(--warn); } .strip.bad { --tone: var(--bad); }
+  .st { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--tone); color: var(--tone);
+        display: grid; place-items: center; background: rgba(0,0,0,.14); box-shadow: 0 0 18px -4px var(--tone); }
+  .st .ic { width: 27px; height: 27px; }
+  .bad .st, .bad .val { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  .main { flex: none; min-width: 92px; display: flex; flex-direction: column; gap: 4px; }
+  .val { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums;
+         color: var(--tone); white-space: nowrap; display: flex; align-items: baseline; gap: 4px; }
+  .val small { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .val small .ic { width: 14px; height: 14px; color: var(--sky); }
+  .next { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .next .ic { width: 14px; height: 14px; color: var(--gold); }
+  .next b { font-family: var(--display); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .next .arrow { opacity: .55; }
+
+  /* üç mini gösterge */
+  .gauges { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 0 12px; height: 56px; justify-content: center;
+            border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  .g { display: grid; grid-template-columns: 13px 66px 56px; align-items: center; gap: 7px; font-size: 10.5px; color: var(--muted); }
+  .g .ic { width: 13px; height: 13px; color: var(--gold); }
+  .g .v { font-family: var(--display); font-variant-numeric: tabular-nums; text-align: right; color: var(--text); white-space: nowrap; }
+  .track { position: relative; height: 5px; border-radius: 3px; background: var(--track); }
+  .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; width: 0;
+          background: linear-gradient(90deg, var(--gold), var(--sky)); transition: width .4s; }
+  .fill.rest { background: linear-gradient(90deg, var(--sky), var(--gold)); }
+  .fill.warn { background: var(--warn); } .fill.bad { background: var(--bad); }
+  .tick { position: absolute; top: -2px; bottom: -2px; width: 1.5px; background: var(--text); opacity: .6; }
+
+  /* saat + bayraklar + iş */
+  .info { flex: 1; min-width: 72px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .clock { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .clock .ic { width: 13px; height: 13px; color: var(--gold); flex: none; }
+  .clock b { font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .flags { display: flex; align-items: center; gap: 7px; min-height: 16px; }
+  .flag { width: 16px; height: 16px; color: var(--muted); flex: none; }
+  .flag.job { width: auto; display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+  .flag.job > svg { width: 15px; height: 15px; flex: none; }
+  .flag.job b { font-family: var(--display); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .flag.job.late, .flag.job.late b { color: var(--bad); }
+
+  /* eylemler */
+  .acts { flex: none; display: grid; grid-template-columns: 27px 27px; grid-auto-rows: 27px; gap: 5px; }
+  .act { border: 1px solid var(--line); border-radius: 8px; background: var(--act-bg); color: var(--muted); cursor: pointer;
+         display: grid; place-items: center; padding: 0; transition: color .15s, border-color .15s, background .15s; }
+  .act .ic { width: 15px; height: 15px; }
+  .act:hover { color: var(--gold); border-color: var(--gold); }
+  .act.on { color: var(--gold); border-color: currentColor; background: var(--gold-soft); }
+  #bBreak.on { color: var(--sky); } #bYard.on { color: var(--yard); }
+  .act:disabled { opacity: .32; cursor: default; }
+  .act:disabled:hover { color: var(--muted); border-color: var(--line); }
+  .act.na { opacity: .16; }
+</style>
+</head>
+<body>
+<div class="strip" id="strip">
+  <svg class="frame" aria-hidden="true">
+    <defs>
+      <filter id="wobble" x="-6%" y="-6%" width="112%" height="112%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.03" numOctaves="2" seed="1889" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+    <rect class="fr"/>
+  </svg>
+  <div class="st" id="st"><i class="ic" id="stIc"></i></div>
+  <div class="main">
+    <div class="val" id="val"><span id="valT">--:--</span><small id="valSub"></small></div>
+    <div class="next" id="next"><span class="arrow">→</span><i class="ic" id="nextIc"></i><b id="nextT"></b></div>
+  </div>
+  <div class="gauges">
+    <div class="g" id="gBlock"><i class="ic"></i><span class="track"><span class="fill"></span></span><span class="v"></span></div>
+    <div class="g" id="gDaily"><i class="ic"></i><span class="track"><span class="fill"></span></span><span class="v"></span></div>
+    <div class="g" id="gRest"><i class="ic"></i><span class="track"><span class="fill rest"></span><span class="tick" hidden></span></span><span class="v"></span></div>
+  </div>
+  <div class="info">
+    <div class="clock" id="clock"><i class="ic" id="clockIc"></i><b id="clockT">--:--</b><span id="clockD"></span></div>
+    <div class="flags" id="flags"></div>
+  </div>
+  <div class="acts">
+    <button class="act" id="bBreak"><i class="ic"></i></button>
+    <button class="act" id="bYard"><i class="ic"></i></button>
+    <button class="act" id="bSkip"><i class="ic"></i></button>
+    <button class="act" id="bExpand"><i class="ic"></i></button>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const SVG = (inner, vb = "0 0 24 24") => `<svg viewBox="${vb}" aria-hidden="true">${inner}</svg>`;
+  // ana paneldeki ikon seti (main.html ile aynı çizimler)
+  const ICONS = {
+    wheel: SVG(`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M4.3 16.4l5.1-2.9M19.7 16.4l-5.1-2.9"/><path d="M3.3 10.5c2.6 1.1 5.5 1.7 8.7 1.7s6.1-.6 8.7-1.7" opacity=".55"/>`),
+    cup: SVG(`<path d="M5 9.5h11v5.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 15z"/><path d="M16 11h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M8.2 3.2c-.6 1 .8 1.6 0 3M11.2 3.2c-.6 1 .8 1.6 0 3" opacity=".8"/><path d="M4 21.5h13" opacity=".6"/>`),
+    moon: SVG(`<path d="M19.5 14.6A7.8 7.8 0 1 1 9.4 4.5a6.3 6.3 0 0 0 10.1 10.1z"/><path d="M18.5 3.5l.55 1.45L20.5 5.5l-1.45.55L18.5 7.5l-.55-1.45L16.5 5.5l1.45-.55z" fill="currentColor" stroke="none" opacity=".9"/>`),
+    bed: SVG(`<path d="M3 19V7"/><path d="M3 12.5h18V19"/><path d="M3 16h18"/><path d="M7 12.5V10a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 10v2.5"/><path d="M21 19v-2" opacity=".6"/>`),
+    road: SVG(`<path d="M8.5 3.5L4.5 20.5M15.5 3.5l4 17"/><path d="M12 4.5v2.5M12 10.5v3M12 17v3.5"/>`),
+    clock: SVG(`<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>`),
+    yard: SVG(`<path d="M2.5 7.5h10v8h-10z"/><path d="M12.5 10.5h3.6l2.9 3v2h-6.5z"/><circle cx="6" cy="17.6" r="1.7"/><circle cx="15.5" cy="17.6" r="1.7"/><path d="M17 5h4.5m0 0l-1.8-1.8M21.5 5l-1.8 1.8"/>`),
+    doc: SVG(`<path d="M7 3h7.5L19 7.5V21H7z"/><path d="M14.5 3v4.5H19"/><path d="M10 12h6M10 15.5h6M10 19h3.5"/>`),
+    skip: SVG(`<path d="M4 5.5l8 6.5-8 6.5zM12.5 5.5l8 6.5-8 6.5z" fill="currentColor" stroke="none"/>`),
+    nojob: SVG(`<path d="M3.5 8.5h17v11h-17z"/><path d="M9 8.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v2.5"/><path d="M4 4l16 16" opacity=".9"/>`),
+    check: SVG(`<path d="M5 12.5l4.5 4.5L19 7.5"/>`),
+    parked: SVG(`<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9.6 16.5v-9h3.2a2.6 2.6 0 0 1 0 5.2H9.6"/>`),
+    "timer-off": SVG(`<circle cx="12" cy="12" r="8.5"/><path d="M10 9v6M14 9v6"/>`),
+    pause: SVG(`<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M10 9v6M14 9v6"/>`),
+    expand: SVG(`<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/>`),
+  };
+  const hm = m => { m = Math.round(m); const s = m < 0 ? "-" : ""; m = Math.abs(m); return `${s}${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`; };
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let api = null, S = {}, sLang = null, last = null;
+  const T = (k, p) => { let s = S[k] != null ? S[k] : k; if (p) for (const x in p) s = s.split(`{${x}}`).join(p[x]); return s; };
+  const setIcon = (el, name) => { if (el.dataset.ic !== name) { el.dataset.ic = name; el.innerHTML = ICONS[name] || ""; } };
+
+  setIcon($("clockIc"), "clock");
+  setIcon($("bBreak").firstElementChild, "cup");
+  setIcon($("bYard").firstElementChild, "yard");
+  setIcon($("bSkip").firstElementChild, "skip");
+  setIcon($("bExpand").firstElementChild, "expand");
+
+  function gauge(id, ic, v, max, tone, title) {
+    const g = $(id);
+    setIcon(g.children[0], ic);
+    const f = g.children[1].children[0];
+    f.style.width = Math.max(0, Math.min(100, v / max * 100)) + "%";
+    f.className = "fill " + tone;
+    g.children[2].textContent = `${hm(v)}/${hm(max)}`;
+    g.title = `${title}: ${hm(v)} / ${hm(max)}`;
+  }
+
+  function render(st) {
+    if (!st) return;
+    last = st;
+    document.documentElement.dataset.theme = st.theme || "vangogh";
+    if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(); }
+    const L = st.limits, sp = st.split || { part1: 0, need: L.rest, done: false }, rt = st.rest_target;
+    const resting = st.status === "OFF_DUTY";
+    const offjob = st.offjob && !(st.offjob_rest && resting);
+    const tone = st.big.tone === "bad" ? "bad" : st.big.tone === "warn" ? "warn" : "";
+    $("strip").className = "strip " + (offjob ? "OFF_JOB" : st.status) + " " + tone;
+
+    // durum halkası
+    const isBreak = rt <= L.break;                       // 0:45 ya da 0:30 (bölünmüş 2. parça)
+    const restDone = resting && (sp.done || st.rest >= rt);
+    const sic = offjob ? "nojob" : st.status === "DRIVING" ? "wheel" : st.status === "ON_DUTY" ? "parked"
+              : st.status === "YARD_MOVE" ? "yard" : (isBreak ? "cup" : "bed");
+    setIcon($("stIc"), sic);
+    $("st").title = offjob ? T("chip.OFF_JOB") : T("chip." + st.status);
+
+    // ana değer: sürüşte kalan hak, dinlenmede ilerleme
+    if (resting) {
+      $("valT").textContent = hm(st.rest);
+      $("valSub").innerHTML = restDone ? `<i class="ic">${ICONS.check}</i>` : `/ ${hm(rt)}`;
+    } else {
+      $("valT").textContent = st.remaining < 0 ? "+" + hm(-st.remaining) : hm(st.remaining);
+      $("valSub").textContent = "";
+    }
+    $("val").title = st.big.label;
+
+    // sonraki adım: dinlenmedeyken sürüş hakkı, sürüşte gereken mola/dinlenme
+    const bn = st.break_part1 ? (L.break2 || 30) : L.break;
+    let nIc, nTx;
+    if (resting) {
+      nIc = "wheel";
+      nTx = restDone ? L.block : isBreak ? Math.min(L.block, L.daily - st.drive_daily) : (st.remaining > 0 ? st.remaining : L.block);
+    } else if (st.next_req === "REST") { nIc = sp.part1 ? "moon" : "bed"; nTx = sp.need; }
+    else { nIc = "cup"; nTx = bn; }
+    setIcon($("nextIc"), nIc);
+    $("nextT").textContent = hm(nTx);
+    $("next").title = st.big.sub;
+
+    // göstergeler
+    const gtone = (v, max) => v > max ? "bad" : (max - v <= 15 ? "warn" : "");
+    gauge("gBlock", "wheel", st.drive_block, L.block, gtone(st.drive_block, L.block), T("ui.bar.block"));
+    gauge("gDaily", "road", st.drive_daily, L.daily, gtone(st.drive_daily, L.daily), T("ui.bar.daily"));
+    gauge("gRest", isBreak ? "cup" : "bed", st.rest, rt, "rest", sp.part1 ? T("ui.bar.rest2") : T("ui.bar.rest"));
+    const tick = $("gRest").children[1].children[1];
+    const showTick = rt > L.break && !sp.part1 && !st.break_credited && st.rest < L.break;
+    tick.hidden = !showTick;
+    if (showTick) tick.style.left = (L.break / rt * 100) + "%";
+
+    // saat + bayraklar + iş
+    $("clockT").textContent = st.clock.time || "--:--";
+    $("clockD").textContent = st.clock.day || "";
+    $("clock").title = st.mode === "manual" ? T("clock.manual") : (st.clock.tz_name || T("clock.game"));
+    let fl = (st.flags || []).map(f => `<i class="flag" title="${esc(f.t)}">${ICONS[f.ic] || ""}</i>`).join("");
+    if (st.job) {
+      const j = st.job, due = j.remaining, late = due != null && due < 0;
+      const tt = `${j.src} → ${j.dst}${j.cargo ? " · " + j.cargo : ""}${j.km ? " · " + j.km + " km" : ""}`;
+      fl += `<span class="flag job${late ? " late" : ""}" title="${esc(tt)}">${ICONS.doc}${due == null ? "" : `<b>${late ? "+" + hm(-due) : hm(due)}</b>`}</span>`;
+    }
+    $("flags").innerHTML = fl;
+
+    // eylemler
+    const bB = $("bBreak"), bY = $("bYard"), bS = $("bSkip");
+    const noRest = st.offjob && !st.offjob_rest;
+    bB.classList.toggle("on", resting);
+    bB.disabled = st.moving || noRest;
+    bB.title = st.moving ? T("ui.btn.break_moving") : noRest ? T("ui.btn.offjob") : resting ? T("mini.break_end") : T("ui.btn.break");
+    bY.classList.toggle("on", st.status === "YARD_MOVE");
+    bY.disabled = !!st.offjob;
+    bY.title = st.offjob ? T("ui.btn.offjob") : st.status === "YARD_MOVE" ? T("mini.yard_end") : T("ui.btn.yard");
+    const sk = st.skip || {};
+    bS.classList.toggle("na", !sk.available);
+    bS.disabled = !sk.available || !!sk.busy || !!sk.blocked;
+    bS.title = !sk.available ? T("mini.skip_na") : sk.busy ? `${sk.label} · ${T("skip.sending")}`
+             : sk.blocked ? `${sk.label} · ⚠ ${sk.blocked}` : `${sk.label} · ${T("skip.sub", { d: hm(sk.minutes) })}`;
+    $("bExpand").title = T("mini.expand");
+    document.body.title = "";
+  }
+
+  async function call(fn, ...a) { if (!api) return; try { render(await api[fn](...a)); } catch (e) {} }
+  async function loadStrings() { try { S = await api.get_strings(); if (last) render(last); } catch (e) {} }
+  async function poll() { try { render(await api.get_state()); } catch (e) {} }
+  async function start() { await loadStrings(); poll(); setInterval(poll, 1000); }
+
+  // butonlara tıklamak pencereyi sürüklemesin
+  document.querySelectorAll(".act").forEach(b => b.addEventListener("mousedown", e => e.stopPropagation()));
+  $("bBreak").addEventListener("click", () => call("set_status", last && last.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"));
+  $("bYard").addEventListener("click", () => call("set_status", last && last.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"));
+  $("bSkip").addEventListener("click", () => call("skip_rest"));
+  $("bExpand").addEventListener("click", () => api && api.toggle_mini());
+
+  if (window.pywebview && window.pywebview.api) { api = window.pywebview.api; start(); }
+  else window.addEventListener("pywebviewready", () => { if (!api) { api = window.pywebview.api; start(); } });
+
+  // tarayıcıda önizleme (pywebview yokken): ?theme=dark&s=rest
+  setTimeout(() => {
+    if (api) return;
+    const q = new URLSearchParams(location.search), sc = q.get("s") || "drive";
+    const base = { theme: q.get("theme") || "vangogh", lang: "tr", mode: "auto", status: "DRIVING", moving: true, offjob: false, offjob_rest: true,
+      limits: { block: 270, daily: 540, break: 45, break2: 30, rest: 660 }, drive_block: 128, drive_daily: 398, rest: 0, rest_target: 45,
+      remaining: 142, next_req: "REST", break_credited: true, break_part1: 0, split: { part1: 0, need: 660, done: false },
+      big: { label: "KALAN SÜRÜŞ", value: "2:22", sub: "Sonra günlük dinlenme", tone: "ok" }, flags: [],
+      clock: { time: "17:42", day: "Sal", tz_name: "CEST" }, job: { src: "Berlin", dst: "Praha", cargo: "Cam", remaining: 265, km: 348 }, skip: { available: false } };
+    const sc_ = {
+      drive: {},
+      duty: { status: "ON_DUTY", moving: false, flags: [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] },
+      warn: { remaining: 9, drive_block: 261, big: { label: "KALAN SÜRÜŞ", sub: "Sonra 45 dk mola", tone: "warn" }, next_req: "BREAK" },
+      bad: { remaining: -12, drive_block: 282, big: { label: "İHLAL", sub: "Hemen mola", tone: "bad" }, next_req: "BREAK", status: "ON_DUTY", moving: false },
+      rest: { status: "OFF_DUTY", moving: false, rest: 21, rest_target: 45, break_credited: false, big: { label: "MOLA", sub: "Sonra 2:22 sürüş", tone: "rest" }, skip: { available: true, minutes: 25, label: "Molayı atla" } },
+      daily: { status: "OFF_DUTY", moving: false, rest: 312, rest_target: 660, remaining: 0, big: { label: "GÜNLÜK DİNLENME", sub: "Sonra 4:30 sürüş", tone: "rest" }, skip: { available: true, minutes: 349, label: "Dinlenmeyi atla" } },
+      yard: { status: "YARD_MOVE", flags: [{ ic: "yard", t: "yükleme sahası" }, { ic: "timer-off", t: "sürüşe sayılmaz" }] },
+      offjob: { status: "ON_DUTY", moving: false, offjob: true, job: null, flags: [{ ic: "nojob", t: "teslimat yok" }, { ic: "timer-off", t: "dinlenme sayılır" }] },
+    }[sc] || {};
+    const st = Object.assign(base, sc_);
+    S = { "chip.DRIVING": "SÜRÜŞ", "chip.ON_DUTY": "GÖREVDE", "chip.OFF_DUTY": "MOLA", "chip.YARD_MOVE": "İÇ HAREKET", "chip.OFF_JOB": "GÖREV DIŞI",
+          "ui.bar.block": "Sürüş bloğu", "ui.bar.daily": "Günlük sürüş", "ui.bar.rest": "Dinlenme", "ui.btn.break": "MOLA", "ui.btn.yard": "İÇ HAREKET",
+          "mini.expand": "Ana pencereye dön", "mini.skip_na": "Atlama şu an kullanılamaz" };
+    render(st);
+  }, 300);
+})();
+</script>
+</body>
+</html>

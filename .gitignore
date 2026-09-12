@@ -1,0 +1,18 @@
+# kullanıcı verisi / runtime (exe'nin ya da OpenTacho.py'nin yanında oluşur)
+state.json
+state.json.tmp
+history.json
+history.json.tmp
+error.log
+*.lnk
+
+# derleme çıktıları (sürümler GitHub Releases'a yüklenir)
+build/
+dist/
+*.spec
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
