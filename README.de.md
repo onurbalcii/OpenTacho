@@ -35,6 +35,10 @@ Für die ⏩ Überspringen-Schaltfläche die Entwicklerkonsole im Spiel aktivier
 `Documents\Euro Truck Simulator 2\config.cfg` `g_console "1"` und `g_developer "1"` setzen.
 Die Schaltfläche bleibt gesperrt, bis beides aktiv ist.
 
+Öffnet sich das Fenster gar nicht, installiere Microsofts kostenlose
+[WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) — sie ist in Windows 11 und in jedem
+aktuellen Windows 10 bereits enthalten, daher ist das selten nötig.
+
 ## Funktionen
 
 - **Live aus dem Spiel** – Uhr, Geschwindigkeit, Lkw-Modell, aktiver Auftrag (Route, Fracht, Zeit bis zur Lieferung).

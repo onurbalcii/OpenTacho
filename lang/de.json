@@ -244,7 +244,7 @@
   "ui.sound_test": "Ton testen",
   "ui.hint.sounds": "Ein Benachrichtigungston: einmal als Vorwarnung, zweimal hintereinander bei Verstoß, einmal wenn eine Pause/Ruhezeit abgeschlossen ist. Ersetze die .wav-Dateien in assets/sounds, um ihn anzupassen.",
   "ui.sec.mini": "Mini-Leiste",
-  "ui.hint.mini": "Eine kleine verschiebbare Anzeige über dem Spiel: Statussymbol, verbleibende Fahr-/Ruhezeit, nächster Schritt, drei Mini-Balken (Block · Tag · Ruhezeit), Spieluhr, Markierungen, Lieferfrist sowie Schaltflächen für Pause / Rangieren / Überspringen. Der Hotkey tauscht sie gegen das Hauptfenster; ihre Position wird gespeichert.",
+  "ui.hint.mini": "Eine kleine verschiebbare Anzeige über dem Spiel: Statussymbol, verbleibende Fahr-/Ruhezeit, nächster Schritt, drei Mini-Balken (Block · Tag · Ruhezeit), Spieluhr, Markierungen, Lieferfrist sowie Schaltflächen für Pause / Rangieren / Überspringen. Der Hotkey tauscht sie gegen das Hauptfenster; ihre Position wird gespeichert. Das Fenster ist transparent: Bei geringerer Deckkraft scheint das Spiel durch die Leiste.",
   "ui.hotkey": "Hotkey",
   "ui.hotkey_change": "Ändern",
   "ui.hotkey_press": "Tastenkombination drücken… (Esc: abbrechen)",
@@ -291,5 +291,6 @@
   "tour.mini.t": "Mini-Leiste",
   "tour.mini.b": "<b>Strg + Num 0</b> (änderbar) tauscht das Hauptfenster gegen eine kleine verschiebbare Anzeige über dem Spiel: Zustand, Restzeit, drei Mini-Balken, Uhr, Markierungen sowie Schaltflächen für Pause / Rangieren / Überspringen. Dieselbe Taste bringt das Fenster zurück.",
   "tour.done.t": "Alles bereit",
-  "tour.done.b": "Starte das Spiel; mit installiertem Plugin kommt die Verbindung von selbst und die Zähler beginnen zu laufen. Gute Fahrt! Um diese Tour erneut zu sehen: Einstellungen → App → <b>Einführung neu starten</b>."
+  "tour.done.b": "Starte das Spiel; mit installiertem Plugin kommt die Verbindung von selbst und die Zähler beginnen zu laufen. Gute Fahrt! Um diese Tour erneut zu sehen: Einstellungen → App → <b>Einführung neu starten</b>.",
+  "ui.mini_opacity": "Hintergrund-Deckkraft"
 }

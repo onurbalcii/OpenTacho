@@ -291,6 +291,9 @@
   .sm.primary { background: var(--gold-soft); border-color: var(--gold-line); color: var(--text); display: inline-flex; align-items: center; gap: 8px; }
   .sm.primary .ic { color: var(--gold); font-size: 16px; }
   .check { display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer; }
+  .row.range { flex-wrap: nowrap; }
+  .row.range input[type="range"] { flex: 1; min-width: 80px; padding: 0; border: 0; background: transparent; accent-color: var(--gold); cursor: pointer; }
+  .row.range b { font-family: var(--display); font-variant-numeric: tabular-nums; color: var(--text); min-width: 40px; text-align: right; font-size: 13px; }
   .check input { width: 16px; height: 16px; accent-color: var(--gold); }
   .hint { color: var(--dim); font-size: 12px; line-height: 1.45; }
   .kv { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.6; }
@@ -609,6 +612,7 @@
         <button class="sm" id="hkChange" data-i18n="ui.hotkey_change">Değiştir</button>
       </div>
       <div class="row"><button class="sm primary" id="miniOpen"><i class="ic" data-ic="strip"></i><span data-i18n="ui.mini_open">Mini şeride geç</span></button></div>
+      <div class="row range"><label for="miniOpacity" data-i18n="ui.mini_opacity">Arka plan yoğunluğu</label><input type="range" id="miniOpacity" min="30" max="100" step="5"><b id="miniOpacityVal">80%</b></div>
       <div class="hint" data-i18n="ui.hint.mini"></div>
     </div>
 
@@ -883,6 +887,7 @@
     $("modeManual").classList.toggle("on", st.mode === "manual");
     $("modeHint").textContent = st.mode === "auto" ? T("ui.hint.mode_auto") : T("ui.hint.mode_manual");
     $("onTop").checked = !!st.on_top;
+    if (document.activeElement !== $("miniOpacity") && st.mini_opacity != null) { $("miniOpacity").value = Math.round(st.mini_opacity * 100); $("miniOpacityVal").textContent = Math.round(st.mini_opacity * 100) + "%"; }
     $("autoBreak").checked = !!st.auto_break;
     {
       const en = !!(st.split && st.split.enabled);
@@ -968,6 +973,8 @@
   $("sounds").addEventListener("change", () => call("set_sounds", $("sounds").checked));
   $("soundTest").addEventListener("click", () => call("test_sound"));
   $("miniOpen").addEventListener("click", () => call("toggle_mini"));
+  $("miniOpacity").addEventListener("input", () => { $("miniOpacityVal").textContent = $("miniOpacity").value + "%"; });
+  $("miniOpacity").addEventListener("change", () => call("set_mini_opacity", $("miniOpacity").value / 100));
   // kısayol yakalama: bir sonraki tuş bileşimi
   let hkCapturing = false;
   const VK_NAMES = { 8: "Backspace", 9: "Tab", 13: "Enter", 19: "Pause", 20: "CapsLock", 27: "Esc", 32: "Space", 33: "PgUp", 34: "PgDn", 35: "End", 36: "Home",
@@ -1114,7 +1121,7 @@
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
-        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false,
+        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .8,
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
           : [{ k: "drive", v: "4:30", st: "active" }, { k: "break", v: "0:45", st: "plan" }, { k: "drive", v: "4:30", st: "plan" }, { k: "daily", v: "11:00", st: "plan" }],
         flags: m.status === "ON_DUTY" ? [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] : [],
@@ -1130,7 +1137,7 @@
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
       set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
-      set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), toggle_mini: async () => view(), set_hotkey: async () => view(),
+      set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), toggle_mini: async () => view(), set_hotkey: async () => view(),
       set_auto_break: async () => view(), set_offjob_rest: async () => view(), set_split_rest: async () => view(), clear_part1: async () => view(), tz_adjust: async () => view(), set_time_frame: async () => view(), skip_rest: async () => { for (let i = 0; i < 46 - m.rest; i++) tickMock(); return view(); },
     };
     start();

@@ -197,6 +197,7 @@ DEFAULT_STATE = {
     "onboarded": False,        # ilk açılış: dil seçimi + rehber turu tamamlandı mı
     "hotkey": {"mods": 2, "vk": 96, "name": "Ctrl + Num 0"},   # mini şerit kısayolu (MOD_CONTROL, VK_NUMPAD0)
     "mini_pos": None,          # mini şerit konumu {"x","y"}
+    "mini_opacity": 0.8,       # mini şerit arka plan yoğunluğu (0.3–1.0; pencere saydam, oyun altından görünür)
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -1377,11 +1378,11 @@ class Tacho:
                     kw = {"x": int(pos["x"]), "y": int(pos["y"])}
                 # pencere arka planı köşelerde görünür; temaya yakın bir renk ver
                 theme = self.s.get("theme") or DEFAULT_THEME
-                bg = {"dark": "#171b22", "light": "#ffffff"}.get(theme, "#0b1230")
+                # saydam pencere: köşeler ve şeridin arkası oyunu gösterir (yoğunluk ayarı sayfada uygulanır)
                 win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#theme=" + theme, js_api=self.api,
                                             width=MINI_W, height=MINI_H,
                                             min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
-                                            background_color=bg, **kw)
+                                            transparent=True, **kw)
                 self.mini_win = win
 
                 def shown():
@@ -1434,6 +1435,11 @@ class Tacho:
     def act_set_sounds(self, flag):
         with self.lock:
             self.s["sounds"] = bool(flag)
+            self.dirty = True
+
+    def act_set_mini_opacity(self, value):
+        with self.lock:
+            self.s["mini_opacity"] = max(0.3, min(1.0, float(value)))
             self.dirty = True
 
     def act_set_onboarded(self, flag):
@@ -1576,6 +1582,7 @@ class Tacho:
             "onboarded": bool(s["onboarded"]),
             "hotkey": s["hotkey"],
             "mini": self.mini_on,
+            "mini_opacity": s["mini_opacity"],
             "split": {"part1": s["rest_part1"] if split else 0, "need": need, "done": s["rest_daily_done"],
                       "enabled": bool(s["split_rest"]), "stored": s["rest_part1"] if s["rest_part1"] >= SPLIT_PART1 else 0},
             "remaining": remaining, "next_req": next_req,
@@ -1811,6 +1818,10 @@ class Api:
 
     def set_hotkey(self, mods, vk, name):
         self._t.act_set_hotkey(mods, vk, name)
+        return self.get_state()
+
+    def set_mini_opacity(self, value):
+        self._t.act_set_mini_opacity(value)
         return self.get_state()
 
     def set_sounds(self, flag):

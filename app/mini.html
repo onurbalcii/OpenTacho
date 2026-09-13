@@ -17,7 +17,8 @@
     --gold: #fdca4f; --gold-line: rgba(253,202,79,.78); --gold-soft: rgba(253,202,79,.16);
     --sky: #7cc0ef; --duty: #f3b979; --yard: #cdb0ff; --bad: #ff6b6b; --warn: #ffa94d;
     --text: #f6efdc; --muted: rgba(246,239,220,.72); --dim: rgba(246,239,220,.42);
-    --bg: linear-gradient(160deg, rgba(22,38,104,.97), rgba(8,14,46,.98));
+    --alpha: .8;   /* arka plan yoğunluğu; JS state.mini_opacity ile günceller */
+    --bg: linear-gradient(160deg, rgba(22,38,104,var(--alpha)), rgba(8,14,46,var(--alpha)));
     --line: rgba(255,255,255,.12); --track: rgba(3,8,30,.65); --act-bg: rgba(3,8,30,.35);
     --display: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", system-ui, sans-serif;
     --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
@@ -26,13 +27,13 @@
     --gold: #7aa7ff; --gold-line: rgba(122,167,255,.55); --gold-soft: rgba(122,167,255,.16);
     --sky: #6fd3c7; --duty: #f0b56b; --yard: #c9a2ff;
     --text: #e9edf5; --muted: rgba(233,237,245,.7); --dim: rgba(233,237,245,.4);
-    --bg: #171b22; --line: rgba(255,255,255,.12); --track: #0b0e12; --act-bg: #0f1216;
+    --bg: rgba(23,27,34,var(--alpha)); --line: rgba(255,255,255,.12); --track: #0b0e12; --act-bg: #0f1216;
   }
   html[data-theme="light"] {
     --gold: #2b5fd9; --gold-line: rgba(43,95,217,.45); --gold-soft: rgba(43,95,217,.12);
     --sky: #0f8f83; --duty: #c2680a; --yard: #7a48d6; --bad: #d63b3b; --warn: #d97a06;
     --text: #1b1f2a; --muted: rgba(27,31,42,.68); --dim: rgba(27,31,42,.38);
-    --bg: #ffffff; --line: #d9dee8; --track: #e3e7ef; --act-bg: #f7f8fb;
+    --bg: rgba(255,255,255,var(--alpha)); --line: #d9dee8; --track: #e3e7ef; --act-bg: #f7f8fb;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -186,6 +187,7 @@
     if (!st) return;
     last = st;
     document.documentElement.dataset.theme = st.theme || "vangogh";
+    document.documentElement.style.setProperty("--alpha", st.mini_opacity != null ? st.mini_opacity : .8);
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(); }
     const L = st.limits, sp = st.split || { part1: 0, need: L.rest, done: false }, rt = st.rest_target;
     const resting = st.status === "OFF_DUTY";

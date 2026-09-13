@@ -35,6 +35,10 @@ For the ⏩ skip button, enable the developer console in the game: in
 `Documents\Euro Truck Simulator 2\config.cfg` set `g_console "1"` and `g_developer "1"`.
 The button stays locked until both are on.
 
+If the window does not open at all, install Microsoft's free
+[WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) — it is already part of
+Windows 11 and of any up-to-date Windows 10, so this is rarely needed.
+
 ## Features
 
 - **Live from the game** – clock, speed, truck model, active job (route, cargo, time to deliver).

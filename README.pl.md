@@ -35,6 +35,10 @@ Dla przycisku ⏩ Pomiń włącz konsolę deweloperską w grze: w
 `Documents\Euro Truck Simulator 2\config.cfg` ustaw `g_console "1"` i `g_developer "1"`.
 Przycisk pozostaje zablokowany, dopóki oba nie są włączone.
 
+Jeśli okno w ogóle się nie otwiera, zainstaluj darmowy
+[WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) od Microsoftu — jest już częścią
+Windows 11 i każdego aktualnego Windows 10, więc rzadko jest to potrzebne.
+
 ## Funkcje
 
 - **Na żywo z gry** – zegar, prędkość, model ciężarówki, aktywne zlecenie (trasa, ładunek, czas do dostawy).

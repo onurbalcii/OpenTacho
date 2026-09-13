@@ -244,7 +244,7 @@
   "ui.sound_test": "Testuj dźwięk",
   "ui.hint.sounds": "Jeden dźwięk powiadomienia: raz jako wczesne ostrzeżenie, dwa razy z rzędu przy naruszeniu, raz po ukończeniu przerwy/odpoczynku. Zamień pliki .wav w assets/sounds, aby go zmienić.",
   "ui.sec.mini": "Mini pasek",
-  "ui.hint.mini": "Mały przesuwalny wskaźnik nad grą: ikona statusu, pozostała jazda / odpoczynek, następny krok, trzy mini paski (blok · dzień · odpoczynek), czas gry, znaczniki, termin dostawy oraz przyciski Przerwa / Manewry / Pomiń. Skrót zamienia go z głównym oknem; położenie jest zapamiętywane.",
+  "ui.hint.mini": "Mały przesuwalny wskaźnik nad grą: ikona statusu, pozostała jazda / odpoczynek, następny krok, trzy mini paski (blok · dzień · odpoczynek), czas gry, znaczniki, termin dostawy oraz przyciski Przerwa / Manewry / Pomiń. Skrót zamienia go z głównym oknem; położenie jest zapamiętywane. Okno jest przezroczyste: zmniejsz krycie, a gra będzie widoczna przez pasek.",
   "ui.hotkey": "Skrót",
   "ui.hotkey_change": "Zmień",
   "ui.hotkey_press": "Naciśnij kombinację klawiszy… (Esc: anuluj)",
@@ -291,5 +291,6 @@
   "tour.mini.t": "Mini pasek",
   "tour.mini.b": "<b>Ctrl + Num 0</b> (do zmiany) zamienia główne okno na mały przesuwalny wskaźnik nad grą: status, pozostały czas, trzy mini paski, zegar, znaczniki oraz przyciski Przerwa / Manewry / Pomiń. Ten sam klawisz przywraca okno.",
   "tour.done.t": "Wszystko gotowe",
-  "tour.done.b": "Uruchom grę; z zainstalowaną wtyczką połączenie pojawi się samo, a liczniki zaczną działać. Szerokiej drogi! Aby zobaczyć samouczek ponownie: Ustawienia → Aplikacja → <b>Uruchom przewodnik od nowa</b>."
+  "tour.done.b": "Uruchom grę; z zainstalowaną wtyczką połączenie pojawi się samo, a liczniki zaczną działać. Szerokiej drogi! Aby zobaczyć samouczek ponownie: Ustawienia → Aplikacja → <b>Uruchom przewodnik od nowa</b>.",
+  "ui.mini_opacity": "Krycie tła"
 }

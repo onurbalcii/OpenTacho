@@ -244,7 +244,7 @@
   "ui.sound_test": "Test sound",
   "ui.hint.sounds": "One notification sound: once as early warning, twice in a row on violation, once when a break/rest completes. Replace the .wav files in assets/sounds to customise it.",
   "ui.sec.mini": "Mini strip",
-  "ui.hint.mini": "A small draggable gauge over the game: status icon, driving / rest time left, next step, three mini bars (block · daily · rest), game clock, flags, delivery due time and Break / Yard move / Skip buttons. The hotkey swaps it with the main window; its position is remembered.",
+  "ui.hint.mini": "A small draggable gauge over the game: status icon, driving / rest time left, next step, three mini bars (block · daily · rest), game clock, flags, delivery due time and Break / Yard move / Skip buttons. The hotkey swaps it with the main window; its position is remembered. The window is transparent: lower the opacity and the game shows through the strip.",
   "ui.hotkey": "Hotkey",
   "ui.hotkey_change": "Change",
   "ui.hotkey_press": "Press a key combination… (Esc: cancel)",
@@ -291,5 +291,6 @@
   "tour.mini.t": "Mini strip",
   "tour.mini.b": "<b>Ctrl + Num 0</b> (changeable) swaps the main window for a small draggable gauge over the game: state, time left, three mini bars, clock, flags and Break / Yard move / Skip buttons. The same key brings the window back.",
   "tour.done.t": "You're all set",
-  "tour.done.b": "Start the game; with the plugin installed the connection comes up by itself and the counters start working. Safe travels! To see this tour again: Settings → App → <b>Restart the guide</b>."
+  "tour.done.b": "Start the game; with the plugin installed the connection comes up by itself and the counters start working. Safe travels! To see this tour again: Settings → App → <b>Restart the guide</b>.",
+  "ui.mini_opacity": "Background opacity"
 }

@@ -34,6 +34,10 @@ halleder.
 ⏩ Atla butonu için oyunda geliştirici konsolunu aç: `Documents\Euro Truck Simulator 2\config.cfg`
 içinde `g_console "1"` ve `g_developer "1"`. İkisi de açık olmadıkça buton kilitli kalır.
 
+Pencere hiç açılmıyorsa Microsoft'un ücretsiz
+[WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) paketini kur — Windows 11'de ve
+güncel Windows 10'da zaten vardır, bu yüzden nadiren gerekir.
+
 ## Özellikler
 
 - **Oyundan canlı** – saat, hız, kamyon modeli, aktif iş (rota, yük, teslime kalan süre).

@@ -244,7 +244,7 @@
   "ui.sound_test": "Sesi dene",
   "ui.hint.sounds": "Tek bir bildirim sesi: ön uyarıda bir kez, ihlalde iki kez arka arkaya, mola/dinlenme tamamlanınca bir kez. assets/sounds içindeki .wav dosyalarını değiştirerek sesi özelleştirebilirsin.",
   "ui.sec.mini": "Mini şerit",
-  "ui.hint.mini": "Oyunun üstünde sürüklenebilir küçük bir gösterge: durum ikonu, kalan sürüş / dinlenme, sonraki adım, üç mini çubuk (blok · günlük · dinlenme), oyun saati, bayraklar, teslimat süresi ve Mola / İç hareket / Atla düğmeleri. Kısayol ana pencereyle yer değiştirir; konumu hatırlanır.",
+  "ui.hint.mini": "Oyunun üstünde sürüklenebilir küçük bir gösterge: durum ikonu, kalan sürüş / dinlenme, sonraki adım, üç mini çubuk (blok · günlük · dinlenme), oyun saati, bayraklar, teslimat süresi ve Mola / İç hareket / Atla düğmeleri. Kısayol ana pencereyle yer değiştirir; konumu hatırlanır. Pencere saydamdır: yoğunluğu düşürürsen oyun şeridin arkasından görünür.",
   "ui.hotkey": "Kısayol",
   "ui.hotkey_change": "Değiştir",
   "ui.hotkey_press": "Tuş bileşimine bas… (Esc: vazgeç)",
@@ -291,5 +291,6 @@
   "tour.mini.t": "Mini şerit",
   "tour.mini.b": "<b>Ctrl + Num 0</b> (değiştirilebilir) ana pencereyi oyunun üstünde küçük, sürüklenebilir bir göstergeyle değiştirir: durum, kalan süre, üç mini çubuk, saat, bayraklar ve Mola / İç hareket / Atla düğmeleri. Aynı tuş geri getirir.",
   "tour.done.t": "Hazırsın",
-  "tour.done.b": "Oyunu aç; eklenti kuruluysa bağlantı kendiliğinden gelir ve sayaçlar işlemeye başlar. İyi yolculuklar! Turu yeniden görmek için: Ayarlar → Uygulama → <b>Rehberi baştan başlat</b>."
+  "tour.done.b": "Oyunu aç; eklenti kuruluysa bağlantı kendiliğinden gelir ve sayaçlar işlemeye başlar. İyi yolculuklar! Turu yeniden görmek için: Ayarlar → Uygulama → <b>Rehberi baştan başlat</b>.",
+  "ui.mini_opacity": "Arka plan yoğunluğu"
 }
