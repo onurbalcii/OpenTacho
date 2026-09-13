@@ -83,6 +83,29 @@ The button stays locked until both are on.
 Everything is stored in `state.json` / `history.json` next to `OpenTacho.exe`; delete them to
 start fresh (or use *Reset counters* in the settings).
 
+## FAQ
+
+**Is there a tachograph / driving-time tracker for Euro Truck Simulator 2 or American Truck Simulator?**
+Yes — that is exactly what OpenTacho is. It counts driving time, breaks and daily rest in game
+time and reads the game live through the scs-sdk-plugin telemetry plugin.
+
+**Which rule does it follow?**
+The EU hours-of-service rule: 4:30 driving → 45-minute break → 4:30 driving → 11-hour daily
+rest, plus the 15 + 30 split break and the 3 + 9 split daily rest. Nothing else.
+
+**Does it need an internet connection or an account?**
+No. Everything runs locally and offline; nothing is uploaded. The only outbound action is the
+optional feedback button, which opens a web form in your browser.
+
+**Does it work with map mods, ProMods or ATS?**
+Yes. It only reads telemetry (clock, speed, job), so map and truck mods do not matter, and
+American Truck Simulator uses the same plugin.
+
+**How is it different from ELD-style / hours-of-service apps?**
+It is a lightweight, open-source (MIT) alternative: one rule set, no account, works offline,
+a single portable folder with an `.exe`, and it handles ferries, sleeping, time zones and save
+reloads for you.
+
 ## Folder layout
 
 ```
@@ -108,11 +131,6 @@ python OpenTacho.py
 `pip install pyinstaller` and `tools\build.bat` produce `dist\OpenTacho\OpenTacho.exe` and
 `dist\OpenTacho-win64.zip` (the release package). Requires Windows 10/11 with WebView2 (ships
 with Windows).
-
-## Feedback
-
-Settings → App → **Send feedback** opens a form in the app's language. Replace the links in
-`FEEDBACK_URLS` at the top of `OpenTacho.py` with your own before publishing a fork.
 
 ## Adding a language
 

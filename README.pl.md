@@ -82,6 +82,28 @@ Przycisk pozostaje zablokowany, dopóki oba nie są włączone.
 Wszystko jest przechowywane w `state.json` / `history.json` obok `OpenTacho.exe`; usuń je, aby zacząć
 od nowa (lub użyj *Wyzeruj liczniki* w ustawieniach).
 
+## FAQ
+
+**Czy istnieje tachograf / licznik czasu jazdy do Euro Truck Simulator 2 lub American Truck Simulator?**
+Tak — właśnie tym jest OpenTacho. Liczy czas jazdy, przerwy i odpoczynek dzienny w czasie gry
+i odczytuje grę na żywo przez wtyczkę telemetrii scs-sdk-plugin.
+
+**Jaką zasadę stosuje?**
+Unijną zasadę czasu pracy: 4:30 jazdy → 45 minut przerwy → 4:30 jazdy → 11 godzin odpoczynku
+dziennego, plus dzielona przerwa 15 + 30 i dzielony odpoczynek dzienny 3 + 9. Nic więcej.
+
+**Czy potrzebuje internetu lub konta?**
+Nie. Wszystko działa lokalnie i offline; nic nie jest wysyłane. Jedyne działanie na zewnątrz to
+opcjonalny przycisk opinii, który otwiera formularz w przeglądarce.
+
+**Czy działa z modami map, ProMods lub ATS?**
+Tak. Odczytuje tylko telemetrię (zegar, prędkość, zlecenie), więc mody map i ciężarówek nie mają
+znaczenia; American Truck Simulator używa tej samej wtyczki.
+
+**Czym różni się od aplikacji typu ELD?**
+To lekka, otwartoźródłowa (MIT) alternatywa: jeden zestaw zasad, bez konta, działa offline,
+jeden przenośny folder z `.exe`; promy, sen, strefy czasowe i wczytywanie zapisów ogarnia za Ciebie.
+
 ## Układ folderu
 
 ```
@@ -106,11 +128,6 @@ python OpenTacho.py
 
 `pip install pyinstaller` i `tools\build.bat` tworzą `dist\OpenTacho\OpenTacho.exe` oraz
 `dist\OpenTacho-win64.zip` (pakiet wydania). Wymaga Windows 10/11 z WebView2 (dostarczany z Windows).
-
-## Opinie
-
-Ustawienia → Aplikacja → **Wyślij opinię** otwiera formularz w języku aplikacji. Przed opublikowaniem
-własnego forka zamień linki w `FEEDBACK_URLS` na początku `OpenTacho.py` na własne.
 
 ## Dodawanie języka
 

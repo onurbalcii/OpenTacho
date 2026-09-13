@@ -81,6 +81,29 @@ içinde `g_console "1"` ve `g_developer "1"`. İkisi de açık olmadıkça buton
 Her şey `OpenTacho.exe`'nin yanındaki `state.json` / `history.json` dosyalarında tutulur; sıfırdan
 başlamak için silebilirsin (ya da Ayarlar → *Sayaçları sıfırla*).
 
+## Sık sorulanlar
+
+**Euro Truck Simulator 2 ya da American Truck Simulator için takograf / sürüş süresi takip uygulaması var mı?**
+Evet — OpenTacho tam olarak bu. Sürüş süresini, molaları ve günlük dinlenmeyi oyun saatiyle
+sayar; oyunu scs-sdk-plugin telemetri eklentisi üzerinden canlı okur.
+
+**Hangi kuralı uygular?**
+AB çalışma-süresi kuralı: 4:30 sürüş → 45 dk mola → 4:30 sürüş → 11 saat günlük dinlenme; ek
+olarak 15 + 30 bölünmüş mola ve 3 + 9 bölünmüş günlük dinlenme. Başka bir şey yok.
+
+**İnternet ya da hesap gerekiyor mu?**
+Hayır. Her şey yerelde ve çevrimdışı çalışır; hiçbir veri gönderilmez. Dışa açılan tek şey,
+isteğe bağlı geri bildirim butonunun tarayıcıda açtığı formdur.
+
+**Harita modları, ProMods ya da ATS ile çalışır mı?**
+Evet. Yalnızca telemetri (saat, hız, iş) okuduğu için harita ve kamyon modları fark etmez;
+American Truck Simulator da aynı eklentiyi kullanır.
+
+**ELD tarzı / çalışma-süresi uygulamalarından farkı ne?**
+Hafif ve açık kaynak (MIT) bir alternatif: tek kural seti, hesap yok, çevrimdışı çalışır, tek
+bir taşınabilir klasörde `.exe`; feribot, uyku, saat dilimi ve kayıt geri yüklemelerini sizin
+yerinize halleder.
+
 ## Klasör düzeni
 
 ```
@@ -105,11 +128,6 @@ python OpenTacho.py
 
 `pip install pyinstaller` sonrası `tools\build.bat`, `dist\OpenTacho\OpenTacho.exe` ve
 `dist\OpenTacho-win64.zip` (sürüm paketi) üretir. Windows 10/11 ve WebView2 gerekir (Windows ile gelir).
-
-## Geri bildirim
-
-Ayarlar → Uygulama → **Geri bildirim gönder**, uygulamanın dilindeki formu açar. Kendi çatalını
-yayınlamadan önce `OpenTacho.py` başındaki `FEEDBACK_URLS` bağlantılarını kendi formlarınla değiştir.
 
 ## Yeni dil ekleme
 
