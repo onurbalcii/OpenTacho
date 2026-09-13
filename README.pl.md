@@ -21,7 +21,7 @@ zostało, i ogarnia niewygodne przypadki (promy, sen, strefy czasowe, wczytywani
   <img src="docs/screenshots/pl/mini.png" width="540" alt="Mini pasek nad grą">
 </p>
 
-## Szybki start (Python niepotrzebny)
+## Szybki start
 
 1. Pobierz **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
    (wszystkie wersje: [Releases](https://github.com/onurbalcii/OpenTacho/releases)) i rozpakuj gdziekolwiek.

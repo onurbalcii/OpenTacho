@@ -21,7 +21,7 @@
   <img src="docs/screenshots/ru/mini.png" width="540" alt="Мини-панель поверх игры">
 </p>
 
-## Быстрый старт (Python не нужен)
+## Быстрый старт
 
 1. Скачайте **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
    (все версии: [Releases](https://github.com/onurbalcii/OpenTacho/releases)) и распакуйте куда угодно.

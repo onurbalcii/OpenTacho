@@ -21,7 +21,7 @@ Spielstände, Anhänger beladen), damit du einfach fahren kannst.
   <img src="docs/screenshots/de/mini.png" width="540" alt="Mini-Leiste über dem Spiel">
 </p>
 
-## Schnellstart (kein Python nötig)
+## Schnellstart
 
 1. **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
    herunterladen (alle Versionen: [Releases](https://github.com/onurbalcii/OpenTacho/releases)) und irgendwo entpacken.

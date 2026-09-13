@@ -21,7 +21,7 @@ halleder.
   <img src="docs/screenshots/tr/mini.png" width="540" alt="Oyunun üstünde mini şerit">
 </p>
 
-## Hızlı başlangıç (Python gerekmez)
+## Hızlı başlangıç
 
 1. **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
    dosyasını indir (tüm sürümler: [Releases](https://github.com/onurbalcii/OpenTacho/releases)), istediğin yere çıkar.

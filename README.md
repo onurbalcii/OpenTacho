@@ -21,7 +21,7 @@ loading) so you can just drive.
   <img src="docs/screenshots/en/mini.png" width="540" alt="Mini strip over the game">
 </p>
 
-## Quick start (no Python needed)
+## Quick start
 
 1. Download **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
    (all versions: [Releases](https://github.com/onurbalcii/OpenTacho/releases)) and extract it anywhere.
