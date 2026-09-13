@@ -104,6 +104,11 @@ ist die optionale Feedback-Schaltfläche, die ein Webformular im Browser öffnet
 Ja. Es liest nur Telemetrie (Uhr, Geschwindigkeit, Auftrag), Karten- und Lkw-Mods spielen
 also keine Rolle; American Truck Simulator nutzt dasselbe Plugin.
 
+**Die Mini-Leiste erscheint nicht über dem Spiel.**
+Windows kann über ein Spiel im *exklusiven Vollbild* kein Overlay zeichnen. Stelle den Anzeigemodus
+des Spiels auf *Fenster* oder *randloses Vollbild* (ETS2: Optionen → Grafik → Vollbild aus) — dann
+liegt die Leiste oben, und das Spiel scheint durch ihren transparenten Hintergrund.
+
 **Was unterscheidet es von ELD-artigen Lenkzeit-Apps?**
 Es ist eine leichte Open-Source-Alternative (MIT): ein Regelsatz, kein Konto, offline, ein
 einzelner portabler Ordner mit `.exe`, und es kümmert sich um Fähren, Schlafen, Zeitzonen und

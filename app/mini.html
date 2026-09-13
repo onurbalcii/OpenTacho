@@ -187,7 +187,7 @@
     if (!st) return;
     last = st;
     document.documentElement.dataset.theme = st.theme || "vangogh";
-    document.documentElement.style.setProperty("--alpha", st.mini_opacity != null ? st.mini_opacity : .8);
+    if (st.mini_opacity != null) document.documentElement.style.setProperty("--alpha", st.mini_opacity);
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(); }
     const L = st.limits, sp = st.split || { part1: 0, need: L.rest, done: false }, rt = st.rest_target;
     const resting = st.status === "OFF_DUTY";
@@ -277,14 +277,24 @@
   $("bSkip").addEventListener("click", () => call("skip_rest"));
   $("bExpand").addEventListener("click", () => api && api.toggle_mini());
 
-  if (window.pywebview && window.pywebview.api) { api = window.pywebview.api; start(); }
-  else window.addEventListener("pywebviewready", () => { if (!api) { api = window.pywebview.api; start(); } });
+  const H = new URLSearchParams(location.hash.slice(1));
+  const PREVIEW = H.get("preview") === "1";   // ayarlardaki küçük önizleme (iframe): API yok, örnek durum
+  if (PREVIEW) {
+    document.body.style.pointerEvents = "none";
+    document.documentElement.style.setProperty("--alpha", H.get("alpha") || ".7");
+    window.addEventListener("message", e => {
+      const d = e.data || {};
+      if (d.alpha != null) document.documentElement.style.setProperty("--alpha", d.alpha);
+      if (d.theme) { document.documentElement.dataset.theme = d.theme; if (last) { last.theme = d.theme; render(last); } }
+    });
+  } else if (window.pywebview && window.pywebview.api) { api = window.pywebview.api; start(); }
+  else window.addEventListener("pywebviewready", () => { if (!api && !PREVIEW) { api = window.pywebview.api; start(); } });
 
-  // tarayıcıda önizleme (pywebview yokken): ?theme=dark&s=rest
+  // tarayıcıda önizleme (pywebview yokken) ve ayar önizlemesi: ?theme=dark&s=rest / #preview=1&theme=…
   setTimeout(() => {
     if (api) return;
     const q = new URLSearchParams(location.search), sc = q.get("s") || "drive";
-    const base = { theme: q.get("theme") || "vangogh", lang: "tr", mode: "auto", status: "DRIVING", moving: true, offjob: false, offjob_rest: true,
+    const base = { theme: H.get("theme") || q.get("theme") || "vangogh", lang: "tr", mode: "auto", status: "DRIVING", moving: true, offjob: false, offjob_rest: true,
       limits: { block: 270, daily: 540, break: 45, break2: 30, rest: 660 }, drive_block: 128, drive_daily: 398, rest: 0, rest_target: 45,
       remaining: 142, next_req: "REST", break_credited: true, break_part1: 0, split: { part1: 0, need: 660, done: false },
       big: { label: "KALAN SÜRÜŞ", value: "2:22", sub: "Sonra günlük dinlenme", tone: "ok" }, flags: [],

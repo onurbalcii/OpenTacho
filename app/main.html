@@ -292,6 +292,12 @@
   .sm.primary .ic { color: var(--gold); font-size: 16px; }
   .check { display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer; }
   .row.range { flex-wrap: nowrap; }
+  .mini-preview { position: relative; height: 92px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
+                  background: url("assets/bg_starry.jpg") center / cover; }
+  .mini-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.25)); pointer-events: none; }
+  .mini-preview iframe { position: absolute; left: 50%; top: 50%; width: 540px; height: 76px; border: 0; background: transparent;
+                         transform: translate(-50%, -50%) scale(.55); pointer-events: none; }
+  .mini-preview[hidden] { display: none; }
   .row.range input[type="range"] { flex: 1; min-width: 80px; padding: 0; border: 0; background: transparent; accent-color: var(--gold); cursor: pointer; }
   .row.range b { font-family: var(--display); font-variant-numeric: tabular-nums; color: var(--text); min-width: 40px; text-align: right; font-size: 13px; }
   .check input { width: 16px; height: 16px; accent-color: var(--gold); }
@@ -612,7 +618,8 @@
         <button class="sm" id="hkChange" data-i18n="ui.hotkey_change">Değiştir</button>
       </div>
       <div class="row"><button class="sm primary" id="miniOpen"><i class="ic" data-ic="strip"></i><span data-i18n="ui.mini_open">Mini şeride geç</span></button></div>
-      <div class="row range"><label for="miniOpacity" data-i18n="ui.mini_opacity">Arka plan yoğunluğu</label><input type="range" id="miniOpacity" min="30" max="100" step="5"><b id="miniOpacityVal">80%</b></div>
+      <div class="row range"><label for="miniOpacity" data-i18n="ui.mini_opacity">Arka plan yoğunluğu</label><input type="range" id="miniOpacity" min="30" max="100" step="5"><b id="miniOpacityVal">70%</b></div>
+      <div class="mini-preview" id="miniPreview" hidden><iframe id="miniPreviewFrame" title="" tabindex="-1"></iframe></div>
       <div class="hint" data-i18n="ui.hint.mini"></div>
     </div>
 
@@ -973,8 +980,22 @@
   $("sounds").addEventListener("change", () => call("set_sounds", $("sounds").checked));
   $("soundTest").addEventListener("click", () => call("test_sound"));
   $("miniOpen").addEventListener("click", () => call("toggle_mini"));
-  $("miniOpacity").addEventListener("input", () => { $("miniOpacityVal").textContent = $("miniOpacity").value + "%"; });
-  $("miniOpacity").addEventListener("change", () => call("set_mini_opacity", $("miniOpacity").value / 100));
+  // kaydırıcıya dokununca şeridin küçük bir önizlemesi görünür; bırakınca biraz sonra kaybolur
+  let pvTimer = null, pvTheme = null;
+  const pvFrame = $("miniPreviewFrame");
+  function showPreview() {
+    clearTimeout(pvTimer);
+    const theme = (last && last.theme) || "vangogh";
+    if (pvTheme !== theme) { pvTheme = theme; pvFrame.src = `mini.html#preview=1&theme=${theme}&alpha=${$("miniOpacity").value / 100}`; }
+    $("miniPreview").hidden = false;
+    pushPreviewAlpha();
+  }
+  function hidePreviewSoon() { clearTimeout(pvTimer); pvTimer = setTimeout(() => { $("miniPreview").hidden = true; }, 1500); }
+  function pushPreviewAlpha() { try { pvFrame.contentWindow && pvFrame.contentWindow.postMessage({ alpha: $("miniOpacity").value / 100 }, "*"); } catch (e) {} }
+  ["pointerdown", "focus", "touchstart"].forEach(ev => $("miniOpacity").addEventListener(ev, showPreview));
+  ["pointerup", "blur", "touchend", "keyup"].forEach(ev => $("miniOpacity").addEventListener(ev, hidePreviewSoon));
+  $("miniOpacity").addEventListener("input", () => { $("miniOpacityVal").textContent = $("miniOpacity").value + "%"; showPreview(); pushPreviewAlpha(); });
+  $("miniOpacity").addEventListener("change", () => { call("set_mini_opacity", $("miniOpacity").value / 100); hidePreviewSoon(); });
   // kısayol yakalama: bir sonraki tuş bileşimi
   let hkCapturing = false;
   const VK_NAMES = { 8: "Backspace", 9: "Tab", 13: "Enter", 19: "Pause", 20: "CapsLock", 27: "Esc", 32: "Space", 33: "PgUp", 34: "PgDn", 35: "End", 36: "Home",
@@ -1121,7 +1142,7 @@
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
-        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .8,
+        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7,
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
           : [{ k: "drive", v: "4:30", st: "active" }, { k: "break", v: "0:45", st: "plan" }, { k: "drive", v: "4:30", st: "plan" }, { k: "daily", v: "11:00", st: "plan" }],
         flags: m.status === "ON_DUTY" ? [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] : [],

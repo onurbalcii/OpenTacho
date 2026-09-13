@@ -57,6 +57,7 @@ if not os.path.exists(SII_DLL) and os.path.exists(os.path.join(DATA_DIR, "SII_De
 APP_NAME = "OpenTacho"
 WINDOW_TITLE = APP_NAME
 MINI_W, MINI_H = 540, 76          # mini şerit penceresi (px)
+MINI_PARK = -30000                # gizlenen mini şerit buraya taşınır (hide/show WebView2 saydamlığını bozuyor)
 DEFAULT_LANG = "tr"
 DEFAULT_THEME = "vangogh"
 # Geri bildirim formu, dile göre (bilinmeyen dil -> "en"). Kendi çatalında kendi form bağlantılarını yaz.
@@ -197,7 +198,7 @@ DEFAULT_STATE = {
     "onboarded": False,        # ilk açılış: dil seçimi + rehber turu tamamlandı mı
     "hotkey": {"mods": 2, "vk": 96, "name": "Ctrl + Num 0"},   # mini şerit kısayolu (MOD_CONTROL, VK_NUMPAD0)
     "mini_pos": None,          # mini şerit konumu {"x","y"}
-    "mini_opacity": 0.8,       # mini şerit arka plan yoğunluğu (0.3–1.0; pencere saydam, oyun altından görünür)
+    "mini_opacity": 0.7,       # mini şerit arka plan yoğunluğu (0.3–1.0; pencere saydam, oyun altından görünür)
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -613,6 +614,51 @@ class HotkeyListener(threading.Thread):
             except Exception:
                 log_error(traceback.format_exc())
             time.sleep(0.05)
+
+
+# ---------------- Pencere: saydamlık ----------------
+def _hwnd_of(win):
+    try:
+        from webview.platforms.winforms import BrowserView
+        inst = BrowserView.instances.get(win.uid)
+        if inst is not None:
+            return int(inst.Handle.ToInt64())
+    except Exception:
+        pass
+    return None
+
+
+def make_glass(win):
+    """Pencerenin tüm istemci alanını DWM 'cam' katmanına çevirir: WebView2'nin saydam çizdiği pikseller
+    (köşeler, şeridin arkası) alttaki ekranı gösterir. pywebview'in transparent=True ayarını pekiştirir."""
+    hwnd = _hwnd_of(win)
+    if not hwnd:
+        return
+    try:
+        class MARGINS(ctypes.Structure):
+            _fields_ = [("l", ctypes.c_int), ("r", ctypes.c_int), ("t", ctypes.c_int), ("b", ctypes.c_int)]
+        dwm = ctypes.WinDLL("dwmapi")
+        dwm.DwmExtendFrameIntoClientArea.argtypes = [wt.HWND, ctypes.POINTER(MARGINS)]
+        dwm.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(MARGINS(-1, -1, -1, -1)))   # -1: tamamı cam
+    except Exception as e:
+        log_error("saydam pencere ayarlanamadı: %r" % e)
+
+
+def set_toolwindow(win):
+    """WS_EX_TOOLWINDOW: görev çubuğunda ve Alt-Tab'da görünmez (ilk gösterimden önce çağrılmalı)."""
+    hwnd = _hwnd_of(win)
+    if not hwnd:
+        return
+    try:
+        u = ctypes.WinDLL("user32", use_last_error=True)
+        u.GetWindowLongW.restype = ctypes.c_long
+        u.GetWindowLongW.argtypes = [wt.HWND, ctypes.c_int]
+        u.SetWindowLongW.restype = ctypes.c_long
+        u.SetWindowLongW.argtypes = [wt.HWND, ctypes.c_int, ctypes.c_long]
+        GWL_EXSTYLE, WS_EX_TOOLWINDOW = -20, 0x00000080
+        u.SetWindowLongW(hwnd, GWL_EXSTYLE, u.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
+    except Exception as e:
+        log_error("araç penceresi stili ayarlanamadı: %r" % e)
 
 
 # ---------------- Pencere: her zaman üstte ----------------
@@ -1391,8 +1437,11 @@ class Tacho:
                         win.resize(MINI_W, MINI_H)
                     except Exception:
                         pass
+                    make_glass(win)
 
                 def moved(x, y):
+                    if x <= MINI_PARK // 2 or y <= MINI_PARK // 2:
+                        return   # park konumu, kullanıcının yeri değil
                     with self.lock:
                         self.s["mini_pos"] = {"x": x, "y": y}
                         self.dirty = True
@@ -1404,6 +1453,7 @@ class Tacho:
                     self.act_toggle_mini()
                     return False
 
+                win.events.before_show += lambda: set_toolwindow(win)
                 win.events.shown += shown
                 if hasattr(win.events, "moved"):
                     win.events.moved += moved
@@ -1412,16 +1462,21 @@ class Tacho:
                 if self.window is not None:
                     self.window.hide()
                 return
+            # hide()/show() WebView2'nin saydam arka planını kaybettiriyor (köşeler kararıyor); pencereyi
+            # görünür bırakıp ekran dışına taşıyoruz — araç penceresi olduğu için görev çubuğunda da yer almaz
             if self.mini_on:
                 self.mini_on = False
-                self.mini_win.hide()
+                self.mini_win.move(MINI_PARK, MINI_PARK)
                 if self.window is not None:
                     self.window.show()
             else:
                 self.mini_on = True
                 if self.window is not None:
                     self.window.hide()
-                self.mini_win.show()
+                pos = self.s.get("mini_pos") or {}
+                if not ("x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H)):
+                    pos = {"x": 80, "y": 80}
+                self.mini_win.move(int(pos["x"]), int(pos["y"]))
         except Exception:
             log_error(traceback.format_exc())
 

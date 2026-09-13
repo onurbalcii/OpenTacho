@@ -105,6 +105,11 @@ optional feedback button, which opens a web form in your browser.
 Yes. It only reads telemetry (clock, speed, job), so map and truck mods do not matter, and
 American Truck Simulator uses the same plugin.
 
+**The mini strip does not show over the game.**
+Windows cannot draw any overlay over a game in *exclusive fullscreen*. Set the game's display
+mode to *windowed* or *borderless fullscreen* (ETS2: Options → Graphics → Fullscreen off) and the
+strip appears on top, with the game visible through its translucent background.
+
 **How is it different from ELD-style / hours-of-service apps?**
 It is a lightweight, open-source (MIT) alternative: one rule set, no account, works offline,
 a single portable folder with an `.exe`, and it handles ferries, sleeping, time zones and save

@@ -103,6 +103,11 @@ isteğe bağlı geri bildirim butonunun tarayıcıda açtığı formdur.
 Evet. Yalnızca telemetri (saat, hız, iş) okuduğu için harita ve kamyon modları fark etmez;
 American Truck Simulator da aynı eklentiyi kullanır.
 
+**Mini şerit oyunun üstünde görünmüyor.**
+Windows, *özel tam ekran* (exclusive fullscreen) modundaki bir oyunun üstüne hiçbir şey çizemez.
+Oyunun görüntü modunu *pencereli* ya da *kenarlıksız tam ekran* yap (ETS2: Seçenekler → Grafik →
+Tam ekran kapalı); şerit üstte görünür, saydam arka planından oyun seçilir.
+
 **ELD tarzı / çalışma-süresi uygulamalarından farkı ne?**
 Hafif ve açık kaynak (MIT) bir alternatif: tek kural seti, hesap yok, çevrimdışı çalışır, tek
 bir taşınabilir klasörde `.exe`; feribot, uyku, saat dilimi ve kayıt geri yüklemelerini sizin

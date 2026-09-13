@@ -104,6 +104,11 @@ opcjonalny przycisk opinii, który otwiera formularz w przeglądarce.
 Tak. Odczytuje tylko telemetrię (zegar, prędkość, zlecenie), więc mody map i ciężarówek nie mają
 znaczenia; American Truck Simulator używa tej samej wtyczki.
 
+**Mini pasek nie pokazuje się nad grą.**
+Windows nie potrafi rysować nakładek nad grą w trybie *pełnoekranowym wyłącznym*. Ustaw tryb
+wyświetlania gry na *okno* lub *pełny ekran bez ramki* (ETS2: Opcje → Grafika → Pełny ekran wył.) —
+pasek pojawi się na górze, a gra będzie widoczna przez jego półprzezroczyste tło.
+
 **Czym różni się od aplikacji typu ELD?**
 To lekka, otwartoźródłowa (MIT) alternatywa: jeden zestaw zasad, bez konta, działa offline,
 jeden przenośny folder z `.exe`; promy, sen, strefy czasowe i wczytywanie zapisów ogarnia za Ciebie.
