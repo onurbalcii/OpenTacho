@@ -57,7 +57,6 @@ if not os.path.exists(SII_DLL) and os.path.exists(os.path.join(DATA_DIR, "SII_De
 APP_NAME = "OpenTacho"
 WINDOW_TITLE = APP_NAME
 MINI_W, MINI_H = 540, 76          # mini şerit penceresi (px)
-MINI_PARK = -30000                # gizlenen mini şerit buraya taşınır (hide/show WebView2 saydamlığını bozuyor)
 DEFAULT_LANG = "tr"
 DEFAULT_THEME = "vangogh"
 # Geri bildirim formu, dile göre (bilinmeyen dil -> "en"). Kendi çatalında kendi form bağlantılarını yaz.
@@ -716,6 +715,7 @@ class Tacho:
         self.alert_prev = {"rem": None, "rest_left": None}
         self.mini_win = None
         self.mini_on = False
+        self.mini_lock = threading.RLock()   # aç/kapat art arda gelirse
         self.exiting = False
         self.api = None
         self.hotkeys = None
@@ -1416,67 +1416,62 @@ class Tacho:
 
     # ---- mini şerit / kısayol ----
     def act_toggle_mini(self):
+        """Mini şeridi aç/kapat. Şerit her açılışta yeniden oluşturulur: WebView2'nin saydam arka planı yalnızca
+        taze bir pencerede güvenilir (gizle/göster ya da ekran değişimleri sonrası köşeler kararabiliyor)."""
         try:
-            if self.mini_win is None:
-                pos = self.s.get("mini_pos") or {}
-                kw = {}
-                if "x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H):
-                    kw = {"x": int(pos["x"]), "y": int(pos["y"])}
-                # pencere arka planı köşelerde görünür; temaya yakın bir renk ver
-                theme = self.s.get("theme") or DEFAULT_THEME
-                # saydam pencere: köşeler ve şeridin arkası oyunu gösterir (yoğunluk ayarı sayfada uygulanır)
-                win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#theme=" + theme, js_api=self.api,
-                                            width=MINI_W, height=MINI_H,
-                                            min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
-                                            transparent=True, **kw)
-                self.mini_win = win
-
-                def shown():
-                    # WinForms boyutu çerçeve kaldırılmadan önce uygular (16 px eksik kalır); tam boyuta getir
-                    try:
-                        win.resize(MINI_W, MINI_H)
-                    except Exception:
-                        pass
-                    make_glass(win)
-
-                def moved(x, y):
-                    if x <= MINI_PARK // 2 or y <= MINI_PARK // 2:
-                        return   # park konumu, kullanıcının yeri değil
-                    with self.lock:
-                        self.s["mini_pos"] = {"x": x, "y": y}
-                        self.dirty = True
-
-                def closing():
-                    # kullanıcı kapatırsa yok etme, ana pencereye dön; uygulama çıkarken serbest bırak
-                    if self.exiting:
-                        return True
-                    self.act_toggle_mini()
-                    return False
-
-                win.events.before_show += lambda: set_toolwindow(win)
-                win.events.shown += shown
-                if hasattr(win.events, "moved"):
-                    win.events.moved += moved
-                win.events.closing += closing
-                self.mini_on = True
-                if self.window is not None:
-                    self.window.hide()
-                return
-            # hide()/show() WebView2'nin saydam arka planını kaybettiriyor (köşeler kararıyor); pencereyi
-            # görünür bırakıp ekran dışına taşıyoruz — araç penceresi olduğu için görev çubuğunda da yer almaz
-            if self.mini_on:
-                self.mini_on = False
-                self.mini_win.move(MINI_PARK, MINI_PARK)
+            with self.mini_lock:   # yalnızca referans değişimi kilitli; destroy() UI iş parçacığını bekler, kilit tutulmaz
+                win, self.mini_win, self.mini_on = self.mini_win, None, False
+            if win is not None:
+                try:
+                    win.destroy()
+                except Exception:
+                    pass
                 if self.window is not None:
                     self.window.show()
-            else:
-                self.mini_on = True
+                return
+            pos = self.s.get("mini_pos") or {}
+            kw = {}
+            if "x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H):
+                kw = {"x": int(pos["x"]), "y": int(pos["y"])}
+            theme = self.s.get("theme") or DEFAULT_THEME
+            # saydam pencere: köşeler ve şeridin arkası oyunu gösterir (yoğunluk ayarı sayfada uygulanır)
+            win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#theme=" + theme, js_api=self.api,
+                                        width=MINI_W, height=MINI_H,
+                                        min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
+                                        transparent=True, **kw)
+            set_toolwindow(win)   # pencere var ama henüz gösterilmedi: görev çubuğunda yer almasın
+
+            def shown():
+                # WinForms boyutu çerçeve kaldırılmadan önce uygular (16 px eksik kalır); tam boyuta getir
+                try:
+                    win.resize(MINI_W, MINI_H)
+                except Exception:
+                    pass
+                make_glass(win)
+
+            def moved(x, y):
+                with self.lock:
+                    self.s["mini_pos"] = {"x": x, "y": y}
+                    self.dirty = True
+
+            def closing():
+                # kullanıcı şeridi kapattı (Alt+F4 vb.): pencere gitsin, ana pencere geri gelsin.
+                # (Kilit alınmaz: destroy() çağıran iş parçacığı kilidi tutuyorsa UI kilitlenir.)
+                if self.exiting or self.mini_win is not win:
+                    return True   # çıkış ya da bizim destroy() çağrımız — ana pencereyi çağıran gösterir
+                self.mini_win, self.mini_on = None, False
                 if self.window is not None:
-                    self.window.hide()
-                pos = self.s.get("mini_pos") or {}
-                if not ("x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H)):
-                    pos = {"x": 80, "y": 80}
-                self.mini_win.move(int(pos["x"]), int(pos["y"]))
+                    self.window.show()
+                return True
+
+            win.events.shown += shown
+            if hasattr(win.events, "moved"):
+                win.events.moved += moved
+            win.events.closing += closing
+            self.mini_win = win
+            self.mini_on = True
+            if self.window is not None:
+                self.window.hide()
         except Exception:
             log_error(traceback.format_exc())
 
