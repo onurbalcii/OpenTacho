@@ -91,8 +91,10 @@ SAVE_FRESH_MIN = 30    # atlamadan önce kayıt en fazla bu kadar oyun dk eski o
 DELIVERY_NEAR_M = 100  # rotaya bu kadar metre kalınca (aktif işte) teslimat sahası: otomatik iç hareket
 DELIVERY_FAR_M = 300   # tekrar bu kadar uzaklaşınca otomatik iç hareket biter
 DELIVERY_MAX_KMH = 20  # teslimat sahası tespiti için hız üst sınırı
-JOB_EVENT_WINDOW = 15  # sn: iş olayı (başlangıç/bitiş) ile zaman atlaması bu kadar yakınsa "yükleme" sayılır
-JUMP_HOLD_S = 4        # sn: zaman atlaması karara bağlanmadan önce iş olayı beklenir
+JOB_EVENT_WINDOW = 30  # sn: iş olayı (başlangıç/bitiş/yük bayrağı) ile zaman atlaması bu kadar yakınsa "yükleme" sayılır
+JUMP_HOLD_S = 30       # sn: zaman atlaması karara bağlanmadan önce iş olayı beklenir (kendi dorseyle yüklemede
+                       #     onJob ve isCargoLoaded atlamadan 6–20 sn SONRA geliyor; 4 sn yetmiyordu)
+SKIP_WINDOW = 25       # sn: kendi g_set_time komutumuzdan bu kadar süre içindeki atlama beklemeden dinlenme sayılır
 HIST_MINUTES = 12 * 60 # kayıt geri yükleme için tutulan sayaç geçmişi (oyun dk)
 ROLLBACK_MIN = 2       # oyun saati en az bu kadar dk geri giderse "kayıt yüklendi" sayılır
 TICK = 0.25            # saniye
@@ -256,6 +258,8 @@ class Telemetry:
     OFF_ROUTE_DIST = 1060  # truck_f.routeDistance (m); rota yoksa 0
     OFF_JOB_START = 444    # gameplay_ui.jobStartingTime (oyun dk)
     OFF_CARGO_LOADED = 1564  # truck_b.isCargoLoaded (5. bölge): yükleme/boşaltma anı
+    OFF_FERRY = 4306       # special_b.ferry: her feribot kullanımında tersine çevrilir (değişim = olay)
+    OFF_TRAIN = 4307       # special_b.train: her tren kullanımında tersine çevrilir
     READ_LEN = 4352
 
     def __init__(self):
@@ -317,6 +321,8 @@ class Telemetry:
                 "loaded": bool(buf[self.OFF_CARGO_LOADED]),
             },
             "route_m": max(0.0, struct.unpack_from("<f", buf, self.OFF_ROUTE_DIST)[0]),
+            "ferry": bool(buf[self.OFF_FERRY]),
+            "train": bool(buf[self.OFF_TRAIN]),
             "active": bool(buf[self.OFF_SDK_ACTIVE]),
             "paused": bool(buf[self.OFF_PAUSED]),
             "revision": struct.unpack_from("<I", buf, self.OFF_REVISION)[0],
@@ -778,6 +784,10 @@ class Tacho:
         self.prev_job_on = None
         self.prev_job_start = None
         self.prev_loaded = None
+        self.prev_ferry = None     # feribot/tren bayrakları (tersine çevrilen bool)
+        self.prev_train = None
+        self.travel_event_at = None   # son feribot/tren olayı (monotonic): atlaması dinlenme
+        self.skip_at = None           # son Atla komutu (monotonic): atlaması beklemeden dinlenme
         self.job_event_at = None   # son iş olayı (başlangıç/bitiş) zamanı (monotonic)
         self.pending_jump = None   # karar bekleyen zaman atlaması
         self.auto_yard = None      # otomatik iç hareket nedeni: pickup | delivery | None
@@ -1097,17 +1107,20 @@ class Tacho:
             return
         s = self.s
         d = pj["delta"]
-        near_event = self.job_event_at is not None and abs(self.job_event_at - pj["t"]) <= JOB_EVENT_WINDOW
-        if near_event:
+        near_job = self.job_event_at is not None and abs(self.job_event_at - pj["t"]) <= JOB_EVENT_WINDOW
+        if near_job:
+            # yükleme / boşaltma: hiçbir sayaca yazılmaz
             self.log(L("log.jump_loading", d=hm(d)))
             self.pending_jump = None
             return
-        if time.monotonic() - pj["t"] < JUMP_HOLD_S:
-            return
+        near_travel = self.travel_event_at is not None and abs(self.travel_event_at - pj["t"]) <= JOB_EVENT_WINDOW
+        own_skip = self.skip_at is not None and abs(self.skip_at - pj["t"]) <= SKIP_WINDOW
+        if not (near_travel or own_skip) and time.monotonic() - pj["t"] < JUMP_HOLD_S:
+            return   # iş olayı gelebilir, bekle
         if self.offjob and not s["offjob_rest"]:
             self.log(L("log.jump_offjob", d=hm(d)))
         else:
-            self.log(L("log.jump_rest", d=hm(d)))
+            self.log(L("log.jump_travel" if near_travel else "log.jump_rest", d=hm(d)))
             self.add_rest(min(d, 24 * 60))
             if s["status"] == "DRIVING":
                 s["status"] = "ON_DUTY"
@@ -1135,11 +1148,13 @@ class Tacho:
         job_on = bool(self.job and self.job.get("on"))
         job_start = self.job.get("start") if self.job else None
         loaded = bool(self.job and self.job.get("loaded"))
+        ferry, train = bool(tel.get("ferry")), bool(tel.get("train"))
         if not was or s["last_abs"] is None:
             # yeni bağlantı: saati eşitle, aradaki süreyi sayma
             s["last_abs"] = now
             s["last_move_abs"] = now
             self.prev_job_on, self.prev_job_start, self.prev_loaded = job_on, job_start, loaded
+            self.prev_ferry, self.prev_train = ferry, train
             self.log(L("log.connected"))
             return
 
@@ -1157,7 +1172,14 @@ class Tacho:
             # yükleme (0→1) / boşaltma (1→0): bu ana denk gelen zaman atlaması sayaçlara yazılmaz
             self.job_event_at = mono
             self.log(L("log.cargo_loaded") if loaded else L("log.cargo_unloaded"))
+        if self.prev_ferry is not None and ferry != self.prev_ferry:
+            self.travel_event_at = mono
+            self.log(L("log.ferry"))
+        if self.prev_train is not None and train != self.prev_train:
+            self.travel_event_at = mono
+            self.log(L("log.train"))
         self.prev_job_on, self.prev_job_start, self.prev_loaded = job_on, job_start, loaded
+        self.prev_ferry, self.prev_train = ferry, train
 
         moving = self.speed > MOVE_KMH and not self.paused
         route = self.route_m
@@ -1171,6 +1193,7 @@ class Tacho:
             self._rollback(now, -delta)
             s["last_abs"] = now
             self.prev_job_on, self.prev_job_start, self.prev_loaded = job_on, job_start, loaded
+            self.prev_ferry, self.prev_train = ferry, train
             return
         self._resolve_pending_jump()
 
@@ -1341,6 +1364,7 @@ class Tacho:
             target = frame_now + need
             cmd = f"g_set_time {(target % 1440) // 60} {target % 60}"
             self.skip = {"cmd": cmd, "need": need, "start_abs": base_now, "t0": time.monotonic()}
+            self.skip_at = time.monotonic()
             self.log(L("log.skip_sending", d=hm(need), cmd=cmd))
         threading.Thread(target=self._skip_worker, daemon=True).start()
 

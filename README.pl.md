@@ -76,7 +76,7 @@ Windows 11 i każdego aktualnego Windows 10, więc rzadko jest to potrzebne.
 | Postój | Na służbie – licznik jazdy wstrzymany, odpoczynek się nie liczy. |
 | Przycisk **Przerwa** | Odpoczynek się liczy; kończy się automatycznie, gdy ciężarówka ruszy. |
 | **Manewry** | Ruch nie liczy się jako jazda; odpoczynek wstrzymany, nie odrzucony. |
-| Skok czasu (sen, prom, pociąg) | Liczony jako odpoczynek po 4 s oczekiwania. |
+| Skok czasu (sen, prom, pociąg) | Liczony jako odpoczynek. Prom/pociąg i własne „Pomiń” od razu; inne skoki czekają do 30 s, gdyby zdarzenie zlecenia oznaczyło je jako załadunek. |
 | Skok czasu przy ładowaniu/rozładunku | Ignorowany (wykrywany przez flagę załadowanego ładunku / zdarzenia zlecenia). |
 | Postój 15–44 min przerwany jazdą | Zachowany jako część 1 przerwy; późniejsza przerwa 30 min odnawia blok 4,5 h. |
 | Odpoczynek ≥ 3:00 przerwany jazdą | Zachowany jako część 1 dzielonego odpoczynku; kolejne 9:00 kończy dzień. |

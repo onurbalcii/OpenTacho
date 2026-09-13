@@ -296,5 +296,8 @@
   "ui.win.min": "Minimieren",
   "ui.win.max": "Maximieren",
   "ui.win.restore": "Wiederherstellen",
-  "ui.win.close": "Schließen"
+  "ui.win.close": "Schließen",
+  "log.ferry": "Fährüberfahrt → Ruhezeit",
+  "log.train": "Zugfahrt → Ruhezeit",
+  "log.jump_travel": "Zeitsprung Fähre/Zug +{d} → als Ruhezeit gezählt"
 }

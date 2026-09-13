@@ -296,5 +296,8 @@
   "ui.win.min": "Küçült",
   "ui.win.max": "Büyüt",
   "ui.win.restore": "Önceki boyut",
-  "ui.win.close": "Kapat"
+  "ui.win.close": "Kapat",
+  "log.ferry": "Feribot yolculuğu → dinlenme",
+  "log.train": "Tren yolculuğu → dinlenme",
+  "log.jump_travel": "Feribot/tren atlaması +{d} → dinlenme sayıldı"
 }

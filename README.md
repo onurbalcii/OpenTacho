@@ -77,7 +77,7 @@ Windows 11 and of any up-to-date Windows 10, so this is rarely needed.
 | Stopped | On duty – driving timer paused, rest not counting. |
 | **Break** button | Rest counts; ends automatically when the truck moves. |
 | **Yard move** | Movement is not counted as driving; rest is paused, not discarded. |
-| Time skip (sleep, ferry, train) | Counted as rest after a 4 s hold. |
+| Time skip (sleep, ferry, train) | Counted as rest. Ferry/train and the app's own skip are credited at once; other skips wait up to 30 s in case a job event marks them as loading. |
 | Time skip at loading/unloading | Ignored (detected via the cargo-loaded flag / job events). |
 | Stop of 15–44 min interrupted by driving | Kept as break part 1; a later 30 min break renews the 4.5 h block. |
 | Rest ≥ 3:00 interrupted by driving | Kept as part 1 of a split rest; 9:00 later completes the day. |

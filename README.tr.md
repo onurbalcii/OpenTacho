@@ -75,7 +75,7 @@ güncel Windows 10'da zaten vardır, bu yüzden nadiren gerekir.
 | Duruyor | Görevde – sürüş sayacı durur, dinlenme işlemez. |
 | **Mola** butonu | Dinlenme işler; araç hareket edince kendiliğinden biter. |
 | **İç hareket** | Hareket sürüşe sayılmaz; dinlenme bekler, silinmez. |
-| Zaman atlaması (uyku, feribot, tren) | 4 sn bekletildikten sonra dinlenme sayılır. |
+| Zaman atlaması (uyku, feribot, tren) | Dinlenme sayılır. Feribot/tren ve uygulamanın kendi Atla'sı anında; diğer atlamalar bir iş olayı yükleme olduğunu gösterebilir diye 30 sn'ye kadar bekletilir. |
 | Yükleme/boşaltmadaki atlama | Yok sayılır (yük yüklendi bayrağı / iş olaylarıyla tespit). |
 | 15–44 dk duruş sürüşle kesilirse | Mola 1. parçası olarak saklanır; sonraki 30 dk mola 4,5 saatlik bloğu yeniler. |
 | ≥ 3:00 dinlenme sürüşle kesilirse | Bölünmüş dinlenmenin 1. kısmı olarak saklanır; sonraki 9:00 günü tamamlar. |

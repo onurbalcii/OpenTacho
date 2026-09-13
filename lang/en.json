@@ -296,5 +296,8 @@
   "ui.win.min": "Minimize",
   "ui.win.max": "Maximize",
   "ui.win.restore": "Restore",
-  "ui.win.close": "Close"
+  "ui.win.close": "Close",
+  "log.ferry": "Ferry crossing → rest",
+  "log.train": "Train ride → rest",
+  "log.jump_travel": "Ferry/train time skip +{d} → counted as rest"
 }

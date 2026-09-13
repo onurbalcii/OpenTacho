@@ -296,5 +296,8 @@
   "ui.win.min": "Minimalizuj",
   "ui.win.max": "Maksymalizuj",
   "ui.win.restore": "Przywróć",
-  "ui.win.close": "Zamknij"
+  "ui.win.close": "Zamknij",
+  "log.ferry": "Przeprawa promem → odpoczynek",
+  "log.train": "Przejazd pociągiem → odpoczynek",
+  "log.jump_travel": "Skok czasu prom/pociąg +{d} → zaliczony jako odpoczynek"
 }

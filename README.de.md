@@ -76,7 +76,7 @@ aktuellen Windows 10 bereits enthalten, daher ist das selten nötig.
 | Stillstand | Im Dienst – Fahrzeit pausiert, Ruhezeit zählt nicht. |
 | Schaltfläche **Pause** | Ruhezeit zählt; endet automatisch, sobald der Lkw fährt. |
 | **Rangieren** | Bewegung zählt nicht als Fahren; Ruhezeit pausiert, wird nicht verworfen. |
-| Zeitsprung (Schlaf, Fähre, Zug) | Nach 4 s Wartezeit als Ruhezeit gezählt. |
+| Zeitsprung (Schlaf, Fähre, Zug) | Als Ruhezeit gezählt. Fähre/Zug und das eigene Überspringen sofort; andere Sprünge warten bis zu 30 s, falls ein Auftragsereignis sie als Beladung ausweist. |
 | Zeitsprung beim Be-/Entladen | Ignoriert (erkannt über Fracht-geladen-Flag / Auftragsereignisse). |
 | Halt von 15–44 min, durch Fahren unterbrochen | Als Pause Teil 1 behalten; eine spätere 30-min-Pause erneuert den 4,5-h-Block. |
 | Ruhezeit ≥ 3:00, durch Fahren unterbrochen | Als Teil 1 einer geteilten Ruhezeit behalten; 9:00 später schließt den Tag ab. |
