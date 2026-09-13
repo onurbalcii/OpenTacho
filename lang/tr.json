@@ -292,5 +292,9 @@
   "tour.mini.b": "<b>Ctrl + Num 0</b> (değiştirilebilir) ana pencereyi oyunun üstünde küçük, sürüklenebilir bir göstergeyle değiştirir: durum, kalan süre, üç mini çubuk, saat, bayraklar ve Mola / İç hareket / Atla düğmeleri. Aynı tuş geri getirir.",
   "tour.done.t": "Hazırsın",
   "tour.done.b": "Oyunu aç; eklenti kuruluysa bağlantı kendiliğinden gelir ve sayaçlar işlemeye başlar. İyi yolculuklar! Turu yeniden görmek için: Ayarlar → Uygulama → <b>Rehberi baştan başlat</b>.",
-  "ui.mini_opacity": "Arka plan yoğunluğu"
+  "ui.mini_opacity": "Arka plan yoğunluğu",
+  "ui.win.min": "Küçült",
+  "ui.win.max": "Büyüt",
+  "ui.win.restore": "Önceki boyut",
+  "ui.win.close": "Kapat"
 }

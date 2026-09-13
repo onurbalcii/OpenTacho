@@ -17,8 +17,7 @@
     --gold: #fdca4f; --gold-line: rgba(253,202,79,.78); --gold-soft: rgba(253,202,79,.16);
     --sky: #7cc0ef; --duty: #f3b979; --yard: #cdb0ff; --bad: #ff6b6b; --warn: #ffa94d;
     --text: #f6efdc; --muted: rgba(246,239,220,.72); --dim: rgba(246,239,220,.42);
-    --alpha: .8;   /* arka plan yoğunluğu; JS state.mini_opacity ile günceller */
-    --bg: linear-gradient(160deg, rgba(22,38,104,var(--alpha)), rgba(8,14,46,var(--alpha)));
+    --bg: linear-gradient(160deg, #162668, #080e2e);   /* opak; saydamlık pencere alfasıyla (Python) verilir */
     --line: rgba(255,255,255,.12); --track: rgba(3,8,30,.65); --act-bg: rgba(3,8,30,.35);
     --display: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", system-ui, sans-serif;
     --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
@@ -27,27 +26,27 @@
     --gold: #7aa7ff; --gold-line: rgba(122,167,255,.55); --gold-soft: rgba(122,167,255,.16);
     --sky: #6fd3c7; --duty: #f0b56b; --yard: #c9a2ff;
     --text: #e9edf5; --muted: rgba(233,237,245,.7); --dim: rgba(233,237,245,.4);
-    --bg: rgba(23,27,34,var(--alpha)); --line: rgba(255,255,255,.12); --track: #0b0e12; --act-bg: #0f1216;
+    --bg: #171b22; --line: rgba(255,255,255,.12); --track: #0b0e12; --act-bg: #0f1216;
   }
   html[data-theme="light"] {
     --gold: #2b5fd9; --gold-line: rgba(43,95,217,.45); --gold-soft: rgba(43,95,217,.12);
     --sky: #0f8f83; --duty: #c2680a; --yard: #7a48d6; --bad: #d63b3b; --warn: #d97a06;
     --text: #1b1f2a; --muted: rgba(27,31,42,.68); --dim: rgba(27,31,42,.38);
-    --bg: rgba(255,255,255,var(--alpha)); --line: #d9dee8; --track: #e3e7ef; --act-bg: #f7f8fb;
+    --bg: #ffffff; --line: #d9dee8; --track: #e3e7ef; --act-bg: #f7f8fb;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body { font-family: var(--sans); color: var(--text); background: transparent; overflow: hidden;
+  body { font-family: var(--sans); color: var(--text); background: transparent; overflow: hidden;   /* gövde saydam: önizlemede tuval renk almasın */
          -webkit-user-select: none; user-select: none; cursor: move; }
   svg { display: block; }
   .ic svg, .flag > svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .ic { display: block; }
 
   .strip { position: relative; height: 100%; display: flex; align-items: center; gap: 12px; padding: 0 10px 0 12px;
-           background: var(--bg); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+           background: var(--bg); border: 1px solid var(--line); border-radius: 0; overflow: hidden; }   /* köşeleri Windows 11 DWM yuvarlar */
   .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
   html[data-theme="vangogh"] .frame { display: block; }
-  .frame .fr { x: 4px; y: 4px; width: calc(100% - 8px); height: calc(100% - 8px); rx: 13px; ry: 13px; fill: none;
+  .frame .fr { x: 4px; y: 4px; width: calc(100% - 8px); height: calc(100% - 8px); rx: 5px; ry: 5px; fill: none;
                stroke: var(--gold-line); stroke-width: 1.4; filter: url(#wobble); opacity: .85; }
 
   /* durum halkası + ana değer */
@@ -187,7 +186,6 @@
     if (!st) return;
     last = st;
     document.documentElement.dataset.theme = st.theme || "vangogh";
-    if (st.mini_opacity != null) document.documentElement.style.setProperty("--alpha", st.mini_opacity);
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(); }
     const L = st.limits, sp = st.split || { part1: 0, need: L.rest, done: false }, rt = st.rest_target;
     const resting = st.status === "OFF_DUTY";
@@ -281,10 +279,10 @@
   const PREVIEW = H.get("preview") === "1";   // ayarlardaki küçük önizleme (iframe): API yok, örnek durum
   if (PREVIEW) {
     document.body.style.pointerEvents = "none";
-    document.documentElement.style.setProperty("--alpha", H.get("alpha") || ".7");
+    document.body.style.opacity = H.get("alpha") || ".7";   // gerçek pencerede aynı etkiyi LWA_ALPHA verir
     window.addEventListener("message", e => {
       const d = e.data || {};
-      if (d.alpha != null) document.documentElement.style.setProperty("--alpha", d.alpha);
+      if (d.alpha != null) document.body.style.opacity = d.alpha;
       if (d.theme) { document.documentElement.dataset.theme = d.theme; if (last) { last.theme = d.theme; render(last); } }
     });
   } else if (window.pywebview && window.pywebview.api) { api = window.pywebview.api; start(); }

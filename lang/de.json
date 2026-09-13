@@ -292,5 +292,9 @@
   "tour.mini.b": "<b>Strg + Num 0</b> (änderbar) tauscht das Hauptfenster gegen eine kleine verschiebbare Anzeige über dem Spiel: Zustand, Restzeit, drei Mini-Balken, Uhr, Markierungen sowie Schaltflächen für Pause / Rangieren / Überspringen. Dieselbe Taste bringt das Fenster zurück.",
   "tour.done.t": "Alles bereit",
   "tour.done.b": "Starte das Spiel; mit installiertem Plugin kommt die Verbindung von selbst und die Zähler beginnen zu laufen. Gute Fahrt! Um diese Tour erneut zu sehen: Einstellungen → App → <b>Einführung neu starten</b>.",
-  "ui.mini_opacity": "Hintergrund-Deckkraft"
+  "ui.mini_opacity": "Hintergrund-Deckkraft",
+  "ui.win.min": "Minimieren",
+  "ui.win.max": "Maximieren",
+  "ui.win.restore": "Wiederherstellen",
+  "ui.win.close": "Schließen"
 }

@@ -197,7 +197,7 @@ DEFAULT_STATE = {
     "onboarded": False,        # ilk açılış: dil seçimi + rehber turu tamamlandı mı
     "hotkey": {"mods": 2, "vk": 96, "name": "Ctrl + Num 0"},   # mini şerit kısayolu (MOD_CONTROL, VK_NUMPAD0)
     "mini_pos": None,          # mini şerit konumu {"x","y"}
-    "mini_opacity": 0.7,       # mini şerit arka plan yoğunluğu (0.3–1.0; pencere saydam, oyun altından görünür)
+    "mini_opacity": 0.7,       # mini şerit pencere opaklığı (0.3–1.0; LWA_ALPHA, oyun altından görünür)
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -627,20 +627,33 @@ def _hwnd_of(win):
     return None
 
 
-def make_glass(win):
-    """Pencerenin tüm istemci alanını DWM 'cam' katmanına çevirir: WebView2'nin saydam çizdiği pikseller
-    (köşeler, şeridin arkası) alttaki ekranı gösterir. pywebview'in transparent=True ayarını pekiştirir."""
+def set_window_alpha(win, opacity, rounded=True):
+    """Pencereyi katmanlı yapar ve bütününe alfa uygular (LWA_ALPHA): şeridin arkasındaki oyun görünür.
+    WebView2'nin saydam arka planı WinForms altında çalışmadığı için (köşeler beyaz kalıyor) bu yol kullanılır.
+    Windows 11'de köşeleri DWM yuvarlar; Windows 10'da köşeler düz kalır."""
     hwnd = _hwnd_of(win)
     if not hwnd:
         return
     try:
-        class MARGINS(ctypes.Structure):
-            _fields_ = [("l", ctypes.c_int), ("r", ctypes.c_int), ("t", ctypes.c_int), ("b", ctypes.c_int)]
-        dwm = ctypes.WinDLL("dwmapi")
-        dwm.DwmExtendFrameIntoClientArea.argtypes = [wt.HWND, ctypes.POINTER(MARGINS)]
-        dwm.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(MARGINS(-1, -1, -1, -1)))   # -1: tamamı cam
+        u = ctypes.WinDLL("user32", use_last_error=True)
+        u.GetWindowLongW.restype = ctypes.c_long
+        u.GetWindowLongW.argtypes = [wt.HWND, ctypes.c_int]
+        u.SetWindowLongW.restype = ctypes.c_long
+        u.SetWindowLongW.argtypes = [wt.HWND, ctypes.c_int, ctypes.c_long]
+        u.SetLayeredWindowAttributes.argtypes = [wt.HWND, wt.COLORREF, wt.BYTE, wt.DWORD]
+        GWL_EXSTYLE, WS_EX_LAYERED, LWA_ALPHA = -20, 0x00080000, 0x2
+        ex = u.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        if not ex & WS_EX_LAYERED:
+            u.SetWindowLongW(hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED)
+        a = int(round(max(0.3, min(1.0, float(opacity))) * 255))
+        u.SetLayeredWindowAttributes(hwnd, 0, a, LWA_ALPHA)
+        if rounded:
+            dwm = ctypes.WinDLL("dwmapi")
+            dwm.DwmSetWindowAttribute.argtypes = [wt.HWND, wt.DWORD, ctypes.c_void_p, wt.DWORD]
+            pref = ctypes.c_int(2)   # DWMWCP_ROUND (33 = DWMWA_WINDOW_CORNER_PREFERENCE; Win10 yok sayar)
+            dwm.DwmSetWindowAttribute(hwnd, 33, ctypes.byref(pref), 4)
     except Exception as e:
-        log_error("saydam pencere ayarlanamadı: %r" % e)
+        log_error("pencere alfası ayarlanamadı: %r" % e)
 
 
 def set_toolwindow(win):
@@ -658,6 +671,62 @@ def set_toolwindow(win):
         u.SetWindowLongW(hwnd, GWL_EXSTYLE, u.GetWindowLongW(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW)
     except Exception as e:
         log_error("araç penceresi stili ayarlanamadı: %r" % e)
+
+
+# ---------------- Ana pencere: çerçevesiz ama yerel davranış ----------------
+THEME_BORDER = {"vangogh": 0x8A4F3A, "dark": 0x3B302A, "light": 0xE2D6CF}   # DWM kenar rengi (COLORREF: 0x00BBGGRR)
+
+
+def _user32():
+    u = ctypes.WinDLL("user32", use_last_error=True)
+    u.GetWindowLongW.restype = ctypes.c_long
+    u.GetWindowLongW.argtypes = [wt.HWND, ctypes.c_int]
+    u.SetWindowLongW.restype = ctypes.c_long
+    u.SetWindowLongW.argtypes = [wt.HWND, ctypes.c_int, ctypes.c_long]
+    u.SetWindowPos.argtypes = [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wt.UINT]
+    u.PostMessageW.argtypes = [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM]
+    u.IsZoomed.argtypes = [wt.HWND]
+    return u
+
+
+def style_frameless_main(win, theme):
+    """Windows başlık çubuğu ve çerçevesi yok; Windows 11 köşeleri DWM yuvarlar, ince kenar rengi temaya uyar.
+    Taşıma/boyutlandırma/büyütme sayfadaki bar ve kenar tutamaçlarıyla yapılır (WS_THICKFRAME mavi bir üst
+    şerit çizdiği ve WinForms'un geri alma hesabını bozduğu için kullanılmaz)."""
+    hwnd = _hwnd_of(win)
+    if not hwnd:
+        return
+    try:
+        dwm = ctypes.WinDLL("dwmapi")
+        dwm.DwmSetWindowAttribute.argtypes = [wt.HWND, wt.DWORD, ctypes.c_void_p, wt.DWORD]
+        pref = ctypes.c_int(2)                                   # DWMWCP_ROUND
+        dwm.DwmSetWindowAttribute(hwnd, 33, ctypes.byref(pref), 4)
+        col = ctypes.c_uint32(THEME_BORDER.get(theme, THEME_BORDER["vangogh"]))
+        dwm.DwmSetWindowAttribute(hwnd, 34, ctypes.byref(col), 4)   # DWMWA_BORDER_COLOR
+    except Exception as e:
+        log_error("çerçevesiz pencere stili ayarlanamadı: %r" % e)
+
+
+def work_area(hwnd):
+    """Pencerenin bulunduğu ekranın çalışma alanı (görev çubuğu hariç)."""
+    class MONITORINFO(ctypes.Structure):
+        _fields_ = [("cbSize", wt.DWORD), ("rcMonitor", wt.RECT), ("rcWork", wt.RECT), ("dwFlags", wt.DWORD)]
+    u = _user32()
+    u.MonitorFromWindow.restype = wt.HMONITOR
+    u.MonitorFromWindow.argtypes = [wt.HWND, wt.DWORD]
+    u.GetMonitorInfoW.argtypes = [wt.HMONITOR, ctypes.POINTER(MONITORINFO)]
+    mi = MONITORINFO(); mi.cbSize = ctypes.sizeof(MONITORINFO)
+    u.GetMonitorInfoW(u.MonitorFromWindow(hwnd, 2), ctypes.byref(mi))
+    return mi.rcWork
+
+
+def window_syscommand(win, cmd):
+    """WM_SYSCOMMAND: 0xF010 taşı, 0xF020 küçült, 0xF030 büyüt, 0xF120 geri al, 0xF000+yön boyutlandır."""
+    hwnd = _hwnd_of(win)
+    if hwnd:
+        u = _user32()
+        u.ReleaseCapture()
+        u.PostMessageW(hwnd, 0x0112, cmd, 0)
 
 
 # ---------------- Pencere: her zaman üstte ----------------
@@ -716,6 +785,8 @@ class Tacho:
         self.mini_win = None
         self.mini_on = False
         self.mini_lock = threading.RLock()   # aç/kapat art arda gelirse
+        self.win_maxed = False               # ana pencere bizim "büyüt"ümüzle çalışma alanını dolduruyor mu
+        self.win_normal = None               # büyütme öncesi (x, y, w, h)
         self.exiting = False
         self.api = None
         self.hotkeys = None
@@ -1434,20 +1505,26 @@ class Tacho:
             if "x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H):
                 kw = {"x": int(pos["x"]), "y": int(pos["y"])}
             theme = self.s.get("theme") or DEFAULT_THEME
-            # saydam pencere: köşeler ve şeridin arkası oyunu gösterir (yoğunluk ayarı sayfada uygulanır)
+            bg = {"dark": "#171b22", "light": "#ffffff"}.get(theme, "#0b1230")
             win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#theme=" + theme, js_api=self.api,
                                         width=MINI_W, height=MINI_H,
                                         min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
-                                        transparent=True, **kw)
-            set_toolwindow(win)   # pencere var ama henüz gösterilmedi: görev çubuğunda yer almasın
+                                        background_color=bg, **kw)
+            # pencere var ama henüz gösterilmedi: görev çubuğunda yer almasın; saydamlık pencere alfasıyla
+            set_toolwindow(win)
+            set_window_alpha(win, self.s.get("mini_opacity", 0.7))
+            # WinForms boyutu çerçeve kaldırılmadan önce uygular (16 px eksik kalır); tam boyuta getir.
+            # Pencere create_window içinde eşzamanlı gösterildiği için "shown" olayına bağlanmak geç kalır.
+            try:
+                win.resize(MINI_W, MINI_H)
+            except Exception:
+                pass
 
             def shown():
-                # WinForms boyutu çerçeve kaldırılmadan önce uygular (16 px eksik kalır); tam boyuta getir
                 try:
                     win.resize(MINI_W, MINI_H)
                 except Exception:
                     pass
-                make_glass(win)
 
             def moved(x, y):
                 with self.lock:
@@ -1487,10 +1564,70 @@ class Tacho:
             self.s["sounds"] = bool(flag)
             self.dirty = True
 
+    def act_win(self, what):
+        """Başlık çubuğu düğmeleri: min | max | close."""
+        win = self.window
+        if win is None:
+            return
+        if what == "min":
+            window_syscommand(win, 0xF020)
+        elif what == "max":
+            hwnd = _hwnd_of(win)
+            if not hwnd:
+                return
+            u = _user32()
+            SWP = 0x0004 | 0x0010   # NOZORDER | NOACTIVATE
+            wr = wt.RECT(); u.GetWindowRect(hwnd, ctypes.byref(wr))
+            if not self.win_maxed:
+                self.win_normal = (wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top)
+                wa = work_area(hwnd)   # görev çubuğu hariç
+                u.SetWindowPos(hwnd, None, wa.left, wa.top, wa.right - wa.left, wa.bottom - wa.top, SWP)
+                self.win_maxed = True
+            else:
+                x, y, w, h = self.win_normal or (wr.left, wr.top, 460, 950)
+                u.SetWindowPos(hwnd, None, x, y, w, h, SWP)
+                self.win_maxed = False
+        elif what == "close":
+            # destroy() JS köprüsü iş parçacığından çağrılırsa köprü yanıtı beklerken takılıyor; WM_CLOSE gönder,
+            # kapanış UI iş parçacığında olur ve closing olayı durumu kaydeder
+            hwnd = _hwnd_of(win)
+            if hwnd:
+                _user32().PostMessageW(hwnd, 0x0010, 0, 0)
+
+    def act_win_resize(self, edge, dx, dy):
+        """Sayfadaki kenar tutamacı sürüklenirken: edge = n|s|e|w|ne|nw|se|sw; dx/dy = sürükleme başından fark.
+        edge None ise başlangıç dikdörtgeni kaydedilir."""
+        win = self.window
+        hwnd = _hwnd_of(win) if win is not None else None
+        if not hwnd or self.win_maxed:
+            return
+        u = _user32()
+        if edge is None:
+            r = wt.RECT(); u.GetWindowRect(hwnd, ctypes.byref(r))
+            self.win_drag0 = (r.left, r.top, r.right - r.left, r.bottom - r.top)
+            return
+        if not getattr(self, "win_drag0", None):
+            return
+        x, y, w, h = self.win_drag0
+        dx, dy = int(dx), int(dy)
+        MINW, MINH = 380, 600
+        if "e" in edge:
+            w = max(MINW, w + dx)
+        if "s" in edge:
+            h = max(MINH, h + dy)
+        if "w" in edge:
+            nw = max(MINW, w - dx); x += w - nw; w = nw
+        if "n" in edge:
+            nh = max(MINH, h - dy); y += h - nh; h = nh
+        u.SetWindowPos(hwnd, None, x, y, w, h, 0x0004 | 0x0010)   # NOZORDER | NOACTIVATE
+
     def act_set_mini_opacity(self, value):
         with self.lock:
             self.s["mini_opacity"] = max(0.3, min(1.0, float(value)))
             self.dirty = True
+        win = self.mini_win
+        if win is not None:
+            set_window_alpha(win, self.s["mini_opacity"], rounded=False)   # açıkken canlı uygula
 
     def act_set_onboarded(self, flag):
         with self.lock:
@@ -1632,6 +1769,7 @@ class Tacho:
             "onboarded": bool(s["onboarded"]),
             "hotkey": s["hotkey"],
             "mini": self.mini_on,
+            "win_max": self.win_maxed,
             "mini_opacity": s["mini_opacity"],
             "split": {"part1": s["rest_part1"] if split else 0, "need": need, "done": s["rest_daily_done"],
                       "enabled": bool(s["split_rest"]), "stored": s["rest_part1"] if s["rest_part1"] >= SPLIT_PART1 else 0},
@@ -1874,6 +2012,14 @@ class Api:
         self._t.act_set_mini_opacity(value)
         return self.get_state()
 
+    def win(self, what):
+        self._t.act_win(what)
+        return self.get_state()
+
+    def win_resize(self, edge, dx, dy):
+        self._t.act_win_resize(edge, dx, dy)
+        return True
+
     def set_sounds(self, flag):
         self._t.act_set_sounds(flag)
         return self.get_state()
@@ -1954,8 +2100,19 @@ def main():
         min_size=(380, 600),
         on_top=bool(tacho.s["on_top"]),
         background_color=THEME_BG.get(theme, "#0d1117"),
+        frameless=True,            # Windows başlık çubuğu yerine sayfadaki ince bar (temaya uyumlu)
+        easy_drag=False,           # pywebview çerçevesizde bunu varsayılan açar: her tıklama pencereyi sürüklerdi;
+                                   # taşıma yalnızca başlık çubuğundan (.pywebview-drag-region)
         **kw,
     )
+
+    def shown():
+        style_frameless_main(window, tacho.s.get("theme") or DEFAULT_THEME)
+        try:
+            window.resize(kw["width"], kw["height"])   # çerçeve kaldırılınca 16 px eksilen boyutu geri ver
+        except Exception:
+            pass
+    window.events.shown += shown
     tacho.window = window
     tacho.api = api
     tacho.hotkeys = HotkeyListener(tacho.act_toggle_mini)
@@ -1972,7 +2129,11 @@ def main():
 
     def on_closing():
         try:
-            remember(x=window.x, y=window.y, w=window.width, h=window.height)
+            if tacho.win_maxed and tacho.win_normal:
+                x, y, w, h = tacho.win_normal
+                remember(x=x, y=y, w=w, h=h)
+            else:
+                remember(x=window.x, y=window.y, w=window.width, h=window.height)
         except Exception as e:
             log_error("pencere konumu okunamadı: %r" % e)
         tacho.stop = True
@@ -1986,10 +2147,18 @@ def main():
             except Exception:
                 pass
 
+    def on_moved(x, y):
+        if not tacho.win_maxed:
+            remember(x=x, y=y)
+
+    def on_resized(w, h):
+        if not tacho.win_maxed:
+            remember(w=w, h=h)
+
     if hasattr(window.events, "moved"):
-        window.events.moved += lambda x, y: remember(x=x, y=y)
+        window.events.moved += on_moved
     if hasattr(window.events, "resized"):
-        window.events.resized += lambda w, h: remember(w=w, h=h)
+        window.events.resized += on_resized
     window.events.closing += on_closing
     threading.Thread(target=tacho.run, daemon=True).start()
     webview.start(icon=ICON_FILE if os.path.exists(ICON_FILE) else None)

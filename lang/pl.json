@@ -292,5 +292,9 @@
   "tour.mini.b": "<b>Ctrl + Num 0</b> (do zmiany) zamienia główne okno na mały przesuwalny wskaźnik nad grą: status, pozostały czas, trzy mini paski, zegar, znaczniki oraz przyciski Przerwa / Manewry / Pomiń. Ten sam klawisz przywraca okno.",
   "tour.done.t": "Wszystko gotowe",
   "tour.done.b": "Uruchom grę; z zainstalowaną wtyczką połączenie pojawi się samo, a liczniki zaczną działać. Szerokiej drogi! Aby zobaczyć samouczek ponownie: Ustawienia → Aplikacja → <b>Uruchom przewodnik od nowa</b>.",
-  "ui.mini_opacity": "Krycie tła"
+  "ui.mini_opacity": "Krycie tła",
+  "ui.win.min": "Minimalizuj",
+  "ui.win.max": "Maksymalizuj",
+  "ui.win.restore": "Przywróć",
+  "ui.win.close": "Zamknij"
 }

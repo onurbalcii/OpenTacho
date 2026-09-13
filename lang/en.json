@@ -292,5 +292,9 @@
   "tour.mini.b": "<b>Ctrl + Num 0</b> (changeable) swaps the main window for a small draggable gauge over the game: state, time left, three mini bars, clock, flags and Break / Yard move / Skip buttons. The same key brings the window back.",
   "tour.done.t": "You're all set",
   "tour.done.b": "Start the game; with the plugin installed the connection comes up by itself and the counters start working. Safe travels! To see this tour again: Settings → App → <b>Restart the guide</b>.",
-  "ui.mini_opacity": "Background opacity"
+  "ui.mini_opacity": "Background opacity",
+  "ui.win.min": "Minimize",
+  "ui.win.max": "Maximize",
+  "ui.win.restore": "Restore",
+  "ui.win.close": "Close"
 }
