@@ -1,6 +1,6 @@
 # OpenTacho
 
-*[Türkçe README](README.tr.md)*
+**English** · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md)
 
 A small, opinionated hours-of-service tachograph for **Euro Truck Simulator 2** and
 **American Truck Simulator** — one rule, no fuss, measured entirely in **game time**:
@@ -11,17 +11,25 @@ It reads the game clock, speed, truck and job data live from the game, shows wha
 left, and handles the awkward cases (ferries, sleeping, time zones, save reloads, trailer
 loading) so you can just drive.
 
-![OpenTacho](app/assets/logo_square.png)
-
 **Windows 10/11 only** — the telemetry plugin shares data through Windows shared memory and the app uses Windows APIs for the hotkey, sounds and the console command. Linux (native ETS2 / Proton) and macOS are not supported.
+
+<p align="center">
+  <img src="docs/screenshots/en/main.jpg" width="300" alt="Main window">
+  <img src="docs/screenshots/en/settings-rules.jpg" width="300" alt="Settings – Rules tab">
+</p>
+<p align="center">
+  <img src="docs/screenshots/en/mini.png" width="540" alt="Mini strip over the game">
+</p>
 
 ## Quick start (no Python needed)
 
-1. Download **`OpenTacho-win64.zip`** from the [Releases](../../releases) page and extract it anywhere.
+1. Download **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
+   (all versions: [Releases](https://github.com/onurbalcii/OpenTacho/releases)) and extract it anywhere.
 2. Copy **`plugin\scs-telemetry.dll`** into the game's plugin folder
    (`…\Euro Truck Simulator 2\bin\win_x64\plugins\` — create `plugins` if it does not exist;
    same for ATS). Start the game once and accept the SDK prompt.
-3. Run **`OpenTacho.exe`**. That's it — everything else is in the box.
+3. Run **`OpenTacho.exe`**. That's it — everything else is in the box. The first start asks for
+   your language and gives a short guided tour.
 
 For the ⏩ skip button, enable the developer console in the game: in
 `Documents\Euro Truck Simulator 2\config.cfg` set `g_console "1"` and `g_developer "1"`.
@@ -51,8 +59,8 @@ The button stays locked until both are on.
   small always-on-top gauge over the game — status icon, time left, next step, three mini bars,
   game clock, flags, delivery due time and Break / Yard move / Skip buttons — drag it anywhere.
 - **Themes**: Van Gogh (default, an algorithmically painted *Starry Night*-style backdrop with
-  glass panels), simple dark, simple light. **Languages**: Turkish, English — adding one is a
-  single JSON file.
+  glass panels), simple dark, simple light.
+- **Languages**: English, Turkish, German, Russian, Polish — adding one is a single JSON file.
 - **First run**: a language picker, then a short guided tour of the screen and the settings tabs
   (restart it any time from Settings → App).
 - Remembers window position/size, always-on-top option, event log, feedback button.
@@ -81,8 +89,9 @@ start fresh (or use *Reset counters* in the settings).
 OpenTacho.exe          the app (release build)            OpenTacho.py   the same app, run from source
 plugin/                scs-telemetry.dll → copy into the game's plugins folder
 app/                   window content: main.html, mini.html, assets/ (logo, background, sounds)
-lang/                  tr.json, en.json — one file per language
+lang/                  en, tr, de, ru, pl — one JSON file per language
 lib/                   SII_Decrypt.dll (time-zone feature)
+docs/screenshots/      the images used in these READMEs
 third_party/           licenses of the bundled components
 tools/                 build.bat (PyInstaller), asset generators
 ```
@@ -107,8 +116,9 @@ Settings → App → **Send feedback** opens a form in the app's language. Repla
 
 ## Adding a language
 
-Copy `lang/en.json` to `lang/<code>.json`, translate the values (keep the `{placeholders}`),
-set `"_name"`. The new language appears in Settings → App automatically.
+Copy `lang/en.json` to `lang/<code>.json`, translate the values (keep the `{placeholders}`
+and the `<b>`/`<code>` tags), set `"_name"`. The new language appears in Settings → App and in
+the first-run language picker automatically.
 
 ## Third-party components and licenses
 

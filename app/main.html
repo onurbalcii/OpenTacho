@@ -274,12 +274,12 @@
         font-family: var(--display); font-size: 13px; letter-spacing: .3px; min-width: 120px; justify-content: center; }
   .hk.capturing { border-style: dashed; color: var(--gold); animation: breathe 1s ease-in-out infinite; }
   /* uzun dillerde ayar paneli bir tık küçük */
-  html[lang="en"] .drawer { font-size: 13px; }
-  html[lang="en"] .drawer .tab { font-size: 11px; }
-  html[lang="en"] .drawer .seg button { font-size: 12.5px; padding: 8px 6px; }
-  html[lang="en"] .drawer .sm { font-size: 12.5px; padding: 7px 11px; }
-  html[lang="en"] .drawer .sec h4 { font-size: 14px; }
-  html[lang="en"] .drawer .hint { font-size: 11.5px; }
+  html:not([lang="tr"]) .drawer { font-size: 13px; }
+  html:not([lang="tr"]) .drawer .tab { font-size: 11px; }
+  html:not([lang="tr"]) .drawer .seg button { font-size: 12.5px; padding: 8px 6px; }
+  html:not([lang="tr"]) .drawer .sm { font-size: 12.5px; padding: 7px 11px; }
+  html:not([lang="tr"]) .drawer .sec h4 { font-size: 14px; }
+  html:not([lang="tr"]) .drawer .hint { font-size: 11.5px; }
   input:focus, select:focus { outline: none; border-color: var(--gold-line); box-shadow: 0 0 0 3px var(--gold-soft); }
   input[type=number] { width: 64px; }
   #mHH, #mMM { width: 56px; }

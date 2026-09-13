@@ -1,6 +1,6 @@
 # OpenTacho
 
-*[English README](README.md)*
+[English](README.md) · **Türkçe** · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md)
 
 **Euro Truck Simulator 2** ve **American Truck Simulator** için küçük, tek kurallı bir
 çalışma-süresi takografı. Her şey **oyun saatiyle** ölçülür:
@@ -11,17 +11,25 @@ Oyun saatini, hızı, kamyonu ve aktif işi oyundan canlı okur; kalan sürenizi
 durumları (feribot, uyku, saat dilimleri, kayıt geri yükleme, dorse yükleme) sizin yerinize
 halleder.
 
-![OpenTacho](app/assets/logo_square.png)
-
 **Yalnızca Windows 10/11** — telemetri eklentisi veriyi Windows paylaşımlı belleğiyle aktarır; kısayol, ses ve konsol komutu da Windows API'leri kullanır. Linux (yerel ETS2 / Proton) ve macOS desteklenmez.
+
+<p align="center">
+  <img src="docs/screenshots/tr/main.jpg" width="300" alt="Ana pencere">
+  <img src="docs/screenshots/tr/settings-rules.jpg" width="300" alt="Ayarlar – Kurallar sekmesi">
+</p>
+<p align="center">
+  <img src="docs/screenshots/tr/mini.png" width="540" alt="Oyunun üstünde mini şerit">
+</p>
 
 ## Hızlı başlangıç (Python gerekmez)
 
-1. [Releases](../../releases) sayfasından **`OpenTacho-win64.zip`** dosyasını indir, istediğin yere çıkar.
+1. **[OpenTacho-win64.zip](https://github.com/onurbalcii/OpenTacho/releases/latest/download/OpenTacho-win64.zip)**
+   dosyasını indir (tüm sürümler: [Releases](https://github.com/onurbalcii/OpenTacho/releases)), istediğin yere çıkar.
 2. **`plugin\scs-telemetry.dll`** dosyasını oyunun eklenti klasörüne kopyala
    (`…\Euro Truck Simulator 2\bin\win_x64\plugins\` — `plugins` yoksa oluştur; ATS için de aynı).
    Oyunu bir kez başlatıp SDK uyarısını onayla.
-3. **`OpenTacho.exe`**'yi çalıştır. Hepsi bu — başka bir şey indirmek gerekmez.
+3. **`OpenTacho.exe`**'yi çalıştır. Hepsi bu — başka bir şey indirmek gerekmez. İlk açılışta dilini
+   seçersin ve kısa bir rehber tur başlar.
 
 ⏩ Atla butonu için oyunda geliştirici konsolunu aç: `Documents\Euro Truck Simulator 2\config.cfg`
 içinde `g_console "1"` ve `g_developer "1"`. İkisi de açık olmadıkça buton kilitli kalır.
@@ -49,7 +57,8 @@ içinde `g_console "1"` ve `g_developer "1"`. İkisi de açık olmadıkça buton
   üstünde küçük, sürüklenebilir bir göstergeyle değiştirir — durum ikonu, kalan süre, sonraki adım,
   üç mini çubuk, oyun saati, bayraklar, teslimat süresi ve Mola / İç hareket / Atla düğmeleri.
 - **Temalar**: Van Gogh (varsayılan; *Yıldızlı Gece* esintili algoritmik arka plan + cam paneller),
-  sade koyu, sade açık. **Diller**: Türkçe, İngilizce — yeni dil tek JSON dosyası.
+  sade koyu, sade açık.
+- **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe — yeni dil tek JSON dosyası.
 - **İlk açılış**: dil seçimi, ardından ekranı ve ayar sekmelerini adım adım anlatan kısa bir rehber turu
   (Ayarlar → Uygulama'dan her zaman yeniden başlatılabilir).
 - Pencere konumu/boyutu hatırlanır, her zaman üstte seçeneği, olay listesi, geri bildirim butonu.
@@ -78,8 +87,9 @@ başlamak için silebilirsin (ya da Ayarlar → *Sayaçları sıfırla*).
 OpenTacho.exe          uygulama (sürüm paketi)             OpenTacho.py   aynı uygulama, kaynaktan
 plugin/                scs-telemetry.dll → oyunun plugins klasörüne kopyalanır
 app/                   pencere içeriği: main.html, mini.html, assets/ (logo, arka plan, sesler)
-lang/                  tr.json, en.json — dil başına bir dosya
+lang/                  tr, en, de, ru, pl — dil başına bir JSON dosyası
 lib/                   SII_Decrypt.dll (saat dilimi özelliği)
+docs/screenshots/      README'lerde kullanılan görüntüler
 third_party/           paketlenen bileşenlerin lisansları
 tools/                 build.bat (PyInstaller), görsel/ses üreticiler
 ```
@@ -103,8 +113,9 @@ yayınlamadan önce `OpenTacho.py` başındaki `FEEDBACK_URLS` bağlantıların�
 
 ## Yeni dil ekleme
 
-`lang/en.json` dosyasını `lang/<kod>.json` olarak kopyala, değerleri çevir (`{yer_tutucuları}`
-koru), `"_name"` alanını yaz. Yeni dil Ayarlar → Uygulama'da kendiliğinden görünür.
+`lang/en.json` dosyasını `lang/<kod>.json` olarak kopyala, değerleri çevir (`{yer_tutucuları}` ve
+`<b>`/`<code>` etiketlerini koru), `"_name"` alanını yaz. Yeni dil Ayarlar → Uygulama'da ve ilk açılış
+dil ekranında kendiliğinden görünür.
 
 ## Üçüncü taraf bileşenler ve lisanslar
 

@@ -182,7 +182,7 @@
   "ui.tz.applied": "Applied offset: {d}",
   "ui.sec.daily_rest": "Daily rest",
   "ui.seg.single": "Single (11 h)",
-  "ui.seg.split": "Split allowed (3 + 9)",
+  "ui.seg.split": "Split (3 + 9)",
   "ui.hint.split_on": "A rest of ≥ 3:00 interrupted by driving is kept as part 1; the next ≥ 9:00 completes the daily rest. A single 11 h block still works as usual.",
   "ui.hint.split_off": "Any rest interrupted by driving is discarded regardless of length; the daily rest is always an uninterrupted 11 h.",
   "ui.hint.split_locked": " A split rest is in progress (part 1 recorded); switching to single is locked until the day completes or part 1 is cancelled.",
