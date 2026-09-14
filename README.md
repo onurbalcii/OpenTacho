@@ -70,12 +70,13 @@ actually did.
   current one and the plan; single 11 h rest still works as usual. Can be locked to single.
 - **Job planner**: type the distance and delivery time from the offer — the app simulates breaks and daily/weekly rests with
   your current allowances and gives total time, arrival and margin (**fits / doesn't fit**); with a job accepted the route time
-  and delivery window come from the game and the result shows live in the job line. Average speed is learned from the odometer.
+  and delivery window come from the game and the result shows live in the job line. Average speed is learned from the odometer; a **ferry/train**
+  crossing on the route is estimated from the route time (counted as rest) and can be entered manually as well.
 - **Game profile**: the active profile is recognised (name · level · company in the top card); counters, history and events are
   kept **per profile** — switch profiles in the game and the app switches counters (`profiles\` folder).
 - **Strict mode** (optional): breaks and rests count only with the **engine off + parking brake on**; the main panel shows why nothing is counting.
-- **Violation severity**: every violation is labelled by the EU classes (minor / serious / very serious); optional **virtual fines** (€, approximate) on the day and week cards.
-- **Voice announcements**: short sentences with Windows' offline voice ("15 minutes of driving time left", "break complete"…), in all five languages.
+- **Violation severity**: every violation is labelled by the EU classes (minor / serious / very serious); optional **virtual fines** (€, approximate); a **Pay** button reflects them in the game — a copy of your newest save with the fine deducted from the bank account is written to a new save slot named "OpenTacho: fine paid", to be loaded from the game's Load menu.
+- **Voice announcements**: short sentences with Windows' offline voice ("15 minutes of driving time left", "break complete"…), in all five languages; separate volume sliders for the alert sound and the voice.
 - **Weekly rules** (optional, Settings → Rules; simple mode by default): weekly **56 h** / fortnightly **90 h**
   driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
   times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**

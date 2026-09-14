@@ -69,12 +69,13 @@ odpowiadają temu, co naprawdę zrobiłeś.
   bieżący i plan; jednoczęściowy odpoczynek 11 h nadal działa jak zwykle. Można zablokować na jednoczęściowy.
 - **Planer zlecenia**: wpisz dystans i czas dostawy z oferty — aplikacja symuluje przerwy oraz odpoczynki dzienne/tygodniowe z bieżącą
   pulą i podaje łączny czas, przyjazd i zapas (**zdążysz / nie zdążysz**); przy przyjętym zleceniu czas trasy i okno dostawy
-  pochodzą z gry, a wynik widać w wierszu zlecenia. Średnia prędkość uczy się z licznika.
+  pochodzą z gry, a wynik widać w wierszu zlecenia. Średnia prędkość uczy się z licznika; przeprawa **promem/pociągiem** na trasie jest
+  szacowana z czasu trasy (liczona jako odpoczynek) i można ją też wpisać ręcznie.
 - **Profil gry**: aktywny profil jest rozpoznawany (imię · poziom · firma w górnej karcie); liczniki, historia i zdarzenia są
   prowadzone **dla każdego profilu** — po zmianie profilu w grze aplikacja przełącza liczniki (folder `profiles\`).
 - **Tryb ścisły** (opcjonalny): przerwy i odpoczynki liczą się tylko przy **wyłączonym silniku + hamulcu postojowym**; główny panel pokazuje, dlaczego nic się nie liczy.
-- **Waga naruszeń**: każde naruszenie jest oznaczane według klas UE (drobne / poważne / bardzo poważne); opcjonalne **wirtualne mandaty** (€, w przybliżeniu) na kartach dni i tygodni.
-- **Komunikaty głosowe**: krótkie zdania głosem Windows offline („do końca czasu jazdy 15 minut”, „przerwa zakończona” …), w pięciu językach.
+- **Waga naruszeń**: każde naruszenie jest oznaczane według klas UE (drobne / poważne / bardzo poważne); opcjonalne **wirtualne mandaty** (€, w przybliżeniu); przycisk **Zapłać** przenosi je do gry — kopia najnowszego zapisu z mandatem odjętym od konta bankowego trafia do nowego slotu „OpenTacho: mandat zapłacony”, wczytywanego z menu Wczytaj.
+- **Komunikaty głosowe**: krótkie zdania głosem Windows offline („do końca czasu jazdy 15 minut”, „przerwa zakończona” …), w pięciu językach; osobne suwaki głośności dla sygnału i komunikatów.
 - **Zasady tygodniowe** (opcjonalne, Ustawienia → Zasady; domyślnie tryb prosty): **56 h** tygodniowo / **90 h** w dwóch
   tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
   w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),

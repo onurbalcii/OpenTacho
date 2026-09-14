@@ -69,12 +69,13 @@ gerçekten yaptığınla birebir örtüşür.
   (tamamlanan bloklar ✓, şu anki, plan). Tek parça 11 saat aynen çalışır; tek parçaya kilitlenebilir.
 - **Yük planlayıcı**: ilan ekranındaki mesafeyi ve teslim süresini gir — mevcut sürüş haklarınla molaları ve günlük/haftalık
   dinlenmeleri simüle eder, toplam süreyi, varış saatini ve payı verir (**yetişir / yetişmez**); yük alındığında rota süresi ve
-  teslim penceresi oyundan okunur, sonuç iş satırında canlı görünür. Ortalama hız odometreden öğrenilir.
+  teslim penceresi oyundan okunur, sonuç iş satırında canlı görünür. Ortalama hız odometreden öğrenilir; rotadaki **feribot/tren** geçişi
+  rota süresinden tahmin edilir (dinlenme sayılır), elle planda ayrıca girilebilir.
 - **Oyun profili**: aktif profil tanınır (ad · seviye · şirket üst kartta); sayaçlar, geçmiş ve olaylar **profil başına** tutulur —
   başka profile geçince o profilin sayaçları gelir (`profiles\` klasörü).
 - **Sıkı mod** (isteğe bağlı): mola ve dinlenme yalnızca **motor kapalı + el freni çekili** iken sayılır; sayılmıyorsa ana panelde nedeni görünür.
-- **İhlal ciddiyeti**: her ihlal AB sınıflarıyla etiketlenir (hafif / ciddi / çok ciddi); isteğe bağlı **sanal ceza** tutarları (€, yaklaşık) gün ve hafta kartlarında.
-- **Sesli anons**: Windows'un çevrimdışı konuşma sesiyle kısa cümleler ("sürüş süresinin bitmesine 15 dakika kaldı", "mola tamamlandı"…), 5 dilde.
+- **İhlal ciddiyeti**: her ihlal AB sınıflarıyla etiketlenir (hafif / ciddi / çok ciddi); isteğe bağlı **sanal ceza** tutarları (€, yaklaşık); **Öde** düğmesi cezayı oyuna yansıtır — en yeni kaydın kopyası, banka hesabından düşülmüş olarak "OpenTacho: ceza ödendi" adlı yeni bir kayıt slotuna yazılır, oyunda Yükle'den seçilir.
+- **Sesli anons**: Windows'un çevrimdışı konuşma sesiyle kısa cümleler ("sürüş süresinin bitmesine 15 dakika kaldı", "mola tamamlandı"…), 5 dilde; ikaz sesi ve anons için ayrı ses seviyeleri.
 - **Haftalık kurallar** (isteğe bağlı, Ayarlar → Kurallar; varsayılan basit mod): haftalık **56 sa** / iki haftalık **90 sa**
   sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
   düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /

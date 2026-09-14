@@ -163,13 +163,13 @@
   .pin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .pin label { display: grid; gap: 5px; font-size: 11.5px; color: var(--dim); letter-spacing: .2px; }
   .pfield { position: relative; }
-  .pfield input, .pfield input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px 40px 10px 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
+  .pfield input, .pfield input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px 34px 10px 11px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
                   font: inherit; font-size: 17px; font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .3px; line-height: 1.2;
                   -moz-appearance: textfield; appearance: textfield; transition: border-color .2s, box-shadow .2s; }
   .pfield input::-webkit-outer-spin-button, .pfield input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .pfield input::placeholder { color: var(--dim); opacity: .55; font-weight: 500; }
   .pfield input:focus { outline: none; border-color: var(--gold-line); box-shadow: 0 0 0 3px var(--gold-soft); }
-  .pfield em { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 12px; color: var(--dim); font-family: var(--sans); pointer-events: none; }
+  .pfield em { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 12px; color: var(--dim); font-family: var(--sans); pointer-events: none; }
   .pcard { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: rgba(255,255,255,.035); display: grid; gap: 6px; }
   .pcard.now { border-color: var(--gold-line); }
   .pcard .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -578,6 +578,17 @@
   .hviol .sev.minor { color: var(--warn); } .hviol .sev.serious { color: #ff8a5b; } .hviol .sev.vserious { color: var(--bad); }
   .hviol .fine { margin-left: auto; font-family: var(--display); color: var(--muted); white-space: nowrap; }
   .hstats .fine b { color: var(--warn); }
+  .hpay { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .hweek.fine { border-color: rgba(255,169,77,.45); }
+  .hweek.fine .hd span b { color: var(--warn); font-family: var(--display); }
+  .hpay b { color: var(--warn); font-family: var(--display); }
+  .hpay .paid { color: var(--sky); }
+  .hpay .sm { padding: 5px 11px; font-size: 12px; margin-left: auto; }
+  .hpay .sm.primary { color: var(--text); }
+  .hnote { font-size: 11.5px; color: var(--muted); line-height: 1.45; padding: 6px 8px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--line-soft); }
+  .hnote.bad { color: var(--bad); }
+  .pin.three { grid-template-columns: 1fr 1fr 1fr; }
+  .pcard .steps span.ferry { border-color: rgba(124,192,239,.45); color: var(--sky); }
   .hempty { color: var(--dim); font-size: 12.5px; text-align: center; padding: 20px 6px; }
   /* kenar tutamaçları: Windows çerçevesi olmadığı için boyutlandırma buradan (sürükle → SetWindowPos) */
   .rz { position: fixed; z-index: 70; }
@@ -906,9 +917,11 @@
     <div class="sec">
       <h4><i class="ic" data-ic="bell"></i><span data-i18n="ui.sec.sounds">Sesli uyarı</span></h4>
       <label class="check"><input type="checkbox" id="sounds"> <span id="soundsText"></span></label>
+      <div class="row range"><label for="soundVol" data-i18n="ui.sound_volume">İkaz sesi seviyesi</label><input type="range" id="soundVol" min="0" max="100" step="5"><b id="soundVolVal">100%</b></div>
       <div class="row"><button class="sm" id="soundTest" data-i18n="ui.sound_test">Sesi dene</button></div>
       <div class="hint" data-i18n-html="ui.hint.sounds"></div>
       <label class="check"><input type="checkbox" id="voice"> <span data-i18n="ui.voice">Sesli anons (konuşma)</span></label>
+      <div class="row range"><label for="voiceVol" data-i18n="ui.voice_volume">Anons sesi seviyesi</label><input type="range" id="voiceVol" min="0" max="100" step="5"><b id="voiceVolVal">100%</b></div>
       <div class="row"><button class="sm" id="voiceTest" data-i18n="ui.voice_test">Anonsu dene</button><span class="kv" id="voiceInfo"></span></div>
       <div class="hint" data-i18n-html="ui.hint.voice"></div>
     </div>
@@ -957,9 +970,10 @@
 <aside class="drawer plan" id="planDrawer">
   <h3><span data-i18n="ui.plan.title">Yük planlayıcı</span> <button id="closePlan" title="✕">✕</button></h3>
   <div class="hint" data-i18n-html="ui.hint.plan"></div>
-  <div class="pin">
+  <div class="pin three">
     <label><span data-i18n="ui.plan.km">Mesafe</span><div class="pfield"><input type="number" id="planKm" min="0" step="1" inputmode="numeric" placeholder="1250" autocomplete="off"><em>km</em></div></label>
     <label><span data-i18n="ui.plan.hours">Teslim süresi</span><div class="pfield"><input type="number" id="planHours" min="0" step="0.5" inputmode="decimal" placeholder="28" autocomplete="off"><em data-i18n="ui.plan.hours_unit">sa</em></div></label>
+    <label><span data-i18n="ui.plan.ferry">Feribot / tren</span><div class="pfield"><input type="number" id="planFerry" min="0" step="0.5" inputmode="decimal" placeholder="0" autocomplete="off"><em data-i18n="ui.plan.hours_unit">sa</em></div></label>
   </div>
   <div class="psrc" id="planSrc"></div>
   <div id="planOut" class="hlist"></div>
@@ -1289,6 +1303,9 @@
     if (document.activeElement !== $("miniOpacity") && st.mini_opacity != null) { $("miniOpacity").value = Math.round(st.mini_opacity * 100); $("miniOpacityVal").textContent = Math.round(st.mini_opacity * 100) + "%"; }
     $("autoBreak").checked = !!st.auto_break;
     $("strictRest").checked = !!st.strict_rest; $("fines").checked = !!st.fines; $("voice").checked = !!st.voice;
+    if (document.activeElement !== $("soundVol")) { $("soundVol").value = st.sound_volume ?? 100; } $("soundVolVal").textContent = `${$("soundVol").value}%`;
+    if (document.activeElement !== $("voiceVol")) { $("voiceVol").value = st.voice_volume ?? 100; } $("voiceVolVal").textContent = `${$("voiceVol").value}%`;
+    voiceVolume = ($("voiceVol").value || 100) / 100;
     if (st.voice_ev) {
       if (voiceSeq === null) voiceSeq = st.voice_ev.seq;
       else if (st.voice_ev.seq !== voiceSeq) { voiceSeq = st.voice_ev.seq; speak(st.voice_ev.text); }
@@ -1381,6 +1398,11 @@
   $("fines").addEventListener("change", () => call("set_fines", $("fines").checked));
   $("voice").addEventListener("change", () => call("set_voice", $("voice").checked));
   $("voiceTest").addEventListener("click", async () => { let t = ""; try { t = await api.voice_sample(); } catch (e) {} speak(t || "OpenTacho"); });
+  $("soundVol").addEventListener("input", () => { $("soundVolVal").textContent = `${$("soundVol").value}%`; });
+  $("soundVol").addEventListener("change", () => call("set_volume", "sound", $("soundVol").value));
+  $("voiceVol").addEventListener("input", () => { $("voiceVolVal").textContent = `${$("voiceVol").value}%`; voiceVolume = $("voiceVol").value / 100; });
+  $("voiceVol").addEventListener("change", () => call("set_volume", "voice", $("voiceVol").value));
+  let voiceVolume = 1;
 
   // ---- sesli anons: Windows'un yerleşik konuşma sesleri (çevrimdışı); dile uygun ses varsa onu seçer ----
   let voiceSeq = null;
@@ -1397,7 +1419,7 @@
       const v = pickVoice(sLang);
       u.lang = VOICE_LANG[sLang] || "en-US";
       if (v) u.voice = v;
-      u.rate = 1; u.pitch = 1;
+      u.rate = 1; u.pitch = 1; u.volume = voiceVolume;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     } catch (e) { console.error("voice", e); }
   }
@@ -1436,11 +1458,34 @@
     return `<div class="hday${today ? " today" : ""}"><div class="hd"><b>${title}${note}</b><span>${range}</span></div><div class="hstats">${stats}</div>` +
            (segs ? `<div class="hseg">${segs}</div>` : "") + (vl ? `<div class="hviol">${vl}</div>` : "") + `</div>`;
   }
+  let payNote = null;   // {ws, html, bad}
+  function payRow(w, h) {
+    const due = Math.max(0, (w.fines || 0) - (w.paid || 0));
+    const note = payNote && payNote.ws === w.start ? `<div class="hnote${payNote.bad ? " bad" : ""}">${payNote.html}</div>` : "";
+    if (due <= 0) return `<div class="hpay"><span class="paid">✓ ${T("fine.paid_all", { a: w.paid || 0 })}</span></div>${note}`;
+    const btn = h.pay_ready ? `<button class="sm primary" data-pay="${w.start}">${T("fine.pay", { a: due })}</button>` : `<span>${T("fine.no_save")}</span>`;
+    return `<div class="hpay"><span>${T("fine.due")} <b>${due} €</b>${w.paid ? ` · ${T("fine.paid_part", { a: w.paid })}` : ""}</span>${btn}</div>${note}`;
+  }
+  async function payFine(ws) {
+    let r = null;
+    try { r = await api.pay_fine(ws); } catch (e) { r = { ok: false, err: String(e) }; }
+    if (r && r.ok) payNote = { ws, bad: false, html: T("fine.done", { a: r.amount, b: r.before.toLocaleString(), c: r.after.toLocaleString(), slot: r.src_slot, age: r.age_min == null ? "?" : r.age_min }) };
+    else payNote = { ws, bad: true, html: T("fine.err." + ((r && r.err) || "x")) === "fine.err." + ((r && r.err) || "x") ? T("fine.err.x", { e: (r && r.err) || "?" }) : T("fine.err." + r.err) };
+    renderHist();
+  }
+  $("histList").addEventListener("click", e => { const b = e.target.closest("[data-pay]"); if (b) { b.disabled = true; payFine(parseInt(b.dataset.pay, 10)); } });
   async function renderHist() {
     if (!api) return;
     let h; try { h = await api.get_history(); } catch (e) { return; }
     const out = [];
     const td = h.today || {};
+    if (h.fines_on && (h.fine_weeks || []).length) {
+      out.push(`<div class="hsub">${T("fine.title")}</div>`);
+      h.fine_weeks.forEach(w => {
+        const title = w.ago === 0 ? T("ui.hist.week_this") : w.ago === 1 ? T("ui.hist.week_last") : w.ago == null ? "" : T("ui.hist.week_ago", { n: w.ago });
+        out.push(`<div class="hweek fine"><div class="hd"><b>${title}</b><span>${T("ui.hist.fines")} <b>≈ ${w.fines} €</b></span></div>${payRow(w, h)}</div>`);
+      });
+    }
     const weeks = h.weeks || [];
     if (weeks.length) {
       out.push(`<div class="hsub">${T("ui.hist.weeks")}</div>`);
@@ -1454,7 +1499,8 @@
                  `<div class="track"><div class="fill ${w.drive > w.limit ? "bad" : ""}" style="width:${Math.min(100, w.drive / w.limit * 100)}%"></div></div>` +
                  `<div class="hstats"><span><i class="ic">${ICONS.wheel}</i><b>${hm(w.drive)}</b> / ${hm(w.limit)}</span>` +
                  (w.violations ? `<span class="bad"><i class="ic">${ICONS.bell}</i><b>${w.violations}</b> ${T("ui.hist.viol")}</span>` : `<span class="ok"><i class="ic">${ICONS.check}</i>${T("ui.hist.ok")}</span>`) +
-                 `<span>${wr}</span>${extra.map(x => `<span>${x}</span>`).join("")}${w.fines ? `<span class="fine">${T("ui.hist.fines")} <b>≈ ${w.fines} €</b></span>` : ""}</div></div>`);
+                 `<span>${wr}</span>${extra.map(x => `<span>${x}</span>`).join("")}${w.fines ? `<span class="fine">${T("ui.hist.fines")} <b>≈ ${w.fines} €</b></span>` : ""}</div>` +
+                 `</div>`);
       });
       out.push(`<div class="hsub">${T("ui.hist.days")}</div>`);
     }
@@ -1474,6 +1520,7 @@
     if (p.breaks) steps.push(`<span>${T("plan.breaks", { n: p.breaks })}</span>`);
     if (p.rests) steps.push(`<span>${T("plan.rests", { n: p.rests })}</span>`);
     if (p.wrests) steps.push(`<span>${T("plan.wrests", { n: p.wrests })}</span>`);
+    if (p.ferry) steps.push(`<span class="ferry">${T(cur && cur.ferry_est ? "plan.ferry_est" : "plan.ferry", { d: hm(p.ferry) })}</span>`);
     let verdict = "";
     if (p.margin != null) {
       const m = p.margin, cls = m < 0 ? "bad" : m < 30 ? "warn" : "ok";
@@ -1487,8 +1534,8 @@
     planBusy = true;
     let r = null;
     try {
-      const km = parseFloat($("planKm").value), hrs = parseFloat($("planHours").value);
-      r = await api.plan(isFinite(km) && km > 0 ? km : null, isFinite(hrs) && hrs > 0 ? hrs : null);
+      const km = parseFloat($("planKm").value), hrs = parseFloat($("planHours").value), fe = parseFloat($("planFerry").value);
+      r = await api.plan(isFinite(km) && km > 0 ? km : null, isFinite(hrs) && hrs > 0 ? hrs : null, isFinite(fe) && fe > 0 ? fe : null);
     } catch (e) { r = null; }
     planBusy = false;
     if (!r) return;
@@ -1502,7 +1549,7 @@
     $("planSrc").innerHTML = `<i class="ic">${ICONS.route}</i>${src}${r.deadline != null ? ` · ${T("plan.deadline", { d: hm(r.deadline) })}` : ""}`;
     const out = [planCard(r.now, T("plan.now"), r, r.deadline)];
     if (r.rest_first) out.push(planCard(r.rest_first, T("plan.rest_first"), null, r.deadline));
-    out.push(`<div class="pnote">${spd}${r.deadline == null ? "<br>" + T("plan.no_deadline") : ""}</div>`);
+    out.push(`<div class="pnote">${spd}${r.deadline == null ? "<br>" + T("plan.no_deadline") : ""}${r.ferry_est ? "<br>" + T("plan.ferry_note") : ""}</div>`);
     $("planOut").innerHTML = out.join("");
   }
   function openPlan() { closeDrawer(); closeHist(); document.body.classList.add("plan-open"); renderPlan(); clearInterval(planTimer); planTimer = setInterval(renderPlan, 3000); }
@@ -1510,7 +1557,7 @@
   $("quickPlan").addEventListener("click", openPlan);
   $("closePlan").addEventListener("click", closePlan);
   $("scrim").addEventListener("click", closePlan);
-  ["planKm", "planHours"].forEach(id => $(id).addEventListener("input", () => { clearTimeout(planTimer._t); planTimer._t = setTimeout(renderPlan, 250); }));
+  ["planKm", "planHours", "planFerry"].forEach(id => $(id).addEventListener("input", () => { clearTimeout(planTimer._t); planTimer._t = setTimeout(renderPlan, 250); }));
   $("closeHist").addEventListener("click", closeHist);
   $("scrim").addEventListener("click", closeHist);
   $("tzMinus").addEventListener("click", () => call("tz_adjust", ((last && last.tz && last.tz.adjust) || 0) - 60));
@@ -1839,8 +1886,8 @@
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         full_rest: m.status !== "DRIVING" ? { available: true, busy: false, minutes: 661, label: "Tam dinlenme (11:00)" } : { available: false },
         profile: { name: "Onur Balcı", company: "Anka Lojistik", level: 12, xp: 18501, key: "1:x", active: true },
-        strict_rest: !!m.strict, fines: !!m.fines, voice: !!m.voice, voice_ev: { seq: m.vseq || 0, text: "" },
-        plan: { available: true, src: "route", drive: 250, deadline: 400, avg_kmh: 70, learned: false, eta_local: m.abs + 295, now: { total: 295, drive: 250, breaks: 1, rests: 0, wrests: 0, margin: 105 } },
+        strict_rest: !!m.strict, fines: !!m.fines, voice: !!m.voice, voice_ev: { seq: m.vseq || 0, text: "" }, sound_volume: m.svol ?? 100, voice_volume: m.vvol ?? 100,
+        plan: { available: true, src: "route", drive: 250, deadline: 400, ferry: 90, ferry_est: true, avg_kmh: 70, learned: false, eta_local: m.abs + 385, now: { total: 385, drive: 250, breaks: 0, rests: 0, wrests: 0, ferry: 90, margin: 15 } },
         red_rest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 541, label: "Kısa dinlenme (9:00)", n: 1, max: 3 } : { available: false },
         wrest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 2701, label: "Haftalık dinlenme (45:00)" } : { available: false },
         weekly: m.weekly ? { on: true, drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
@@ -1862,13 +1909,14 @@
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
       set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_weekly_rules: async f => { m.weekly = f; return view(); }, set_auto_ext: async () => view(), set_auto_red: async () => view(), red_rest: async () => view(),
+      set_volume: async (w, v) => { if (w === "voice") m.vvol = +v; else m.svol = +v; return view(); }, pay_fine: async ws => { m.paid = (m.paid || 0) + 150; return { ok: true, amount: 150, before: 89816, after: 89666, src_slot: "autosave", age_min: 3, slot: "opentacho_fine" }; },
       set_strict_rest: async f => { m.strict = f; return view(); }, set_fines: async f => { m.fines = f; return view(); }, set_voice: async f => { m.voice = f; return view(); }, voice_sample: async () => "Sürüş süresinin bitmesine on beş dakika kaldı.",
       plan: async (km, hrs) => { const drive = km ? km / 70 * 60 : 250; const dl = hrs ? hrs * 60 : (km ? null : 400); const sim = (rf) => { let t = rf ? 660 : 0, need = drive, block = 270 - m.drive_block, daily = 540 - m.drive_daily, b = 0, r = rf ? 1 : 0; if (rf) { block = 270; daily = 540; } while (need > 0) { const lim = Math.min(block, daily); if (lim <= 0) { if (daily <= 0) { t += 660; r++; block = 270; daily = 540; } else { t += 45; b++; block = 270; } continue; } const d = Math.min(need, lim); need -= d; t += d; block -= d; daily -= d; } return { total: t, drive, breaks: b, rests: r, wrests: 0, margin: dl == null ? null : dl - t }; };
         const now = sim(false); const o = { available: true, src: km ? "manual" : "route", drive, deadline: dl, avg_kmh: 70, learned: false, eta_local: m.abs + now.total, now }; if (now.rests || (now.margin != null && now.margin < 0)) o.rest_first = sim(true); return o; }, weekly_rest: async () => view(), set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
       set_custom_bg: async d => { m.cbgdata = d; m.cbg = true; m.cbgrev = (m.cbgrev || 1) + 1; return { ok: true }; }, clear_custom_bg: async () => { m.cbg = false; m.cbgdata = ""; m.cbgrev = (m.cbgrev || 1) + 1; return view(); }, get_custom_bg: async () => m.cbgdata || "", open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
       set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, full_rest: async () => view(),
-      get_history: async () => ({ weeks: m.weekly ? [{ start: 15 * 1440, drive: 2058, days: 4, violations: 1, wrest: null, ext_used: 1, red_used: 0, ago: 0, limit: 3360 }, { start: 8 * 1440, drive: 3190, days: 6, violations: 0, wrest: "regular", ext_used: 0, red_used: 1, ago: 1, limit: 3360 }] : [], today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
-        days: [{ drive: 512, rest: 705, rests: 2, start: 400, end: 2100, saved: "2026-09-13 21:10", reason: "daily", segments: [{ t: "drive", m: 268, a: 400 }, { t: "rest", m: 45, k: "break", a: 668 }, { t: "drive", m: 244, a: 713 }, { t: "rest", m: 660, k: "daily", a: 957 }], violations: [{ t: 680, kind: "block", over: 12, sev: "minor", fine: m.fines ? 150 : undefined }], fines: m.fines ? 150 : null }] }), toggle_mini: async () => view(), set_hotkey: async () => view(),
+      get_history: async () => ({ weeks: m.weekly ? [{ start: 15 * 1440, drive: 2058, days: 4, violations: 1, wrest: null, ext_used: 1, red_used: 0, ago: 0, limit: 3360, fines: m.fines ? 150 : 0, paid: m.paid || 0 }, { start: 8 * 1440, drive: 3190, days: 6, violations: 0, wrest: "regular", ext_used: 0, red_used: 1, ago: 1, limit: 3360 }] : [], today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
+        days: [{ drive: 512, rest: 705, rests: 2, start: 400, end: 2100, saved: "2026-09-13 21:10", reason: "daily", segments: [{ t: "drive", m: 268, a: 400 }, { t: "rest", m: 45, k: "break", a: 668 }, { t: "drive", m: 244, a: 713 }, { t: "rest", m: 660, k: "daily", a: 957 }], violations: [{ t: 680, kind: "block", over: 12, sev: "minor", fine: m.fines ? 150 : undefined }], fines: m.fines ? 150 : null }], fines_on: !!m.fines, fine_weeks: m.fines ? [{ start: 0, ago: 1, fines: 150, paid: m.paid || 0 }] : [], pay_ready: true }), toggle_mini: async () => view(), set_hotkey: async () => view(),
       set_auto_break: async () => view(), set_offjob_rest: async () => view(), set_split_rest: async () => view(), clear_part1: async () => view(), tz_adjust: async () => view(), set_time_frame: async () => view(), skip_rest: async () => { for (let i = 0; i < 46 - m.rest; i++) tickMock(); return view(); },
     };
     start();

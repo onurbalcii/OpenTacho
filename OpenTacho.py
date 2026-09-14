@@ -19,6 +19,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import struct
 import sys
 import tempfile
@@ -52,6 +53,8 @@ PLAN_DEFAULT_KMH = 70.0   # ortalama hız öğrenilene kadar planlayıcının va
 # İhlal ciddiyeti (AB 2016/403 Ek III sınıfları, aşım dk): (hafif üst sınırı, ciddi üst sınırı); üstü çok ciddi
 SEVERITY = {"block": (30, 90), "daily": (60, 120), "weekly": (240, 840), "fortnight": (600, 1350), "span": (60, 150), "wrest": (180, 540)}
 FINES = {"minor": 150, "serious": 450, "vserious": 1200}   # sanal ceza (€, yaklaşık AB ortalaması; yalnızca oyun içi keyif)
+FINE_SLOT = "opentacho_fine"   # ceza ödemesi: en yeni kaydın kopyası bu slota (para düşülmüş olarak) yazılır; oyuncu oyundan yükler
+FERRY_MIN_EST = 30             # rota süresi, sürüş tahminini bu kadar dk aşarsa fark feribot/tren sayılır
 
 
 def severity(kind, over):
@@ -277,6 +280,9 @@ DEFAULT_STATE = {
     "strict_rest": False,      # sıkı mod: mola/dinlenme yalnızca motor kapalı + el freni çekiliyken sayılır
     "fines": False,            # geçmişte sanal ceza tutarları (€) gösterilsin
     "voice": False,            # sesli anons (Windows konuşma sesi; sayfa okur)
+    "sound_volume": 100,       # ikaz sesi seviyesi (%)
+    "voice_volume": 100,       # anons sesi seviyesi (%)
+    "fines_paid": {},          # ödenen sanal cezalar: {"<hafta başı>": €}
     "spd_km": 0.0, "spd_min": 0.0,   # ortalama hız öğrenme: sürüşte gidilen km / dakika (yumuşatılmış toplamlar)
     "log": [],
 }
@@ -1384,15 +1390,23 @@ class Tacho:
             self._annotate(rec)
             days.append(rec)
         weeks = self.week_summaries()
+        fine_weeks = []
         if self.s.get("fines"):
             by_week = {}
             for rec in days + [today]:
-                if rec.get("start") is not None:
+                if rec.get("start") is not None and rec.get("fines"):
                     ws = self.week_start_of(rec["start"])
-                    by_week[ws] = by_week.get(ws, 0) + (rec.get("fines") or 0)
+                    by_week[ws] = by_week.get(ws, 0) + rec["fines"]
+            fp = self.s.get("fines_paid") or {}
             for w in weeks:
                 w["fines"] = by_week.get(w["start"], 0)
-        return {"today": today, "days": days, "weeks": weeks, "fines_on": bool(self.s.get("fines"))}
+                w["paid"] = int(fp.get(str(w["start"]), 0))
+            local = self.local_abs()
+            cur = self.week_start_of(local) if local is not None else None
+            for ws in sorted(by_week, reverse=True):   # haftalık kurallar kapalıyken de: ceza olan haftalar
+                fine_weeks.append({"start": ws, "ago": None if cur is None else (cur - ws) // WEEK_MIN, "fines": by_week[ws], "paid": int(fp.get(str(ws), 0))})
+        return {"today": today, "days": days, "weeks": weeks, "fines_on": bool(self.s.get("fines")), "fine_weeks": fine_weeks,
+                "pay_ready": bool(self.saves._dec and self.saves.save_file)}
 
     def week_summaries(self):
         """Takvim haftası başına özet (en yeni önce): sürüş, gün sayısı, ihlal sayısı, haftalık dinlenme, uzatma/kısa dinlenme sayıları."""
@@ -1490,7 +1504,8 @@ class Tacho:
     # Profile bağlı olmayan (uygulama geneli) ayarlar; geri kalan her şey profil başına tutulur
     SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
                     "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
-                    "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice")
+                    "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice",
+                    "sound_volume", "voice_volume")
 
     @classmethod
     def counter_keys(cls):
@@ -1582,11 +1597,15 @@ class Tacho:
         return PLAN_DEFAULT_KMH
 
     # ---- yük planlayıcı ----
-    def plan_trip(self, drive_min, deadline_min=None, rest_first=False):
-        """drive_min dakikalık sürüşü mevcut haklarla simüle eder: molalar, günlük/haftalık dinlenmeler, toplam süre, pay."""
+    def plan_trip(self, drive_min, deadline_min=None, rest_first=False, ferry_min=0):
+        """drive_min dakikalık sürüşü mevcut haklarla simüle eder: molalar, günlük/haftalık dinlenmeler, toplam süre, pay.
+        ferry_min > 0: rotanın ortasında o kadar dakikalık feribot/tren geçişi (dinlenme sayılır: ≥ 45 dk mola, ≥ 11 sa günlük)."""
         s = self.s
         t = 0
         breaks = rests = wrests = 0
+        ferry_at = drive_min / 2.0 if ferry_min > 0 else None
+        ferry_done = False
+        driven = 0.0
         block = DRIVE_BLOCK - s["drive_block"]
         daily = self.daily_limit() - s["drive_daily"] + (60 if self.ext_available() else 0)
         week = None
@@ -1604,6 +1623,14 @@ class Tacho:
         guard = 0
         while need > 0 and guard < 60:
             guard += 1
+            if ferry_at is not None and not ferry_done and driven >= ferry_at:
+                ferry_done = True
+                t += ferry_min
+                if ferry_min >= REST_MIN:
+                    rests += 1; block = DRIVE_BLOCK; daily = DRIVE_DAILY
+                elif ferry_min >= BREAK_MIN:
+                    block = DRIVE_BLOCK
+                continue
             lim = min(block, daily) if week is None else min(block, daily, week)
             if lim <= 0:
                 if week is not None and week <= 0:
@@ -1614,36 +1641,52 @@ class Tacho:
                     t += BREAK_MIN; breaks += 1; block = DRIVE_BLOCK
                 continue
             d = min(need, lim)
-            need -= d; t += d; block -= d; daily -= d
+            if ferry_at is not None and not ferry_done and driven + d > ferry_at:
+                d = max(1, ferry_at - driven)   # feribota kadar sür, sonra geçiş
+            need -= d; t += d; block -= d; daily -= d; driven += d
             if week is not None:
                 week -= d
-        return {"total": t, "drive": drive_min, "breaks": breaks, "rests": rests, "wrests": wrests,
+        if ferry_at is not None and not ferry_done:
+            t += ferry_min
+        return {"total": t, "drive": drive_min, "breaks": breaks, "rests": rests, "wrests": wrests, "ferry": ferry_min if ferry_min > 0 else 0,
                 "margin": None if deadline_min is None else deadline_min - t}
 
-    def plan_view(self, km=None, hours=None):
-        """Planlayıcı çıktısı: rota (telemetri) ya da elle girilen km + teslim penceresi."""
+    def plan_view(self, km=None, hours=None, ferry_h=None):
+        """Planlayıcı çıktısı: rota (telemetri) ya da elle girilen km + teslim penceresi (+ isteğe bağlı feribot süresi).
+        Rotada feribot/tren: oyunun rota süresi, mesafe/ortalama hız tahminini belirgin aşıyorsa fark geçiş süresi sayılır."""
         s = self.s
         src = None
         drive_min = deadline = None
+        ferry_min = 0.0
+        ferry_est = False
         job_on = bool(self.job and self.job.get("on")) and s["mode"] == "auto" and self.connected
         route_s = getattr(self, "route_s", 0.0) or 0.0
         if km is not None and km > 0:
             src = "manual"
             drive_min = km / self.avg_kmh() * 60.0
             deadline = hours * 60.0 if hours else None
+            ferry_min = ferry_h * 60.0 if ferry_h else 0.0
         elif s["mode"] == "auto" and self.connected and route_s > 60:
             src = "route"
-            drive_min = route_s / 60.0
+            total_min = route_s / 60.0
+            est_drive = (self.route_m / 1000.0) / self.avg_kmh() * 60.0 if self.route_m else total_min
+            if total_min - est_drive >= FERRY_MIN_EST:
+                ferry_min = total_min - est_drive
+                ferry_est = True
+                drive_min = est_drive
+            else:
+                drive_min = total_min
             if job_on and self.job.get("delivery") and self.tel_abs:
                 deadline = int(self.job["delivery"]) - int(self.tel_abs)
         if drive_min is None:
             return {"available": False, "avg_kmh": round(self.avg_kmh()), "learned": s["spd_min"] >= 30}
-        now_plan = self.plan_trip(drive_min, deadline)
+        now_plan = self.plan_trip(drive_min, deadline, ferry_min=ferry_min)
         out = {"available": True, "src": src, "drive": round(drive_min), "deadline": None if deadline is None else round(deadline),
+               "ferry": round(ferry_min), "ferry_est": ferry_est,
                "avg_kmh": round(self.avg_kmh()), "learned": s["spd_min"] >= 30, "now": now_plan,
                "eta_local": None if self.local_abs() is None else self.local_abs() + round(now_plan["total"])}
         if now_plan["rests"] > 0 or now_plan["wrests"] > 0 or (now_plan["margin"] is not None and now_plan["margin"] < 0):
-            alt = self.plan_trip(drive_min, deadline, rest_first=True)
+            alt = self.plan_trip(drive_min, deadline, rest_first=True, ferry_min=ferry_min)
             out["rest_first"] = alt
         return out
 
@@ -2057,6 +2100,81 @@ class Tacho:
             self.dirty = True
             self.log(L("log.auto_ext_on" if flag else "log.auto_ext_off"))
 
+    def fines_due(self):
+        """Hafta başına ödenmemiş sanal ceza: {ws: (toplam, ödenen)}."""
+        return {w["start"]: (w["fines"], w["paid"]) for w in self.history()["fine_weeks"]}
+
+    def act_pay_fine(self, week_start):
+        """Haftanın ödenmemiş cezasını oyuna yansıt: en yeni kaydın kopyası, banka hesabı düşülmüş olarak 'opentacho_fine' slotuna yazılır."""
+        try:
+            ws = int(week_start)
+        except Exception:
+            return {"ok": False, "err": "bad week"}
+        with self.lock:
+            if not self.s.get("fines"):
+                return {"ok": False, "err": "fines_off"}
+            tot, paid = self.fines_due().get(ws, (0, 0))
+            due = tot - paid
+            if due <= 0:
+                return {"ok": False, "err": "nothing_due"}
+            sv = self.saves
+            src = sv.save_file
+            dec = sv._dec
+        if not dec:
+            return {"ok": False, "err": "no_dll"}
+        if not src or not os.path.exists(src):
+            return {"ok": False, "err": "no_save"}
+        try:
+            sdir = os.path.dirname(src)
+            slot = os.path.join(os.path.dirname(sdir), FINE_SLOT)
+            tmp = os.path.join(tempfile.gettempdir(), "opentacho_fine.sii")
+            rc = dec(src.encode("utf-8"), tmp.encode("utf-8"))
+            if rc != 0:
+                return {"ok": False, "err": "decrypt rc=%d" % rc}
+            with open(tmp, "r", encoding="utf-8", errors="replace") as f:
+                game = f.read()
+            m = re.search(r"(^bank\s*:\s*[^\n]*\{\s*\n(?:[^\n]*\n)*?[ \t]*money_account\s*:\s*)(-?\d+)", game, re.M)
+            if not m:
+                return {"ok": False, "err": "no_bank"}
+            before = int(m.group(2))
+            after = before - due
+            game = game[:m.start(2)] + str(after) + game[m.end(2):]
+            info_src = os.path.join(sdir, "info.sii")
+            info = None
+            if os.path.exists(info_src):
+                rc = dec(info_src.encode("utf-8"), tmp.encode("utf-8"))
+                if rc == 0:
+                    with open(tmp, "r", encoding="utf-8", errors="replace") as f:
+                        info = f.read()
+                    label = "OpenTacho: %s -%d EUR" % (L("fine.slot_name"), due)
+                    info = re.sub(r'^([ \t]*name[ \t]*:[ \t]*)"[^"\n]*"', lambda mm: mm.group(1) + '"' + label.replace('"', "") + '"', info, count=1, flags=re.M)
+            os.makedirs(slot, exist_ok=True)
+            with open(os.path.join(slot, "game.sii"), "w", encoding="utf-8", newline="\n") as f:
+                f.write(game)
+            if info is not None:
+                with open(os.path.join(slot, "info.sii"), "w", encoding="utf-8", newline="\n") as f:
+                    f.write(info)
+            for extra in os.listdir(sdir):
+                if extra not in ("game.sii", "info.sii"):
+                    try:
+                        shutil.copy2(os.path.join(sdir, extra), os.path.join(slot, extra))
+                    except Exception:
+                        pass
+        except Exception as e:
+            log_error("ceza ödemesi yazılamadı: %r" % e)
+            return {"ok": False, "err": repr(e)}
+        with self.lock:
+            fp = self.s.setdefault("fines_paid", {})
+            fp[str(ws)] = paid + due
+            self.dirty = True
+            age = None
+            try:
+                age = int((time.time() - os.path.getmtime(src)) / 60)
+            except Exception:
+                pass
+            self.log(L("log.fine_paid", amount=due, before=before, after=after, slot=os.path.basename(sdir)))
+        return {"ok": True, "amount": due, "before": before, "after": after, "src_slot": os.path.basename(sdir), "age_min": age, "slot": FINE_SLOT}
+
     def act_set_flag(self, key, flag):
         with self.lock:
             if key not in ("strict_rest", "fines", "voice"):
@@ -2262,6 +2380,12 @@ class Tacho:
             return
         try:
             import winsound
+            try:   # uygulamanın kendi wave çıkış seviyesi (Windows ses karıştırıcısında yalnızca bu uygulama)
+                vol = max(0, min(100, int(self.s.get("sound_volume", 100))))
+                v16 = int(vol / 100.0 * 0xFFFF)
+                ctypes.WinDLL("winmm").waveOutSetVolume(0, (v16 << 16) | v16)
+            except Exception:
+                pass
             winsound.PlaySound(path, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
         except Exception as e:
             log_error("ses çalınamadı: %r" % e)
@@ -2612,6 +2736,7 @@ class Tacho:
             "profile": self.profile_view(),
             "plan": self.plan_view(),
             "strict_rest": bool(s["strict_rest"]), "fines": bool(s["fines"]), "voice": bool(s["voice"]),
+            "sound_volume": int(s.get("sound_volume", 100)), "voice_volume": int(s.get("voice_volume", 100)),
             "voice_ev": {"seq": self.voice_seq, "text": self.voice_text},
             "rest_target": need if s["rest_credited"] else target,
             "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= BREAK_PART1) else 0,
@@ -3038,14 +3163,28 @@ class Api:
     def voice_sample(self):
         return L("voice.sample")
 
-    def plan(self, km, hours):
+    def plan(self, km, hours, ferry=None):
         with self._t.lock:
             try:
                 km = float(km) if km not in (None, "") else None
                 hours = float(hours) if hours not in (None, "") else None
+                ferry = float(ferry) if ferry not in (None, "") else None
             except Exception:
-                km = hours = None
-            return self._t.plan_view(km, hours)
+                km = hours = ferry = None
+            return self._t.plan_view(km, hours, ferry)
+
+    def set_volume(self, which, value):
+        with self._t.lock:
+            key = "voice_volume" if which == "voice" else "sound_volume"
+            try:
+                self._t.s[key] = max(0, min(100, int(value)))
+                self._t.dirty = True
+            except Exception:
+                pass
+        return self.get_state()
+
+    def pay_fine(self, week_start):
+        return self._t.act_pay_fine(week_start)
 
     def set_weekly_rules(self, flag):
         self._t.act_set_weekly_rules(flag)
