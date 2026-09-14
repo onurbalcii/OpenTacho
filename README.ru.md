@@ -14,8 +14,9 @@
 **Только Windows 10/11** — плагин телеметрии передаёт данные через общую память Windows, а приложение использует Windows API для горячей клавиши, звуков и команды консоли. Linux (нативный ETS2 / Proton) и macOS не поддерживаются.
 
 <p align="center">
-  <img src="docs/screenshots/ru/main.jpg" width="300" alt="Главное окно">
-  <img src="docs/screenshots/ru/settings-rules.jpg" width="300" alt="Настройки – вкладка Правила">
+  <img src="docs/screenshots/ru/main.jpg" width="280" alt="Главное окно">
+  <img src="docs/screenshots/ru/history.jpg" width="280" alt="История тахографа">
+  <img src="docs/screenshots/ru/settings-rules.jpg" width="280" alt="Настройки – вкладка Правила">
 </p>
 <p align="center">
   <img src="docs/screenshots/ru/mini.png" width="540" alt="Мини-панель поверх игры">

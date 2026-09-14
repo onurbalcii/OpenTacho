@@ -275,7 +275,7 @@
   "tour.btns.t": "Przerwa i Manewry",
   "tour.btns.b": "<b>Przerwa</b>: rozpoczyna odpoczynek, gdy ciężarówka stoi; kończy się sama, gdy ruszysz. Włącza się też automatycznie, gdy zatrzymasz się z małym zapasem jazdy. <b>Manewry</b>: manewrowanie na placach załadunku i dostawy nie liczy się jako jazda; włączają się same na początku zlecenia i w pobliżu celu, wyłączają powyżej 40 km/h.",
   "tour.skip.t": "⏩ Pomiń",
-  "tour.skip.b": "Podczas przerwy lub odpoczynku pojawia się tu przycisk <b>Pomiń</b>: wysyła <b>g_set_time</b> do konsoli gry i przewija dokładnie tyle, ile trzeba. Konsola musi być włączona w grze (config.cfg: g_console 1, g_developer 1); w przeciwnym razie przycisk pozostaje zablokowany i podaje powód. Gdy ciężarówka stoi, pojawia się też przycisk <b>Pełny odpoczynek</b>: pomija cały 11-godzinny odpoczynek dzienny za jednym razem — przydatne, by zacząć nowe zlecenie z wyzerowanymi licznikami.",
+  "tour.skip.b": "Podczas przerwy lub odpoczynku pojawia się tu przycisk <b>Pomiń</b>: wysyła <b>g_set_time</b> do konsoli gry i przewija dokładnie tyle, ile trzeba. Konsola musi być włączona w grze (config.cfg: g_console 1, g_developer 1); w przeciwnym razie przycisk pozostaje zablokowany i podaje powód.",
   "tour.log.t": "Ostatnie zdarzenia",
   "tour.log.b": "Każda decyzja trafia tutaj: przerwa rozpoczęta, blok odnowiony, skok czasu zaliczony jako odpoczynek, cofnięcie zapisu… Jeśli coś poszło nie tak, jak oczekiwano, najpierw zajrzyj tu.",
   "tour.gear.t": "Ustawienia",
@@ -318,5 +318,9 @@
   "ui.hist.reset_note": "(wyzerowano)",
   "ui.hist.ongoing": "w toku",
   "tour.quick.t": "Szybkie przyciski",
-  "tour.quick.b": "Dwa małe przyciski pod kołem zębatym: <b>mini pasek</b> (przejście do małej nakładki nad grą bez otwierania ustawień) i <b>historia tachografu</b> (jazda, odpoczynek i naruszenia dzień po dniu — jak wydruk z prawdziwego tachografu)."
+  "tour.quick.b": "Dwa małe przyciski pod kołem zębatym: <b>mini pasek</b> (przejście do małej nakładki nad grą bez otwierania ustawień) i <b>historia tachografu</b> (jazda, odpoczynek i naruszenia dzień po dniu — jak wydruk z prawdziwego tachografu).",
+  "tour.fullrest.t": "Pełny odpoczynek",
+  "tour.fullrest.b": "Gdy ciężarówka stoi, na głównym panelu pojawia się przycisk <b>Pełny odpoczynek</b>: przełącza na Przerwę i pomija cały 11-godzinny odpoczynek dzienny (9 h jako część 2 dzielonego) za jednym razem. Naciśnij przed nowym zleceniem, by zacząć z wyzerowanymi licznikami. Zasady jak przy Pomiń: konsola gry musi być włączona.",
+  "tour.hist.t": "Historia tachografu",
+  "tour.hist.b": "Lista dzień po dniu jak wydruk z prawdziwego tachografu: każda karta to jeden dzień pracy — początek i koniec, łączna jazda i odpoczynek, odcinki (godzina + czas) i naruszenia (przekroczony blok 4,5 h / 9 h dziennie, z godziną i wielkością przekroczenia). Dzień trafia tu po ukończeniu odpoczynku dziennego lub po wyzerowaniu liczników; żywa karta „Dziś” zostaje na górze."
 }

@@ -14,8 +14,9 @@ loading) so you can just drive.
 **Windows 10/11 only** — the telemetry plugin shares data through Windows shared memory and the app uses Windows APIs for the hotkey, sounds and the console command. Linux (native ETS2 / Proton) and macOS are not supported.
 
 <p align="center">
-  <img src="docs/screenshots/en/main.jpg" width="300" alt="Main window">
-  <img src="docs/screenshots/en/settings-rules.jpg" width="300" alt="Settings – Rules tab">
+  <img src="docs/screenshots/en/main.jpg" width="280" alt="Main window">
+  <img src="docs/screenshots/en/history.jpg" width="280" alt="Tachograph history">
+  <img src="docs/screenshots/en/settings-rules.jpg" width="280" alt="Settings – Rules tab">
 </p>
 <p align="center">
   <img src="docs/screenshots/en/mini.png" width="540" alt="Mini strip over the game">

@@ -275,7 +275,7 @@
   "tour.btns.t": "Pause und Rangieren",
   "tour.btns.b": "<b>Pause</b>: startet die Ruhezeit, während der Lkw steht; endet von selbst, sobald du fährst. Sie schaltet sich auch automatisch ein, wenn du mit wenig Restfahrzeit anhältst. <b>Rangieren</b>: Manöver an Lade- und Lieferbereichen zählen nicht als Fahren; es schaltet sich beim Auftragsbeginn und nahe dem Ziel von selbst ein, über 40 km/h wieder aus.",
   "tour.skip.t": "⏩ Überspringen",
-  "tour.skip.b": "Während einer Pause oder Ruhezeit erscheint hier eine <b>Überspringen</b>-Schaltfläche: sie sendet <b>g_set_time</b> an die Spielkonsole und spult genau so weit vor wie nötig. Die Konsole muss im Spiel aktiviert sein (config.cfg: g_console 1, g_developer 1); sonst bleibt die Schaltfläche gesperrt und nennt den Grund. Steht der Lkw, erscheint zusätzlich <b>Volle Ruhezeit</b>: überspringt die komplette 11-h-Tagesruhezeit auf einmal — praktisch, um einen neuen Auftrag mit frischen Zählern zu beginnen.",
+  "tour.skip.b": "Während einer Pause oder Ruhezeit erscheint hier eine <b>Überspringen</b>-Schaltfläche: sie sendet <b>g_set_time</b> an die Spielkonsole und spult genau so weit vor wie nötig. Die Konsole muss im Spiel aktiviert sein (config.cfg: g_console 1, g_developer 1); sonst bleibt die Schaltfläche gesperrt und nennt den Grund.",
   "tour.log.t": "Letzte Ereignisse",
   "tour.log.b": "Jede Entscheidung landet hier: Pause begonnen, Block erneuert, Zeitsprung als Ruhezeit gezählt, Spielstand zurückgesetzt… Wenn etwas nicht wie erwartet lief, schau zuerst hier nach.",
   "tour.gear.t": "Einstellungen",
@@ -318,5 +318,9 @@
   "ui.hist.reset_note": "(zurückgesetzt)",
   "ui.hist.ongoing": "läuft",
   "tour.quick.t": "Schnellzugriff",
-  "tour.quick.b": "Die zwei kleinen Knöpfe unter dem Zahnrad: <b>Mini-Leiste</b> (ohne Einstellungen direkt zur kleinen Anzeige über dem Spiel) und <b>Tachographen-Verlauf</b> (Fahrzeit, Ruhezeit und Verstöße pro Tag — wie ein echter Tachographenausdruck)."
+  "tour.quick.b": "Die zwei kleinen Knöpfe unter dem Zahnrad: <b>Mini-Leiste</b> (ohne Einstellungen direkt zur kleinen Anzeige über dem Spiel) und <b>Tachographen-Verlauf</b> (Fahrzeit, Ruhezeit und Verstöße pro Tag — wie ein echter Tachographenausdruck).",
+  "tour.fullrest.t": "Volle Ruhezeit",
+  "tour.fullrest.b": "Steht der Lkw, erscheint im Hauptfeld <b>Volle Ruhezeit</b>: schaltet auf Pause und überspringt die komplette 11-h-Tagesruhezeit (9 h als Teil 2 einer geteilten Ruhezeit) auf einmal. Vor einem neuen Auftrag drücken, um mit frischen Zählern zu starten. Wie bei Überspringen muss die Spielkonsole aktiv sein.",
+  "tour.hist.t": "Tachographen-Verlauf",
+  "tour.hist.b": "Eine Liste Tag für Tag wie ein echter Tachographenausdruck: jede Karte ist ein Arbeitstag — Beginn und Ende, Fahr- und Ruhezeit gesamt, Abschnitte (Uhrzeit + Dauer) und Verstöße (4,5-h-Block / 9 h Tagesfahrzeit überschritten, mit Uhrzeit und Überschreitung). Ein Tag landet hier, wenn seine Tagesruhezeit abgeschlossen ist oder die Zähler zurückgesetzt werden; die Live-Karte für heute bleibt oben."
 }

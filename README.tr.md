@@ -14,8 +14,9 @@ halleder.
 **Yalnızca Windows 10/11** — telemetri eklentisi veriyi Windows paylaşımlı belleğiyle aktarır; kısayol, ses ve konsol komutu da Windows API'leri kullanır. Linux (yerel ETS2 / Proton) ve macOS desteklenmez.
 
 <p align="center">
-  <img src="docs/screenshots/tr/main.jpg" width="300" alt="Ana pencere">
-  <img src="docs/screenshots/tr/settings-rules.jpg" width="300" alt="Ayarlar – Kurallar sekmesi">
+  <img src="docs/screenshots/tr/main.jpg" width="280" alt="Ana pencere">
+  <img src="docs/screenshots/tr/history.jpg" width="280" alt="Takograf geçmişi">
+  <img src="docs/screenshots/tr/settings-rules.jpg" width="280" alt="Ayarlar – Kurallar sekmesi">
 </p>
 <p align="center">
   <img src="docs/screenshots/tr/mini.png" width="540" alt="Oyunun üstünde mini şerit">

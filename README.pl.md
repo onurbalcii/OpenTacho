@@ -14,8 +14,9 @@ zostało, i ogarnia niewygodne przypadki (promy, sen, strefy czasowe, wczytywani
 **Tylko Windows 10/11** — wtyczka telemetrii udostępnia dane przez pamięć współdzieloną Windows, a aplikacja używa Windows API do skrótu klawiszowego, dźwięków i polecenia konsoli. Linux (natywny ETS2 / Proton) i macOS nie są wspierane.
 
 <p align="center">
-  <img src="docs/screenshots/pl/main.jpg" width="300" alt="Główne okno">
-  <img src="docs/screenshots/pl/settings-rules.jpg" width="300" alt="Ustawienia – karta Zasady">
+  <img src="docs/screenshots/pl/main.jpg" width="280" alt="Główne okno">
+  <img src="docs/screenshots/pl/history.jpg" width="280" alt="Historia tachografu">
+  <img src="docs/screenshots/pl/settings-rules.jpg" width="280" alt="Ustawienia – karta Zasady">
 </p>
 <p align="center">
   <img src="docs/screenshots/pl/mini.png" width="540" alt="Mini pasek nad grą">

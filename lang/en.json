@@ -275,7 +275,7 @@
   "tour.btns.t": "Break and Yard move",
   "tour.btns.b": "<b>Break</b>: starts rest while the truck is stopped; ends by itself when you move. It also switches on automatically when you stop with little driving time left. <b>Yard move</b>: manoeuvring at loading and delivery areas does not count as driving; it switches on by itself when a job starts and near the destination, off above 40 km/h.",
   "tour.skip.t": "⏩ Skip",
-  "tour.skip.b": "During a break or rest a <b>Skip</b> button appears here: it sends <b>g_set_time</b> to the game console and fast-forwards exactly as much as needed. The console must be enabled in the game (config.cfg: g_console 1, g_developer 1); otherwise the button stays locked and tells you why. While the truck is stopped a <b>Full rest</b> button also appears: it skips the whole 11 h daily rest in one go — handy for starting a new job with fresh counters.",
+  "tour.skip.b": "During a break or rest a <b>Skip</b> button appears here: it sends <b>g_set_time</b> to the game console and fast-forwards exactly as much as needed. The console must be enabled in the game (config.cfg: g_console 1, g_developer 1); otherwise the button stays locked and tells you why.",
   "tour.log.t": "Recent events",
   "tour.log.b": "Every decision lands here: break started, block renewed, time skip counted as rest, save rollback… If something did not go as expected, look here first.",
   "tour.gear.t": "Settings",
@@ -318,5 +318,9 @@
   "ui.hist.reset_note": "(reset)",
   "ui.hist.ongoing": "in progress",
   "tour.quick.t": "Quick buttons",
-  "tour.quick.b": "The two small buttons under the gear: <b>mini strip</b> (switch to the small in-game overlay without opening settings) and <b>tachograph history</b> (driving, rest and violations per day — like a real tachograph printout)."
+  "tour.quick.b": "The two small buttons under the gear: <b>mini strip</b> (switch to the small in-game overlay without opening settings) and <b>tachograph history</b> (driving, rest and violations per day — like a real tachograph printout).",
+  "tour.fullrest.t": "Full rest",
+  "tour.fullrest.b": "While the truck is stopped a <b>Full rest</b> button appears in the main panel: it sets Off duty and skips the whole 11 h daily rest (9 h as part 2 of a split) in one go. Press it before taking a new job to start with fresh counters. Same rules as Skip: the game console must be enabled.",
+  "tour.hist.t": "Tachograph history",
+  "tour.hist.b": "A day-by-day list like a real tachograph printout: each card is one working day — start and end time, total driving and rest, segments (time + duration) and violations (4.5 h block / 9 h daily exceeded, with time and overrun). A day lands here when its daily rest completes or the counters are reset; today's live card stays on top."
 }

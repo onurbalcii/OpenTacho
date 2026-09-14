@@ -275,7 +275,7 @@
   "tour.btns.t": "Mola ve İç hareket",
   "tour.btns.b": "<b>Mola</b>: araç dururken dinlenmeyi başlatır; hareket edince kendiliğinden biter. Sürüş hakkın azken durursan otomatik de açılır. <b>İç hareket</b>: yükleme ve teslimat sahasındaki manevralar sürüşe sayılmaz; iş başlarken ve teslimata yaklaşırken kendiliğinden açılır, 40 km/h üstünde kapanır.",
   "tour.skip.t": "⏩ Atla",
-  "tour.skip.b": "Molada ya da dinlenmedeyken burada <b>Atla</b> butonu çıkar: oyun konsoluna <b>g_set_time</b> gönderip zamanı gereken kadar ileri sarar. Oyunda konsol açık olmalı (config.cfg: g_console 1, g_developer 1); kapalıysa buton kilitli kalır ve nedenini söyler. Araç dururken ayrıca <b>Tam dinlenme</b> düğmesi çıkar: 11 saatlik günlük dinlenmeyi tek seferde atlar — yeni yüke sıfır sayaçla başlamak için.",
+  "tour.skip.b": "Molada ya da dinlenmedeyken burada <b>Atla</b> butonu çıkar: oyun konsoluna <b>g_set_time</b> gönderip zamanı gereken kadar ileri sarar. Oyunda konsol açık olmalı (config.cfg: g_console 1, g_developer 1); kapalıysa buton kilitli kalır ve nedenini söyler.",
   "tour.log.t": "Son olaylar",
   "tour.log.b": "Verilen her karar burada: mola başladı, blok yenilendi, zaman atlaması dinlenme sayıldı, kayıt geri alındı… Bir şey beklediğin gibi gitmediyse ilk bakacağın yer.",
   "tour.gear.t": "Ayarlar",
@@ -318,5 +318,9 @@
   "ui.hist.reset_note": "(sıfırlandı)",
   "ui.hist.ongoing": "devam ediyor",
   "tour.quick.t": "Hızlı düğmeler",
-  "tour.quick.b": "Dişlinin altındaki iki küçük düğme: <b>mini şerit</b> (ayarlara girmeden oyunun üstündeki küçük göstergeye geç) ve <b>takograf geçmişi</b> (gün gün sürüş, dinlenme ve ihlaller — gerçek takograf çıktısı gibi)."
+  "tour.quick.b": "Dişlinin altındaki iki küçük düğme: <b>mini şerit</b> (ayarlara girmeden oyunun üstündeki küçük göstergeye geç) ve <b>takograf geçmişi</b> (gün gün sürüş, dinlenme ve ihlaller — gerçek takograf çıktısı gibi).",
+  "tour.fullrest.t": "Tam dinlenme",
+  "tour.fullrest.b": "Araç dururken ana panelde <b>Tam dinlenme</b> düğmesi çıkar: durumu Mola'ya alıp 11 saatlik günlük dinlenmeyi (bölünmüşte 2. kısım 9 saat) tek seferde atlar. Yeni yüke sıfırdan, dolu sayaçlarla başlamak için yükü almadan önce bas. Atla ile aynı koşullar geçerli: oyun konsolu açık olmalı.",
+  "tour.hist.t": "Takograf geçmişi",
+  "tour.hist.b": "Gerçek takograf çıktısı gibi gün gün liste: her kart bir çalışma günü — başlangıç ve bitiş saati, toplam sürüş ve dinlenme, segmentler (saat + süre) ve ihlaller (4,5 sa blok / 9 sa günlük aşımı, saati ve aşım süresiyle). Gün, günlük dinlenme tamamlanınca ya da sayaçlar sıfırlanınca buraya iner; üstte bugünün canlı kartı durur."
 }

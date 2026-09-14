@@ -1163,6 +1163,7 @@
   // ---- ilk açılış: dil seçimi + rehber turu ----
   let onboardShown = false, tourOn = false, tourI = -1;
   function openDrawer(page) {
+    closeHist();
     document.body.classList.add("open");
     if (page) {
       document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.dataset.page === page));
@@ -1193,9 +1194,11 @@
     { k: "seq", t: "#seq" },
     { k: "btns", t: "#btns" },
     { k: "skip", t: () => ($("skip").hidden ? "#hero" : "#skip") },
+    { k: "fullrest", t: () => ($("fullRest").hidden ? "#hero" : "#fullRest") },
     { k: "log", t: ".log" },
-    { k: "gear", t: "#gear", pre: () => closeDrawer() },
-    { k: "quick", t: ".quick", pre: () => closeDrawer() },
+    { k: "gear", t: "#gear", pre: () => { closeDrawer(); closeHist(); } },
+    { k: "quick", t: ".quick", pre: () => { closeDrawer(); closeHist(); } },
+    { k: "hist", t: "#histDrawer h3", pre: () => openHist() },
     { k: "tab_clock", t: '.tab[data-page="saat"]', pre: () => openDrawer("saat") },
     { k: "tab_rules", t: '.tab[data-page="kural"]', pre: () => openDrawer("kural") },
     { k: "tab_game", t: '.tab[data-page="oyun"]', pre: () => openDrawer("oyun") },
@@ -1241,7 +1244,7 @@
     requestAnimationFrame(placeTour); setTimeout(placeTour, 340);   // yan panel animasyonu bitince yeniden hizala
   }
   function startTour() { closeAllDD(); tourOn = true; $("tour").hidden = false; showTour(0); }
-  async function endTour() { tourOn = false; $("tour").hidden = true; closeDrawer(); await call("set_onboarded", true); }
+  async function endTour() { tourOn = false; $("tour").hidden = true; closeDrawer(); closeHist(); await call("set_onboarded", true); }
   $("tourNext").addEventListener("click", () => tourI >= TOUR.length - 1 ? endTour() : showTour(tourI + 1));
   $("tourPrev").addEventListener("click", () => { if (tourI > 0) showTour(tourI - 1); });
   $("tourSkip").addEventListener("click", endTour);

@@ -14,8 +14,9 @@ Spielstände, Anhänger beladen), damit du einfach fahren kannst.
 **Nur Windows 10/11** — das Telemetrie-Plugin teilt seine Daten über den gemeinsamen Speicher von Windows, und die App nutzt Windows-APIs für Hotkey, Töne und den Konsolenbefehl. Linux (natives ETS2 / Proton) und macOS werden nicht unterstützt.
 
 <p align="center">
-  <img src="docs/screenshots/de/main.jpg" width="300" alt="Hauptfenster">
-  <img src="docs/screenshots/de/settings-rules.jpg" width="300" alt="Einstellungen – Reiter Regeln">
+  <img src="docs/screenshots/de/main.jpg" width="280" alt="Hauptfenster">
+  <img src="docs/screenshots/de/history.jpg" width="280" alt="Tachographen-Verlauf">
+  <img src="docs/screenshots/de/settings-rules.jpg" width="280" alt="Einstellungen – Reiter Regeln">
 </p>
 <p align="center">
   <img src="docs/screenshots/de/mini.png" width="540" alt="Mini-Leiste über dem Spiel">
