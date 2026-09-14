@@ -49,6 +49,14 @@ LEVEL_XP = [200, 500, 700, 900, 1000, 1100, 1300, 1600, 1700, 2100, 2300, 2600, 
             4600, 4700, 4900, 5200, 5700, 5900, 6000, 6200, 6600, 6800]
 LEVEL_LAST = 150
 PLAN_DEFAULT_KMH = 70.0   # ortalama hız öğrenilene kadar planlayıcının varsayımı (oyun km / oyun saati)
+# İhlal ciddiyeti (AB 2016/403 Ek III sınıfları, aşım dk): (hafif üst sınırı, ciddi üst sınırı); üstü çok ciddi
+SEVERITY = {"block": (30, 90), "daily": (60, 120), "weekly": (240, 840), "fortnight": (600, 1350), "span": (60, 150), "wrest": (180, 540)}
+FINES = {"minor": 150, "serious": 450, "vserious": 1200}   # sanal ceza (€, yaklaşık AB ortalaması; yalnızca oyun içi keyif)
+
+
+def severity(kind, over):
+    a, b = SEVERITY.get(kind, (60, 120))
+    return "minor" if over <= a else ("serious" if over <= b else "vserious")
 ERR_FILE = os.path.join(DATA_DIR, "error.log")
 UI_DIR = os.path.join(APP_DIR, "app")              # pencerelerin yüklediği her şey (html + assets)
 UI_FILE = os.path.join(UI_DIR, "main.html")
@@ -266,6 +274,9 @@ DEFAULT_STATE = {
     "theme": DEFAULT_THEME,    # vangogh | dark | light | custom
     "custom": dict(DEFAULT_CUSTOM),   # özel tema ayarları (bkz. DEFAULT_CUSTOM)
     "profile_key": None,       # sayaçların ait olduğu oyun profili ("<oyun>:<profil id>"); None = henüz tanınmadı
+    "strict_rest": False,      # sıkı mod: mola/dinlenme yalnızca motor kapalı + el freni çekiliyken sayılır
+    "fines": False,            # geçmişte sanal ceza tutarları (€) gösterilsin
+    "voice": False,            # sesli anons (Windows konuşma sesi; sayfa okur)
     "spd_km": 0.0, "spd_min": 0.0,   # ortalama hız öğrenme: sürüşte gidilen km / dakika (yumuşatılmış toplamlar)
     "log": [],
 }
@@ -317,6 +328,8 @@ class Telemetry:
     OFF_ON_JOB = 4300      # 12. bölge: bool onJob
     OFF_ROUTE_DIST = 1060  # truck_f.routeDistance (m); rota yoksa 0
     OFF_ODOMETER = 1056    # truck_f.truckOdometer (km)
+    OFF_PARK_BRAKE = 1566  # truck_b.parkBrake (5. bölge: isCargoLoaded@1564, specialJob@1565, sonra truck_b)
+    OFF_ENGINE = 1576      # truck_b.engineEnabled
     OFF_ROUTE_TIME = 1064  # truck_f.routeTime (sn, oyun saati); rota yoksa 0
     OFF_JOB_START = 444    # gameplay_ui.jobStartingTime (oyun dk)
     OFF_CARGO_LOADED = 1564  # truck_b.isCargoLoaded (5. bölge): yükleme/boşaltma anı
@@ -385,6 +398,8 @@ class Telemetry:
             "route_m": max(0.0, struct.unpack_from("<f", buf, self.OFF_ROUTE_DIST)[0]),
             "route_s": max(0.0, struct.unpack_from("<f", buf, self.OFF_ROUTE_TIME)[0]),
             "odometer_km": struct.unpack_from("<f", buf, self.OFF_ODOMETER)[0],
+            "park_brake": bool(buf[self.OFF_PARK_BRAKE]),
+            "engine": bool(buf[self.OFF_ENGINE]),
             "ferry": bool(buf[self.OFF_FERRY]),
             "train": bool(buf[self.OFF_TRAIN]),
             "active": bool(buf[self.OFF_SDK_ACTIVE]),
@@ -983,6 +998,10 @@ class Tacho:
         self.stop = False
         self.window = None
         self.odo_prev = None       # ortalama hız için son odometre (km)
+        self.park_brake = False    # telemetri: el freni
+        self.engine = False        # telemetri: motor çalışıyor
+        self.voice_seq = 0         # sesli anons: her yeni cümlede artar (sayfa değişince okur)
+        self.voice_text = ""
         self.bg_rev = 1            # özel arka plan görseli değişince artar (sayfa yeniden çeker)
 
     # ---- kalıcılık ----
@@ -1224,6 +1243,7 @@ class Tacho:
             s["break_part1"] = 0
             self._close_violation(("block",))
             self._sound("done")
+            self._voice("break_done")
         if not s["rest_daily_done"] and after >= need:
             self._complete_daily(reduced=False)
         if self.weekly_on():
@@ -1235,8 +1255,21 @@ class Tacho:
                     self.log(L("log.wrest_" + kind))
                     self._close_violation(("weekly", "fortnight", "wrest"))
                     self._sound("done")
+                    self._voice("wrest_done")
                 s["last_wrest_end"] = self.local_abs()   # dinlenme sürdükçe bitişi ileri taşı
         self.dirty = True
+
+    def strict_blocked(self):
+        """Sıkı mod açıkken dinlenmenin sayılmasını engelleyen durum var mı (motor açık / el freni çekili değil)."""
+        s = self.s
+        if not s["strict_rest"] or s["mode"] != "auto" or not self.connected:
+            return False
+        return self.engine or not self.park_brake
+
+    def _voice(self, key, **kw):
+        if self.s.get("voice"):
+            self.voice_seq += 1
+            self.voice_text = L("voice." + key, **kw)
 
     def _complete_daily(self, reduced):
         """Günlük dinlenme tamamlandı: günü arşivle, sayaçları sıfırla. reduced=True: 9 sa kısa dinlenme (haftalık hak harcanır)."""
@@ -1259,6 +1292,7 @@ class Tacho:
         s["day_segments"] = []   # yeni gün: akış sıfırdan
         s["ext_drive"] = s["ext_consumed"] = False   # uzatma yeni günde sıfır
         self._sound("done")
+        self._voice("daily_done")
 
     # ---- ihlal kaydı ve takograf geçmişi ----
     def _track_violation(self):
@@ -1327,8 +1361,38 @@ class Tacho:
         s["day_violations"] = []
         self.dirty = True
 
+    def _annotate(self, rec):
+        """Gün kaydındaki ihlallere ciddiyet (ve açıksa sanal ceza) ekler; toplam cezayı döndürür."""
+        total = 0
+        for v in rec.get("violations") or []:
+            sev = severity(v.get("kind"), v.get("over", 0))
+            v["sev"] = sev
+            if self.s.get("fines"):
+                v["fine"] = FINES[sev]
+                total += FINES[sev]
+        rec["fines"] = total if self.s.get("fines") else None
+        return total
+
     def history(self):
-        return {"today": self.day_summary(), "days": list(reversed(self.s.get("days") or [])), "weeks": self.week_summaries()}
+        today = self.day_summary()
+        today["violations"] = [dict(v) for v in today["violations"]]
+        self._annotate(today)
+        days = []
+        for d in reversed(self.s.get("days") or []):
+            rec = dict(d)
+            rec["violations"] = [dict(v) for v in d.get("violations") or []]
+            self._annotate(rec)
+            days.append(rec)
+        weeks = self.week_summaries()
+        if self.s.get("fines"):
+            by_week = {}
+            for rec in days + [today]:
+                if rec.get("start") is not None:
+                    ws = self.week_start_of(rec["start"])
+                    by_week[ws] = by_week.get(ws, 0) + (rec.get("fines") or 0)
+            for w in weeks:
+                w["fines"] = by_week.get(w["start"], 0)
+        return {"today": today, "days": days, "weeks": weeks, "fines_on": bool(self.s.get("fines"))}
 
     def week_summaries(self):
         """Takvim haftası başına özet (en yeni önce): sürüş, gün sayısı, ihlal sayısı, haftalık dinlenme, uzatma/kısa dinlenme sayıları."""
@@ -1415,7 +1479,10 @@ class Tacho:
                     self.log(L("log.ext_used", n=s["week"]["ext_used"], max=EXT_PER_WEEK))
             self._track_violation()
         elif st == "OFF_DUTY":
-            self.add_rest(d)
+            if self.strict_blocked():
+                pass   # sıkı mod: motor açık ya da el freni çekili değil → dakika dinlenmeye yazılmaz (görevde gibi)
+            else:
+                self.add_rest(d)
         # ON_DUTY / YARD_MOVE: sürüş sayılmaz, dinlenme de ilerlemez (ama sıfırlanmaz)
         self.dirty = True
 
@@ -1423,7 +1490,7 @@ class Tacho:
     # Profile bağlı olmayan (uygulama geneli) ayarlar; geri kalan her şey profil başına tutulur
     SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
                     "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
-                    "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min")
+                    "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice")
 
     @classmethod
     def counter_keys(cls):
@@ -1704,6 +1771,8 @@ class Tacho:
             self.job = tel["job"]
             self.route_m = tel.get("route_m", 0.0)
             self.route_s = tel.get("route_s", 0.0)
+            self.park_brake = bool(tel.get("park_brake"))
+            self.engine = bool(tel.get("engine"))
         self.connected = self.tel_ok and tel["time_abs"] > 0
         if not self.connected:
             return
@@ -1988,6 +2057,17 @@ class Tacho:
             self.dirty = True
             self.log(L("log.auto_ext_on" if flag else "log.auto_ext_off"))
 
+    def act_set_flag(self, key, flag):
+        with self.lock:
+            if key not in ("strict_rest", "fines", "voice"):
+                return
+            flag = bool(flag)
+            if flag == bool(self.s[key]):
+                return
+            self.s[key] = flag
+            self.dirty = True
+            self.log(L("log.%s_%s" % (key, "on" if flag else "off")))
+
     def act_set_auto_red(self, flag):
         with self.lock:
             s = self.s
@@ -2196,9 +2276,11 @@ class Tacho:
             if prev["rem"] > ALERT_BEFORE >= rem > 0:
                 self._sound("warn")
                 self.log(L("log.snd_drive15", d=hm(rem)))
+                self._voice("drive15", d=ALERT_BEFORE)
             elif prev["rem"] > 0 >= rem:
                 self._sound("alert")
                 self.log(L("log.snd_drive0"))
+                self._voice("drive0")
         prev["rem"] = rem if active else None
         if s["status"] == "OFF_DUTY":
             target = self.daily_need() if s["rest_credited"] else self.rest_target()
@@ -2206,6 +2288,7 @@ class Tacho:
             if prev["rest_left"] is not None and prev["rest_left"] > ALERT_BEFORE >= left > 0:
                 self._sound("warn")
                 self.log(L("log.snd_rest15", d=hm(left)))
+                self._voice("rest15", d=ALERT_BEFORE)
             prev["rest_left"] = left
         else:
             prev["rest_left"] = None
@@ -2401,6 +2484,8 @@ class Tacho:
         elif s["status"] == "YARD_MOVE":
             f.append({"ic": "yard", "t": {"pickup": L("flag.yard_pickup"), "delivery": L("flag.yard_delivery")}.get(self.auto_yard, L("flag.yard"))})
             f.append({"ic": "timer-off", "t": L("flag.not_driving")})
+        if s["status"] == "OFF_DUTY" and self.strict_blocked():
+            f.append({"ic": "engine", "t": L("flag.strict_engine") if self.engine else L("flag.strict_brake"), "warn": True})
         if self.weekly_on() and s["status"] != "OFF_DUTY":
             rd, local = self.rest_deadline(), self.local_abs()
             if rd is not None and local is not None:
@@ -2526,6 +2611,8 @@ class Tacho:
             "red_rest": self.red_rest_info(),
             "profile": self.profile_view(),
             "plan": self.plan_view(),
+            "strict_rest": bool(s["strict_rest"]), "fines": bool(s["fines"]), "voice": bool(s["voice"]),
+            "voice_ev": {"seq": self.voice_seq, "text": self.voice_text},
             "rest_target": need if s["rest_credited"] else target,
             "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= BREAK_PART1) else 0,
             "split_break": bool(s["split_break"]),
@@ -2935,6 +3022,21 @@ class Api:
     def weekly_rest(self):
         self._t.act_weekly_rest()
         return self.get_state()
+
+    def set_strict_rest(self, flag):
+        self._t.act_set_flag("strict_rest", flag)
+        return self.get_state()
+
+    def set_fines(self, flag):
+        self._t.act_set_flag("fines", flag)
+        return self.get_state()
+
+    def set_voice(self, flag):
+        self._t.act_set_flag("voice", flag)
+        return self.get_state()
+
+    def voice_sample(self):
+        return L("voice.sample")
 
     def plan(self, km, hours):
         with self._t.lock:

@@ -73,6 +73,9 @@ actually did.
   and delivery window come from the game and the result shows live in the job line. Average speed is learned from the odometer.
 - **Game profile**: the active profile is recognised (name · level · company in the top card); counters, history and events are
   kept **per profile** — switch profiles in the game and the app switches counters (`profiles\` folder).
+- **Strict mode** (optional): breaks and rests count only with the **engine off + parking brake on**; the main panel shows why nothing is counting.
+- **Violation severity**: every violation is labelled by the EU classes (minor / serious / very serious); optional **virtual fines** (€, approximate) on the day and week cards.
+- **Voice announcements**: short sentences with Windows' offline voice ("15 minutes of driving time left", "break complete"…), in all five languages.
 - **Weekly rules** (optional, Settings → Rules; simple mode by default): weekly **56 h** / fortnightly **90 h**
   driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
   times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**

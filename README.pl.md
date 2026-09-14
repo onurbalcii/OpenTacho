@@ -72,6 +72,9 @@ odpowiadają temu, co naprawdę zrobiłeś.
   pochodzą z gry, a wynik widać w wierszu zlecenia. Średnia prędkość uczy się z licznika.
 - **Profil gry**: aktywny profil jest rozpoznawany (imię · poziom · firma w górnej karcie); liczniki, historia i zdarzenia są
   prowadzone **dla każdego profilu** — po zmianie profilu w grze aplikacja przełącza liczniki (folder `profiles\`).
+- **Tryb ścisły** (opcjonalny): przerwy i odpoczynki liczą się tylko przy **wyłączonym silniku + hamulcu postojowym**; główny panel pokazuje, dlaczego nic się nie liczy.
+- **Waga naruszeń**: każde naruszenie jest oznaczane według klas UE (drobne / poważne / bardzo poważne); opcjonalne **wirtualne mandaty** (€, w przybliżeniu) na kartach dni i tygodni.
+- **Komunikaty głosowe**: krótkie zdania głosem Windows offline („do końca czasu jazdy 15 minut”, „przerwa zakończona” …), w pięciu językach.
 - **Zasady tygodniowe** (opcjonalne, Ustawienia → Zasady; domyślnie tryb prosty): **56 h** tygodniowo / **90 h** w dwóch
   tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
   w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),

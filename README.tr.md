@@ -72,6 +72,9 @@ gerçekten yaptığınla birebir örtüşür.
   teslim penceresi oyundan okunur, sonuç iş satırında canlı görünür. Ortalama hız odometreden öğrenilir.
 - **Oyun profili**: aktif profil tanınır (ad · seviye · şirket üst kartta); sayaçlar, geçmiş ve olaylar **profil başına** tutulur —
   başka profile geçince o profilin sayaçları gelir (`profiles\` klasörü).
+- **Sıkı mod** (isteğe bağlı): mola ve dinlenme yalnızca **motor kapalı + el freni çekili** iken sayılır; sayılmıyorsa ana panelde nedeni görünür.
+- **İhlal ciddiyeti**: her ihlal AB sınıflarıyla etiketlenir (hafif / ciddi / çok ciddi); isteğe bağlı **sanal ceza** tutarları (€, yaklaşık) gün ve hafta kartlarında.
+- **Sesli anons**: Windows'un çevrimdışı konuşma sesiyle kısa cümleler ("sürüş süresinin bitmesine 15 dakika kaldı", "mola tamamlandı"…), 5 dilde.
 - **Haftalık kurallar** (isteğe bağlı, Ayarlar → Kurallar; varsayılan basit mod): haftalık **56 sa** / iki haftalık **90 sa**
   sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
   düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /

@@ -75,6 +75,9 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   Auftrag kommen Routenzeit und Lieferfenster aus dem Spiel, das Ergebnis steht live in der Auftragszeile. Der Durchschnitt wird vom Kilometerzähler gelernt.
 - **Spielprofil**: das aktive Profil wird erkannt (Name · Level · Firma in der oberen Karte); Zähler, Verlauf und Ereignisse werden
   **pro Profil** geführt — beim Profilwechsel im Spiel wechselt die App die Zähler (Ordner `profiles\`).
+- **Strenger Modus** (optional): Pausen und Ruhezeiten zählen nur bei **Motor aus + Feststellbremse**; das Hauptfeld zeigt, warum nichts zählt.
+- **Verstoßschwere**: jeder Verstoß wird nach den EU-Klassen eingestuft (leicht / schwer / sehr schwer); optionale **virtuelle Bußgelder** (€, ungefähr) auf den Tages- und Wochenkarten.
+- **Sprachansagen**: kurze Sätze mit der Offline-Stimme von Windows („noch 15 Minuten Lenkzeit“, „Pause abgeschlossen“ …), in allen fünf Sprachen.
 - **Wochenregeln** (optional, Einstellungen → Regeln; Standard: einfacher Modus): **56 h** pro Woche / **90 h** in zwei
   Wochen (Spiel-Kalenderwoche), Tageslenkzeit zweimal pro Woche auf **10 h** verlängert, Tagesruhezeit dreimal pro Woche
   auf **9 h** verkürzt, **Tagesspanne** (Ruhezeit muss innerhalb von 13/15 h beginnen; im Hauptfeld als „Tagesende“),
