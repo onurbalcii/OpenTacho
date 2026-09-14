@@ -5,10 +5,47 @@
 <script>
   // Tema ve dil, ilk boyamadan önce URL'nin #theme=..&lang=.. kısmından okunur (Python ekler);
   // böylece açılışta Van Gogh görünüp sonra seçili temaya atlama olmaz.
+
+  // Özel tema: pencere rengi (win) ve vurgu renginden (accent) tüm palet türetilir; yazı rengi parlaklığa göre seçilir.
+  window.OT_PALETTE = (() => {
+    const rgb = h => { h = (h || "").replace("#", ""); return /^[0-9a-fA-F]{6}$/.test(h) ? [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)) : null; };
+    const hex = c => "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
+    const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+    const rgba = (c, a) => `rgba(${c.map(Math.round).join(",")},${a})`;
+    const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
+    const BLACK = [0, 0, 0], WHITE = [255, 255, 255];
+    function vars(win, accent) {
+      const W = rgb(win) || [28, 42, 94], A = rgb(accent) || [253, 202, 79];
+      const light = lum(W) > .45, T = light ? [27, 31, 42] : [246, 241, 230];
+      const Wl = mix(W, WHITE, light ? .18 : .12), Wd = mix(W, BLACK, .3), Wdd = mix(W, BLACK, .55);
+      return { light, vars: {
+        "--text": hex(T), "--muted": rgba(T, .7), "--dim": rgba(T, .48),
+        "--bg": hex(light ? mix(W, WHITE, .35) : mix(W, BLACK, .45)),
+        "--glass": `linear-gradient(160deg, ${rgba(Wl, .62)}, ${rgba(Wd, .74)})`,
+        "--glass-strong": `linear-gradient(150deg, ${rgba(W, .86)}, ${rgba(Wd, .92)})`,
+        "--panel2": `linear-gradient(160deg, ${rgba(Wl, .7)}, ${rgba(W, .8)})`,
+        "--chip-bg": `linear-gradient(160deg, ${rgba(Wl, .95)}, ${rgba(Wd, .97)})`,
+        "--chip-solid": hex(Wd),
+        "--top-bg": rgba(Wdd, .42), "--top-line": rgba(T, .07), "--track": rgba(Wdd, .6), "--input-bg": rgba(Wdd, .5),
+        "--line": rgba(T, .12), "--line-soft": rgba(T, .08),
+        "--gold": hex(A), "--gold2": hex(mix(A, BLACK, .12)), "--gold-soft": rgba(A, .16), "--gold-line": rgba(A, .78), "--gold-hi": hex(mix(A, WHITE, .65)),
+        "--shadow": `0 14px 36px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 40px ${rgba(A, .05)}`,
+        "--bg-veil": light ? "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.04), rgba(255,255,255,.2) 70%, rgba(255,255,255,.32))"
+                           : "radial-gradient(120% 80% at 50% 0%, rgba(0,0,0,.04), rgba(0,0,0,.3) 70%, rgba(0,0,0,.5))",
+        "--sky": light ? "#0f8f83" : "#7cc0ef", "--sky2": light ? "#0b6f66" : "#4f93d6", "--sky-soft": light ? "rgba(15,143,131,.14)" : "rgba(124,192,239,.16)",
+        "--duty": light ? "#c2680a" : "#f3b979", "--yard": light ? "#7a48d6" : "#cdb0ff", "--bad": light ? "#d63b3b" : "#ff6b6b", "--warn": light ? "#d97a06" : "#ffa94d",
+      } };
+    }
+    const KEYS = Object.keys(vars("#000000", "#000000").vars);
+    function apply(win, accent) { const { light, vars: v } = vars(win, accent); const st = document.documentElement.style; for (const k in v) st.setProperty(k, v[k]); document.documentElement.classList.toggle("lum-light", light); }
+    function clear() { const st = document.documentElement.style; KEYS.forEach(k => st.removeProperty(k)); document.documentElement.classList.remove("lum-light"); }
+    return { rgb, hex, mix, lum, apply, clear };
+  })();
   (() => {
     const h = new URLSearchParams(location.hash.slice(1)), t = h.get("theme"), l = h.get("lang");
     if (t) document.documentElement.dataset.theme = t;
     if (l) document.documentElement.lang = l;
+    if (t === "custom") OT_PALETTE.apply("#" + (h.get("win") || "1c2a5e"), "#" + (h.get("accent") || "fdca4f"));
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -399,6 +436,49 @@
   .app { height: calc(100% - var(--tb)); }
   .scrim { top: var(--tb); }
   .drawer { top: var(--tb); }
+  /* ---------- özel tema: kullanıcının görseli ve renkleri (değişkenler OT_PALETTE ile html üstüne yazılır) ---------- */
+  html[data-theme="custom"] body::before { background: var(--bg); }
+  html[data-theme="custom"].has-bg body::before { background: var(--custom-bg) center / cover no-repeat, var(--bg); }
+  html[data-theme="custom"] body::after { display: none; }
+  html[data-theme="custom"].has-bg body::after { display: block; background: var(--bg-veil); }
+  html[data-theme="custom"] .clock b { background: linear-gradient(180deg, var(--gold-hi), var(--gold)); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 8px var(--gold-soft)); }
+  html[data-theme="custom"] select option { color: var(--text); background: var(--chip-solid); }
+  html[data-theme="custom"] .logo { filter: drop-shadow(0 3px 10px var(--gold-soft)); }
+  html.lum-light .scrim { background: rgba(20,30,60,.35); }
+  html.lum-light .tour-hole { box-shadow: 0 0 0 200vmax rgba(20,30,60,.5); }
+  html.lum-light .langpick { background: rgba(20,30,60,.35); }
+  html.lum-light .dd-menu { box-shadow: 0 10px 28px rgba(20,30,60,.16); }
+  html.lum-light .tbtn:hover { background: rgba(20,30,60,.08); }
+  html.lum-light .qb:hover { color: #fff; }
+  html.lum-light .mark { background: rgba(27,31,42,.35); }
+  html.lum-light .big { text-shadow: none; }
+  html.lum-light .sec, html.lum-light .hday { background: rgba(0,0,0,.035); }
+  html.lum-light .sm { background: rgba(0,0,0,.04); }
+  /* Ayarlar → Görünüm → Özel tema */
+  .custom { display: grid; gap: 10px; padding-top: 4px; border-top: 1px solid var(--line-soft); margin-top: 4px; }
+  .crow { display: flex; gap: 10px; align-items: center; }
+  .cbg { width: 84px; height: 52px; border-radius: 10px; border: 1px solid var(--line); background: var(--input-bg) center / cover no-repeat; flex: none;
+         display: grid; place-items: center; color: var(--dim); font-size: 18px; }
+  .cbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cnote { font-size: 11.5px; color: var(--dim); min-height: 14px; }
+  .cnote.bad { color: var(--bad); }
+  .swatches { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sw { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
+        cursor: pointer; font: inherit; text-align: left; transition: .2s; }
+  .sw i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .sw span { display: grid; line-height: 1.15; min-width: 0; }
+  .sw b { font-size: 12px; font-weight: 600; }
+  .sw small { font-size: 11px; color: var(--dim); font-family: var(--display); letter-spacing: .3px; }
+  .sw.on { border-color: var(--gold-line); background: var(--gold-soft); }
+  .picker { display: grid; gap: 8px; }
+  .picker canvas { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); cursor: crosshair; touch-action: none; }
+  .picker canvas#pkHue { cursor: ew-resize; }
+  .pkin { display: grid; grid-template-columns: 1fr 1fr 1fr 1.7fr; gap: 6px; }
+  .pkin label { display: grid; gap: 2px; font-size: 10.5px; color: var(--dim); letter-spacing: .4px; }
+  .pkin input { width: 100%; min-width: 0; padding: 6px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text); font: inherit; font-size: 12.5px;
+                font-family: var(--display); font-variant-numeric: tabular-nums; text-align: center; }
+  .pkin input:focus { outline: none; border-color: var(--gold-line); }
+  .pkin input[type="number"]::-webkit-inner-spin-button { opacity: .6; }
   /* dişlinin altındaki hızlı düğmeler */
   .topbtns { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
   .quick { display: flex; gap: 6px; }
@@ -700,6 +780,33 @@
         <div class="field"><label for="langSel" data-i18n="ui.lang">Dil</label><select id="langSel"></select></div>
         <div class="field"><label for="themeSel" data-i18n="ui.theme">Tema</label><select id="themeSel"></select></div>
       </div>
+      <div class="custom" id="customBox" hidden>
+        <div class="hint" data-i18n-html="ui.hint.custom"></div>
+        <div class="crow">
+          <div class="cbg" id="cbgThumb"><i class="ic" data-ic="image"></i></div>
+          <div class="cbtns">
+            <button class="sm primary" id="cbgPick"><i class="ic" data-ic="image"></i><span data-i18n="ui.custom.pick">Görsel seç…</span></button>
+            <button class="sm" id="cbgClear" data-i18n="ui.custom.remove">Görseli kaldır</button>
+            <input type="file" id="cbgFile" accept="image/*" hidden>
+          </div>
+        </div>
+        <div class="cnote" id="cbgNote"></div>
+        <div class="swatches">
+          <button class="sw on" data-target="win"><i id="swWin"></i><span><b data-i18n="ui.custom.win">Pencere rengi</b><small id="swWinHex">#1c2a5e</small></span></button>
+          <button class="sw" data-target="accent"><i id="swAccent"></i><span><b data-i18n="ui.custom.accent">Vurgu rengi</b><small id="swAccentHex">#fdca4f</small></span></button>
+        </div>
+        <div class="picker" id="picker">
+          <canvas id="pkSV" width="300" height="140"></canvas>
+          <canvas id="pkHue" width="300" height="16"></canvas>
+          <div class="pkin">
+            <label>R<input type="number" id="pkR" min="0" max="255"></label>
+            <label>G<input type="number" id="pkG" min="0" max="255"></label>
+            <label>B<input type="number" id="pkB" min="0" max="255"></label>
+            <label>HEX<input type="text" id="pkHex" maxlength="7" spellcheck="false"></label>
+          </div>
+        </div>
+        <div class="row"><button class="sm" id="customReset" data-i18n="ui.custom.reset">Varsayılan renklere dön</button></div>
+      </div>
     </div>
 
     <div class="sec">
@@ -822,6 +929,7 @@
     pause: SVG(`<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M10 9v6M14 9v6"/>`),
     bell: SVG(`<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M12 3.5v1.5"/>`),
     strip: SVG(`<rect x="2.5" y="8.5" width="19" height="7" rx="3.5"/><path d="M6.5 12h5M15 12h2.5"/>`),
+    image: SVG(`<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5.2-5.2L7 19.5"/>`),
     history: SVG(`<path d="M4.2 12a7.8 7.8 0 1 0 2.3-5.5"/><path d="M4 4.2v4.4h4.4"/><path d="M12 8.2v4.2l2.7 1.6"/>`),
     help: SVG(`<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>`),
     flourish: SVG(`<path d="M2 14c6-9 14-9 26-3" opacity=".85"/><path d="M6 17c5-5 11-6 20-3" opacity=".5"/>`, "0 0 32 24"),
@@ -918,6 +1026,7 @@
     if (st.onboarded === false && !onboardShown) { onboardShown = true; showLangPick(st.langs || []); }
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(st.lang); }
     document.documentElement.dataset.theme = st.theme || "vangogh";
+    syncCustom(st);
     document.body.classList.toggle("manual", st.mode === "manual");
 
     // üst çubuk
@@ -1128,6 +1237,123 @@
   $("frameLocal").addEventListener("click", () => call("set_time_frame", "local"));
   $("langSel").addEventListener("change", async () => { await call("set_lang", $("langSel").value); await loadStrings($("langSel").value); });
   $("themeSel").addEventListener("change", () => call("set_theme", $("themeSel").value));
+
+  // ---- özel tema: renkler + arka plan görseli ----
+  const custom = { win: "#1c2a5e", accent: "#fdca4f", bg: false, rev: 0 };
+  let customTouched = 0, customSaveT = null, customBgLoaded = -1, customTarget = "win";
+  function applyCustomLive() {
+    if (document.documentElement.dataset.theme === "custom") OT_PALETTE.apply(custom.win, custom.accent);
+    $("swWin").style.background = custom.win; $("swWinHex").textContent = custom.win;
+    $("swAccent").style.background = custom.accent; $("swAccentHex").textContent = custom.accent;
+    if (!$("miniPreview").hidden) showPreview();
+  }
+  function syncCustom(st) {
+    const isCustom = (st.theme || "vangogh") === "custom";
+    $("customBox").hidden = !isCustom;
+    const c = st.custom || {};
+    if (Date.now() - customTouched > 1500 && c.win) {
+      if (c.win !== custom.win || c.accent !== custom.accent) {
+        custom.win = c.win; custom.accent = c.accent;
+        PK.set(custom[customTarget], true);
+      }
+    }
+    if (isCustom) OT_PALETTE.apply(custom.win, custom.accent); else OT_PALETTE.clear();
+    $("swWin").style.background = custom.win; $("swWinHex").textContent = custom.win;
+    $("swAccent").style.background = custom.accent; $("swAccentHex").textContent = custom.accent;
+    custom.bg = !!c.bg;
+    $("cbgClear").hidden = !custom.bg;
+    if (c.bg_rev !== undefined && c.bg_rev !== customBgLoaded) { customBgLoaded = c.bg_rev; loadCustomBg(); }
+  }
+  async function loadCustomBg() {
+    let url = "";
+    try { url = custom.bg ? (await api.get_custom_bg()) || "" : ""; } catch (e) { url = ""; }
+    setCustomBg(url);
+  }
+  function setCustomBg(url) {
+    const root = document.documentElement;
+    if (url) { root.style.setProperty("--custom-bg", `url("${url}")`); root.classList.add("has-bg"); $("cbgThumb").style.backgroundImage = `url("${url}")`; $("cbgThumb").classList.add("has"); }
+    else { root.style.removeProperty("--custom-bg"); root.classList.remove("has-bg"); $("cbgThumb").style.backgroundImage = ""; $("cbgThumb").classList.remove("has"); }
+    $("cbgThumb").querySelector(".ic").hidden = !!url;
+  }
+  function scheduleCustomSave() {
+    customTouched = Date.now();
+    clearTimeout(customSaveT);
+    customSaveT = setTimeout(() => { if (api) api.set_custom(custom.win, custom.accent).catch(() => {}); }, 250);
+  }
+  document.querySelectorAll(".sw").forEach(b => b.addEventListener("click", () => {
+    customTarget = b.dataset.target;
+    document.querySelectorAll(".sw").forEach(x => x.classList.toggle("on", x === b));
+    PK.set(custom[customTarget], true);
+  }));
+  $("customReset").addEventListener("click", () => { custom.win = "#1c2a5e"; custom.accent = "#fdca4f"; PK.set(custom[customTarget], true); applyCustomLive(); scheduleCustomSave(); });
+  const cbgNote = (msg, bad) => { $("cbgNote").textContent = msg || ""; $("cbgNote").classList.toggle("bad", !!bad); };
+  $("cbgPick").addEventListener("click", () => $("cbgFile").click());
+  $("cbgClear").addEventListener("click", async () => { cbgNote(""); await call("clear_custom_bg"); });
+  $("cbgFile").addEventListener("change", async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!f) return;
+    if (!/^image\/(jpeg|png|webp|bmp|gif)$/.test(f.type)) { cbgNote(T("ui.custom.err_type"), true); return; }
+    if (f.size > 40 * 1024 * 1024) { cbgNote(T("ui.custom.err_size"), true); return; }
+    cbgNote(T("ui.custom.saving"));
+    let dataUrl;
+    try { dataUrl = await shrinkImage(f); } catch (err) { cbgNote(T("ui.custom.err_type"), true); return; }
+    let r = null;
+    try { r = await api.set_custom_bg(dataUrl); } catch (err) { r = { ok: false, err: String(err) }; }
+    if (r && r.ok) { cbgNote(T("ui.custom.saved")); setCustomBg(dataUrl); customBgLoaded = -2; }
+    else cbgNote(T("ui.custom.err_save", { err: (r && r.err) || "?" }), true);
+  });
+  async function shrinkImage(file) {
+    // büyük duvar kâğıtlarını 2560 px'e küçültüp JPEG olarak gönder (dosya küçük kalsın, köprü hızlı olsun)
+    const bmp = await createImageBitmap(file);
+    const max = 2560, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); bmp.close && bmp.close();
+    return c.toDataURL("image/jpeg", .9);
+  }
+
+  // canvas renk seçici: doygunluk/parlaklık karesi + ton şeridi + R G B / HEX alanları
+  const PK = (() => {
+    const sv = $("pkSV"), hu = $("pkHue"), sc = sv.getContext("2d"), hc = hu.getContext("2d");
+    let h = 225, s = .7, v = .37, onChange = null;
+    const hsv2rgb = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5), f(3), f(1)].map(x => x * 255); };
+    const rgb2hsv = (r, g, b) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let hh = 0;
+      if (d) { hh = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; hh *= 60; if (hh < 0) hh += 360; }
+      return [hh, mx ? d / mx : 0, mx]; };
+    function drawHue() {
+      const g = hc.createLinearGradient(0, 0, hu.width, 0);
+      for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsl(${i * 60},100%,50%)`);
+      hc.fillStyle = g; hc.fillRect(0, 0, hu.width, hu.height);
+      const x = h / 360 * hu.width;
+      hc.lineWidth = 2; hc.strokeStyle = "#fff"; hc.strokeRect(x - 3, 1, 6, hu.height - 2);
+      hc.lineWidth = 1; hc.strokeStyle = "rgba(0,0,0,.6)"; hc.strokeRect(x - 4, 0, 8, hu.height);
+    }
+    function drawSV() {
+      const W = sv.width, Hh = sv.height;
+      sc.fillStyle = `hsl(${h},100%,50%)`; sc.fillRect(0, 0, W, Hh);
+      let g = sc.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); sc.fillStyle = g; sc.fillRect(0, 0, W, Hh);
+      g = sc.createLinearGradient(0, 0, 0, Hh); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)"); sc.fillStyle = g; sc.fillRect(0, 0, W, Hh);
+      const x = s * W, y = (1 - v) * Hh;
+      sc.beginPath(); sc.arc(x, y, 6, 0, Math.PI * 2); sc.lineWidth = 2; sc.strokeStyle = "#fff"; sc.stroke();
+      sc.beginPath(); sc.arc(x, y, 7.5, 0, Math.PI * 2); sc.lineWidth = 1; sc.strokeStyle = "rgba(0,0,0,.6)"; sc.stroke();
+    }
+    function fill(hex) { const c = OT_PALETTE.rgb(hex); if (!c) return; $("pkR").value = c[0]; $("pkG").value = c[1]; $("pkB").value = c[2]; $("pkHex").value = hex; }
+    function emit(quiet) { const hex = OT_PALETTE.hex(hsv2rgb(h, s, v)); fill(hex); if (!quiet && onChange) onChange(hex); }
+    function pointer(cv, fn) {
+      const move = e => { const r = cv.getBoundingClientRect(); fn(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), Math.max(0, Math.min(1, (e.clientY - r.top) / r.height))); };
+      cv.addEventListener("pointerdown", e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); move(e); });
+      cv.addEventListener("pointermove", e => { if (e.buttons & 1) move(e); });
+    }
+    pointer(sv, (x, y) => { s = x; v = 1 - y; drawSV(); emit(); });
+    pointer(hu, x => { h = x * 360; drawHue(); drawSV(); emit(); });
+    const fromRgb = () => { const c = ["pkR", "pkG", "pkB"].map(id => Math.max(0, Math.min(255, parseInt($(id).value, 10) || 0))); [h, s, v] = rgb2hsv(...c); drawHue(); drawSV(); emit(); };
+    ["pkR", "pkG", "pkB"].forEach(id => $(id).addEventListener("input", fromRgb));
+    $("pkHex").addEventListener("input", () => { let t = $("pkHex").value.trim(); if (!t.startsWith("#")) t = "#" + t; const c = OT_PALETTE.rgb(t); if (!c) return; [h, s, v] = rgb2hsv(...c); drawHue(); drawSV(); emit(); });
+    $("pkHex").addEventListener("blur", () => { const c = OT_PALETTE.rgb($("pkHex").value.trim().replace(/^#?/, "#")); if (!c) emit(true); });
+    function set(hex, quiet) { const c = OT_PALETTE.rgb(hex); if (!c) return; [h, s, v] = rgb2hsv(...c); drawHue(); drawSV(); emit(quiet); }
+    drawHue(); drawSV(); emit(true);
+    return { set, onChange: fn => { onChange = fn; } };
+  })();
+  PK.onChange(hex => { custom[customTarget] = hex; applyCustomLive(); scheduleCustomSave(); });
   $("feedback").addEventListener("click", () => call("open_feedback"));
   $("splitBreak").addEventListener("change", () => call("set_split_break", $("splitBreak").checked));
   $("sounds").addEventListener("change", () => call("set_sounds", $("sounds").checked));
@@ -1139,7 +1365,8 @@
   function showPreview() {
     clearTimeout(pvTimer);
     const theme = (last && last.theme) || "vangogh";
-    if (pvTheme !== theme) { pvTheme = theme; pvFrame.src = `mini.html#preview=1&theme=${theme}&alpha=${$("miniOpacity").value / 100}`; }
+    const key = theme === "custom" ? `custom&win=${custom.win.slice(1)}&accent=${custom.accent.slice(1)}` : theme;
+    if (pvTheme !== key) { pvTheme = key; pvFrame.src = `mini.html#preview=1&theme=${key}&alpha=${$("miniOpacity").value / 100}`; }
     $("miniPreview").hidden = false;
     pushPreviewAlpha();
   }
@@ -1322,7 +1549,8 @@
         clock: { abs: m.abs, local: m.abs - 60, day: ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"][Math.floor((m.abs - 60) / 1440) % 7], time: `${String(Math.floor((m.abs - 60) % 1440 / 60)).padStart(2,"0")}:${String((m.abs - 60) % 60).padStart(2,"0")}`, tz_name: "BST", offset: -60 },
         drive_block: m.drive_block, drive_daily: m.drive_daily, rest: m.rest, limits: L, rest_target: m.rest >= 45 ? 660 : 45, remaining: rem, next_req: remD <= remB ? "REST" : "BREAK",
         break_credited: m.credited, big, moving: m.status === "DRIVING", manual_rate: m.rate, on_top: m.on_top, log: [...m.log].reverse().slice(0, 6),
-        lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }], yard_max: 40,
+        lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }, { code: "custom", name: "Özel" }],
+        custom: { win: m.cwin || "#1c2a5e", accent: m.caccent || "#fdca4f", bg: !!m.cbg, bg_rev: m.cbgrev || 1 }, yard_max: 40,
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         full_rest: m.status !== "DRIVING" ? { available: true, busy: false, minutes: 661, label: "Tam dinlenme (11:00)" } : { available: false },
@@ -1342,7 +1570,8 @@
       set_mode: async v => { m.mode = v; return view(); }, set_manual_clock: async (d, h, mi) => { m.abs = d * 1440 + h * 60 + mi; return view(); },
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
-      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
+      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
+      set_custom_bg: async d => { m.cbgdata = d; m.cbg = true; m.cbgrev = (m.cbgrev || 1) + 1; return { ok: true }; }, clear_custom_bg: async () => { m.cbg = false; m.cbgdata = ""; m.cbgrev = (m.cbgrev || 1) + 1; return view(); }, get_custom_bg: async () => m.cbgdata || "", open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
       set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, full_rest: async () => view(),
       get_history: async () => ({ today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
         days: [{ drive: 512, rest: 705, rests: 2, start: 400, end: 2100, saved: "2026-09-13 21:10", reason: "daily", segments: [{ t: "drive", m: 268, a: 400 }, { t: "rest", m: 45, k: "break", a: 668 }, { t: "drive", m: 244, a: 713 }, { t: "rest", m: 660, k: "daily", a: 957 }], violations: [{ t: 680, kind: "block", over: 12 }] }] }), toggle_mini: async () => view(), set_hotkey: async () => view(),

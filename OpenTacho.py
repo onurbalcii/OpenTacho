@@ -100,7 +100,10 @@ ROLLBACK_MIN = 2       # oyun saati en az bu kadar dk geri giderse "kayıt yükl
 TICK = 0.25            # saniye
 
 STATUSES = ("DRIVING", "ON_DUTY", "OFF_DUTY", "YARD_MOVE")
-THEMES = ("vangogh", "dark", "light")
+THEMES = ("vangogh", "dark", "light", "custom")
+DEFAULT_CUSTOM = {"win": "#1c2a5e", "accent": "#fdca4f", "bg": False}   # özel tema: pencere rengi, vurgu rengi, arka plan görseli var mı
+CUSTOM_BG_FILE = os.path.join(DATA_DIR, "custom_bg.img")                 # kullanıcının seçtiği görsel (jpeg/png), exe'nin yanında
+CUSTOM_BG_MAX = 15 * 1024 * 1024
 
 
 class I18n:
@@ -208,7 +211,8 @@ DEFAULT_STATE = {
     "win": None,               # pencere konumu/boyutu {"x","y","w","h"}
     "prov": None,              # geçici sayım (iş yok ama GPS rotası var): başlangıç anındaki sayaç görüntüsü
     "lang": DEFAULT_LANG,      # arayüz dili (lang/<kod>.json)
-    "theme": DEFAULT_THEME,    # vangogh | dark | light
+    "theme": DEFAULT_THEME,    # vangogh | dark | light | custom
+    "custom": dict(DEFAULT_CUSTOM),   # özel tema ayarları (bkz. DEFAULT_CUSTOM)
     "log": [],
 }
 
@@ -697,7 +701,53 @@ def _user32():
     return u
 
 
-def style_frameless_main(win, theme):
+def _hex_ok(v):
+    return isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v) is not None
+
+
+def _hex_rgb(h):
+    return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def _mix_hex(h, to, t):
+    """h rengini to'ya doğru t oranında karıştırır (#rrggbb)."""
+    a, b = _hex_rgb(h), _hex_rgb(to)
+    return "#%02x%02x%02x" % tuple(int(round(x + (y - x) * t)) for x, y in zip(a, b))
+
+
+def _is_light(h):
+    r, g, b = _hex_rgb(h)
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.55
+
+
+def theme_bg_color(s):
+    """Pencerenin sayfa boyanmadan önceki arka plan rengi (özel temada pencere renginden türetilir)."""
+    theme = s.get("theme") or DEFAULT_THEME
+    if theme == "custom":
+        w = s["custom"]["win"]
+        return _mix_hex(w, "#ffffff", 0.35) if _is_light(w) else _mix_hex(w, "#000000", 0.45)
+    return THEME_BG.get(theme, "#0d1117")
+
+
+def theme_border(s):
+    """DWM kenar rengi (COLORREF 0x00BBGGRR): temaya göre; özel temada vurgu rengi."""
+    theme = s.get("theme") or DEFAULT_THEME
+    if theme == "custom":
+        r, g, b = _hex_rgb(s["custom"]["accent"])
+        return (b << 16) | (g << 8) | r
+    return THEME_BORDER.get(theme, THEME_BORDER["vangogh"])
+
+
+def theme_hash(s):
+    """Sayfa URL'sinin # kısmı: tema (+ özel temada renkler), ilk boyamadan önce okunur."""
+    theme = s.get("theme") or DEFAULT_THEME
+    h = "theme=" + theme
+    if theme == "custom":
+        h += "&win=" + s["custom"]["win"][1:] + "&accent=" + s["custom"]["accent"][1:]
+    return h
+
+
+def style_frameless_main(win, border):
     """Windows başlık çubuğu ve çerçevesi yok; Windows 11 köşeleri DWM yuvarlar, ince kenar rengi temaya uyar.
     Taşıma/boyutlandırma/büyütme sayfadaki bar ve kenar tutamaçlarıyla yapılır (WS_THICKFRAME mavi bir üst
     şerit çizdiği ve WinForms'un geri alma hesabını bozduğu için kullanılmaz)."""
@@ -709,7 +759,7 @@ def style_frameless_main(win, theme):
         dwm.DwmSetWindowAttribute.argtypes = [wt.HWND, wt.DWORD, ctypes.c_void_p, wt.DWORD]
         pref = ctypes.c_int(2)                                   # DWMWCP_ROUND
         dwm.DwmSetWindowAttribute(hwnd, 33, ctypes.byref(pref), 4)
-        col = ctypes.c_uint32(THEME_BORDER.get(theme, THEME_BORDER["vangogh"]))
+        col = ctypes.c_uint32(border)
         dwm.DwmSetWindowAttribute(hwnd, 34, ctypes.byref(col), 4)   # DWMWA_BORDER_COLOR
     except Exception as e:
         log_error("çerçevesiz pencere stili ayarlanamadı: %r" % e)
@@ -812,6 +862,7 @@ class Tacho:
         self.last_save = time.monotonic()
         self.stop = False
         self.window = None
+        self.bg_rev = 1            # özel arka plan görseli değişince artar (sayfa yeniden çeker)
 
     # ---- kalıcılık ----
     def _load(self):
@@ -835,6 +886,10 @@ class Tacho:
             st["set_time_frame"] = "local"
         if st.get("theme") not in THEMES:
             st["theme"] = DEFAULT_THEME
+        c = st.get("custom") if isinstance(st.get("custom"), dict) else {}
+        st["custom"] = {"win": c.get("win") if _hex_ok(c.get("win")) else DEFAULT_CUSTOM["win"],
+                        "accent": c.get("accent") if _hex_ok(c.get("accent")) else DEFAULT_CUSTOM["accent"],
+                        "bg": bool(c.get("bg")) and os.path.exists(CUSTOM_BG_FILE)}
         L.load(st.get("lang") or DEFAULT_LANG)
         st["lang"] = L.code
         # bağlantı yeniden kurulunca saat yeniden eşitlenir
@@ -1626,7 +1681,9 @@ class Tacho:
                 kw = {"x": int(pos["x"]), "y": int(pos["y"])}
             theme = self.s.get("theme") or DEFAULT_THEME
             bg = {"dark": "#171b22", "light": "#ffffff"}.get(theme, "#0b1230")
-            win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#theme=" + theme, js_api=self.api,
+            if theme == "custom":
+                bg = _mix_hex(self.s["custom"]["win"], "#000000", 0.35)
+            win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#" + theme_hash(self.s), js_api=self.api,
                                         width=MINI_W, height=MINI_H,
                                         min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
                                         background_color=bg, **kw)
@@ -1909,6 +1966,7 @@ class Tacho:
             "langs": I18n.available(),
             "theme": s["theme"],
             "themes": [{"code": t, "name": L("theme." + t)} for t in THEMES],
+            "custom": {"win": s["custom"]["win"], "accent": s["custom"]["accent"], "bg": bool(s["custom"].get("bg")), "bg_rev": self.bg_rev},
             "feedback_url": feedback_url(),
             "yard_max": int(YARD_MAX_KMH),
             "auto_break": s["auto_break"],
@@ -2038,6 +2096,78 @@ class Tacho:
                 self.s["theme"] = theme
                 self.dirty = True
                 self.log(L("log.theme", name=L("theme." + theme)))
+        self._restyle_border()
+
+    def _restyle_border(self):
+        if self.window is not None:
+            style_frameless_main(self.window, theme_border(self.s))
+
+    # ---- özel tema ----
+    def act_set_custom(self, win, accent):
+        with self.lock:
+            c = self.s["custom"]
+            if _hex_ok(win):
+                c["win"] = win.lower()
+            if _hex_ok(accent):
+                c["accent"] = accent.lower()
+            self.dirty = True
+            is_custom = self.s.get("theme") == "custom"
+        if is_custom:
+            self._restyle_border()
+
+    def act_set_custom_bg(self, data_url):
+        """Sayfadan gelen data:image/...;base64 görselini exe'nin yanına yazar."""
+        try:
+            head, _, b64 = (data_url or "").partition(",")
+            if not head.startswith("data:image/") or not b64:
+                return {"ok": False, "err": "bad data"}
+            import base64
+            raw = base64.b64decode(b64, validate=True)
+        except Exception as e:
+            return {"ok": False, "err": "decode: %r" % e}
+        if len(raw) > CUSTOM_BG_MAX:
+            return {"ok": False, "err": "too large"}
+        if not (raw[:3] == b"\xff\xd8\xff" or raw[:8] == b"\x89PNG\r\n\x1a\n"):
+            return {"ok": False, "err": "not jpeg/png"}
+        tmp = CUSTOM_BG_FILE + ".tmp"
+        try:
+            with open(tmp, "wb") as f:
+                f.write(raw)
+            os.replace(tmp, CUSTOM_BG_FILE)
+        except Exception as e:
+            log_error("özel arka plan yazılamadı: %r" % e)
+            return {"ok": False, "err": "write: %r" % e}
+        with self.lock:
+            self.s["custom"]["bg"] = True
+            self.bg_rev += 1
+            self.dirty = True
+            self.log(L("log.custom_bg"))
+        return {"ok": True}
+
+    def act_clear_custom_bg(self):
+        try:
+            if os.path.exists(CUSTOM_BG_FILE):
+                os.remove(CUSTOM_BG_FILE)
+        except Exception as e:
+            log_error("özel arka plan silinemedi: %r" % e)
+        with self.lock:
+            self.s["custom"]["bg"] = False
+            self.bg_rev += 1
+            self.dirty = True
+
+    def custom_bg_data_url(self):
+        """Kayıtlı görseli data URL olarak verir (sayfa dosya sisteminden okuyamaz)."""
+        if not self.s["custom"].get("bg") or not os.path.exists(CUSTOM_BG_FILE):
+            return ""
+        try:
+            with open(CUSTOM_BG_FILE, "rb") as f:
+                raw = f.read()
+        except Exception as e:
+            log_error("özel arka plan okunamadı: %r" % e)
+            return ""
+        import base64
+        mime = "image/png" if raw[:8] == b"\x89PNG\r\n\x1a\n" else "image/jpeg"
+        return "data:%s;base64,%s" % (mime, base64.b64encode(raw).decode("ascii"))
 
     def act_set_auto_break(self, flag):
         with self.lock:
@@ -2125,6 +2255,20 @@ class Api:
     def set_theme(self, theme):
         self._t.act_set_theme(theme)
         return self.get_state()
+
+    def set_custom(self, win, accent):
+        self._t.act_set_custom(win, accent)
+        return self.get_state()
+
+    def set_custom_bg(self, data_url):
+        return self._t.act_set_custom_bg(data_url)
+
+    def clear_custom_bg(self):
+        self._t.act_clear_custom_bg()
+        return self.get_state()
+
+    def get_custom_bg(self):
+        return self._t.custom_bg_data_url()
 
     def toggle_mini(self):
         self._t.act_toggle_mini()
@@ -2229,11 +2373,11 @@ def main():
     theme = tacho.s.get("theme") or DEFAULT_THEME
     window = webview.create_window(
         WINDOW_TITLE,
-        UI_FILE + f"#theme={theme}&lang={L.code}",    # sayfa ilk boyamadan önce temayı bundan okur
+        UI_FILE + "#" + theme_hash(tacho.s) + f"&lang={L.code}",    # sayfa ilk boyamadan önce temayı (ve özel renkleri) bundan okur
         js_api=api,
         min_size=(380, 600),
         on_top=bool(tacho.s["on_top"]),
-        background_color=THEME_BG.get(theme, "#0d1117"),
+        background_color=theme_bg_color(tacho.s),
         frameless=True,            # Windows başlık çubuğu yerine sayfadaki ince bar (temaya uyumlu)
         easy_drag=False,           # pywebview çerçevesizde bunu varsayılan açar: her tıklama pencereyi sürüklerdi;
                                    # taşıma yalnızca başlık çubuğundan (.pywebview-drag-region)
@@ -2241,7 +2385,7 @@ def main():
     )
 
     def shown():
-        style_frameless_main(window, tacho.s.get("theme") or DEFAULT_THEME)
+        style_frameless_main(window, theme_border(tacho.s))
         try:
             window.resize(kw["width"], kw["height"])   # çerçeve kaldırılınca 16 px eksilen boyutu geri ver
         except Exception:

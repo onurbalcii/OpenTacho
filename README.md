@@ -87,7 +87,9 @@ actually did.
   small always-on-top gauge over the game — status icon, time left, next step, three mini bars,
   game clock, flags, delivery due time and Break / Yard move / Skip buttons — drag it anywhere.
 - **Themes**: Van Gogh (default, an algorithmically painted *Starry Night*-style backdrop with
-  glass panels), simple dark, simple light.
+  glass panels), simple dark, simple light and **Custom**: your own background image (JPG/PNG/WebP) plus a
+  canvas colour picker for the window and accent colours (RGB/HEX; text colour is chosen automatically, the mini strip
+  follows the same colours).
 - **Languages**: English, Turkish, German, Russian, Polish — adding one is a single JSON file.
 - **First run**: a language picker, then a short guided tour of the screen and the settings tabs
   (restart it any time from Settings → App).

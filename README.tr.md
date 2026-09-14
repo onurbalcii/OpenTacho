@@ -85,7 +85,8 @@ gerçekten yaptığınla birebir örtüşür.
   üstünde küçük, sürüklenebilir bir göstergeyle değiştirir — durum ikonu, kalan süre, sonraki adım,
   üç mini çubuk, oyun saati, bayraklar, teslimat süresi ve Mola / İç hareket / Atla düğmeleri.
 - **Temalar**: Van Gogh (varsayılan; *Yıldızlı Gece* esintili algoritmik arka plan + cam paneller),
-  sade koyu, sade açık.
+  sade koyu, sade açık ve **Özel**: kendi arka plan görselin (JPG/PNG/WebP) + canvas renk seçiciyle pencere ve
+  vurgu rengi (RGB/HEX; yazı rengi kendiliğinden seçilir, mini şerit aynı renkleri kullanır).
 - **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe — yeni dil tek JSON dosyası.
 - **İlk açılış**: dil seçimi, ardından ekranı ve ayar sekmelerini adım adım anlatan kısa bir rehber turu
   (Ayarlar → Uygulama'dan her zaman yeniden başlatılabilir).

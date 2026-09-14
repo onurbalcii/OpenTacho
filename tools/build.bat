@@ -21,7 +21,7 @@ copy /Y README.md dist\OpenTacho\ >nul
 copy /Y README.tr.md dist\OpenTacho\ >nul
 
 rem Test calistirmasindan kalan kullanici verisi pakete girmesin
-for %%f in (state.json history.json error.log) do if exist dist\OpenTacho\%%f del dist\OpenTacho\%%f
+for %%f in (state.json history.json error.log custom_bg.img) do if exist dist\OpenTacho\%%f del dist\OpenTacho\%%f
 if exist dist\OpenTacho-win64.zip del dist\OpenTacho-win64.zip
 powershell -NoProfile -Command "Compress-Archive -Path 'dist\OpenTacho\*' -DestinationPath 'dist\OpenTacho-win64.zip' -CompressionLevel Optimal"
 

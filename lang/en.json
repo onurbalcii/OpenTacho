@@ -287,7 +287,7 @@
   "tour.tab_game.t": "Game tab",
   "tour.tab_game.b": "<ul><li><b>Recommended game setup</b>: fatigue simulation off, rests skipped from the app.</li><li>The time frame used by the skip button.</li><li>Telemetry details: plugin version, game, time scale, save age — look here if the connection or the clock misbehaves.</li></ul>",
   "tour.tab_app.t": "App tab",
-  "tour.tab_app.b": "<ul><li>Language and theme</li><li>Sound alerts</li><li>Mini strip: hotkey and background opacity</li><li>Always on top, resetting the counters, feedback</li><li>Restarting this guide</li></ul>",
+  "tour.tab_app.b": "<ul><li>Language and theme — the <b>Custom</b> theme takes your own background image and colours</li><li>Sound alerts</li><li>Mini strip: hotkey and background opacity</li><li>Always on top, resetting the counters, feedback</li><li>Restarting this guide</li></ul>",
   "tour.mini.t": "Mini strip",
   "tour.mini.b": "<b>Ctrl + Num 0</b> (changeable) swaps the main window for a small draggable gauge over the game.<ul><li>State, time left, three mini bars, clock, flags.</li><li>Break / Yard move / Skip buttons.</li><li>The same key brings the main window back.</li></ul>",
   "tour.done.t": "You're all set",
@@ -326,5 +326,18 @@
   "tour.setup.t": "Set this up first — important",
   "tour.setup.b": "The most effective way to use OpenTacho is to take the game's own fatigue mechanic out of the loop.<ol><li>In the game untick <b>Options → Gameplay → Fatigue simulation</b> — its fatigue clock has nothing to do with the EU rule.</li><li>Don't <b>sleep</b> at rest areas / hotels — the game decides how long you sleep, rarely the 11 h a daily rest needs.</li><li>When your driving time is up, stop the truck and skip breaks and rests from here with <b>⏩ Skip</b> or <b>Full rest</b> — the game clock advances by exactly the required amount and the time is credited instantly. This needs the console (config.cfg: g_console 1, g_developer 1).</li></ol>",
   "ui.sec.setup": "Recommended game setup",
-  "ui.hint.setup_html": "Most effective use:<ol><li>In the game keep <b>Options → Gameplay → Fatigue simulation</b> off — the game's fatigue clock doesn't follow the EU rule.</li><li>Don't sleep at rest areas / hotels — in-game sleep isn't 11 h.</li><li>When your driving time is up, stop the truck and skip breaks and rests with <b>⏩ Skip</b> / <b>Full rest</b> — the game clock advances by exactly the required amount and the time is credited instantly.</li></ol>"
+  "ui.hint.setup_html": "Most effective use:<ol><li>In the game keep <b>Options → Gameplay → Fatigue simulation</b> off — the game's fatigue clock doesn't follow the EU rule.</li><li>Don't sleep at rest areas / hotels — in-game sleep isn't 11 h.</li><li>When your driving time is up, stop the truck and skip breaks and rests with <b>⏩ Skip</b> / <b>Full rest</b> — the game clock advances by exactly the required amount and the time is credited instantly.</li></ol>",
+  "theme.custom": "Custom",
+  "ui.hint.custom": "<ul><li>Put your own image in the background (JPG, PNG, WebP…); it is downscaled and stored next to the app.</li><li><b>Window colour</b> sets the tone of the panels and background, <b>accent colour</b> the headings, frames and bars; the text colour is chosen automatically.</li><li>Changes apply instantly; the mini strip uses the same colours.</li></ul>",
+  "ui.custom.pick": "Choose image…",
+  "ui.custom.remove": "Remove image",
+  "ui.custom.win": "Window colour",
+  "ui.custom.accent": "Accent colour",
+  "ui.custom.reset": "Reset colours",
+  "ui.custom.err_type": "Only JPG, PNG, WebP, GIF or BMP images can be used.",
+  "ui.custom.err_size": "Image too large (40 MB max).",
+  "ui.custom.saving": "Saving…",
+  "ui.custom.saved": "Background image set.",
+  "ui.custom.err_save": "Image could not be saved: {err}",
+  "log.custom_bg": "Custom background image set"
 }

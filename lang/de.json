@@ -287,7 +287,7 @@
   "tour.tab_game.t": "Reiter Spiel",
   "tour.tab_game.b": "<ul><li><b>Empfohlene Spieleinstellung</b>: Müdigkeitssimulation aus, Ruhezeiten über die App überspringen.</li><li>Die Zeitbasis der Überspringen-Schaltfläche.</li><li>Telemetriedetails: Plugin-Version, Spiel, Zeitfaktor, Alter des Spielstands — hier nachsehen, wenn Verbindung oder Uhr sich seltsam verhalten.</li></ul>",
   "tour.tab_app.t": "Reiter App",
-  "tour.tab_app.b": "<ul><li>Sprache und Design</li><li>Tonwarnungen</li><li>Mini-Leiste: Hotkey und Hintergrund-Deckkraft</li><li>Immer im Vordergrund, Zähler zurücksetzen, Feedback</li><li>Diese Einführung neu starten</li></ul>",
+  "tour.tab_app.b": "<ul><li>Sprache und Design — das Design <b>Eigenes</b> nimmt dein Hintergrundbild und deine Farben</li><li>Tonwarnungen</li><li>Mini-Leiste: Hotkey und Hintergrund-Deckkraft</li><li>Immer im Vordergrund, Zähler zurücksetzen, Feedback</li><li>Diese Einführung neu starten</li></ul>",
   "tour.mini.t": "Mini-Leiste",
   "tour.mini.b": "<b>Strg + Num 0</b> (änderbar) tauscht das Hauptfenster gegen eine kleine verschiebbare Anzeige über dem Spiel.<ul><li>Zustand, Restzeit, drei Mini-Balken, Uhr, Markierungen.</li><li>Schaltflächen für Pause / Rangieren / Überspringen.</li><li>Dieselbe Taste bringt das Hauptfenster zurück.</li></ul>",
   "tour.done.t": "Alles bereit",
@@ -326,5 +326,18 @@
   "tour.setup.t": "Zuerst einstellen — wichtig",
   "tour.setup.b": "Am effektivsten nutzt du OpenTacho, wenn du die Müdigkeitsmechanik des Spiels aus dem Spiel nimmst.<ol><li>Im Spiel <b>Optionen → Gameplay → Müdigkeitssimulation</b> abwählen — ihre Müdigkeitsuhr hat nichts mit der EU-Regel zu tun.</li><li>Nicht an Rastplätzen / im Hotel <b>schlafen</b> — das Spiel bestimmt die Schlafdauer, selten die 11 h einer Tagesruhezeit.</li><li>Ist die Lenkzeit aufgebraucht, Lkw anhalten und Pausen und Ruhezeiten von hier mit <b>⏩ Überspringen</b> oder <b>Volle Ruhezeit</b> überspringen — die Spieluhr springt um genau die nötige Zeit, und sie wird sofort gutgeschrieben. Dafür muss die Konsole aktiv sein (config.cfg: g_console 1, g_developer 1).</li></ol>",
   "ui.sec.setup": "Empfohlene Spieleinstellung",
-  "ui.hint.setup_html": "Am effektivsten:<ol><li>Im Spiel <b>Optionen → Gameplay → Müdigkeitssimulation</b> ausschalten — die Müdigkeitsuhr des Spiels folgt nicht der EU-Regel.</li><li>Nicht an Rastplätzen / im Hotel schlafen — der Schlaf im Spiel dauert keine 11 h.</li><li>Ist die Lenkzeit aufgebraucht, Lkw anhalten und Pausen und Ruhezeiten mit <b>⏩ Überspringen</b> / <b>Volle Ruhezeit</b> überspringen — die Spieluhr springt um genau die nötige Zeit, und sie wird sofort gutgeschrieben.</li></ol>"
+  "ui.hint.setup_html": "Am effektivsten:<ol><li>Im Spiel <b>Optionen → Gameplay → Müdigkeitssimulation</b> ausschalten — die Müdigkeitsuhr des Spiels folgt nicht der EU-Regel.</li><li>Nicht an Rastplätzen / im Hotel schlafen — der Schlaf im Spiel dauert keine 11 h.</li><li>Ist die Lenkzeit aufgebraucht, Lkw anhalten und Pausen und Ruhezeiten mit <b>⏩ Überspringen</b> / <b>Volle Ruhezeit</b> überspringen — die Spieluhr springt um genau die nötige Zeit, und sie wird sofort gutgeschrieben.</li></ol>",
+  "theme.custom": "Eigenes",
+  "ui.hint.custom": "<ul><li>Lege dein eigenes Bild in den Hintergrund (JPG, PNG, WebP…); es wird verkleinert und neben der App gespeichert.</li><li><b>Fensterfarbe</b> bestimmt den Ton von Feldern und Hintergrund, <b>Akzentfarbe</b> Überschriften, Rahmen und Balken; die Textfarbe wird automatisch gewählt.</li><li>Änderungen gelten sofort; die Mini-Leiste nutzt dieselben Farben.</li></ul>",
+  "ui.custom.pick": "Bild wählen…",
+  "ui.custom.remove": "Bild entfernen",
+  "ui.custom.win": "Fensterfarbe",
+  "ui.custom.accent": "Akzentfarbe",
+  "ui.custom.reset": "Farben zurücksetzen",
+  "ui.custom.err_type": "Nur JPG-, PNG-, WebP-, GIF- oder BMP-Bilder sind möglich.",
+  "ui.custom.err_size": "Bild zu groß (max. 40 MB).",
+  "ui.custom.saving": "Wird gespeichert…",
+  "ui.custom.saved": "Hintergrundbild gesetzt.",
+  "ui.custom.err_save": "Bild konnte nicht gespeichert werden: {err}",
+  "log.custom_bg": "Eigenes Hintergrundbild gesetzt"
 }

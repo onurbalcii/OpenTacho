@@ -88,7 +88,8 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   kleine, immer sichtbare Anzeige über dem Spiel — Statussymbol, Restzeit, nächster Schritt, drei Mini-Balken,
   Spieluhr, Markierungen, Lieferfrist und Schaltflächen für Pause / Rangieren / Überspringen — frei verschiebbar.
 - **Designs**: Van Gogh (Standard, ein algorithmisch gemalter Hintergrund im Stil der *Sternennacht*
-  mit Glasflächen), schlicht dunkel, schlicht hell.
+  mit Glasflächen), schlicht dunkel, schlicht hell und **Eigenes**: dein eigenes Hintergrundbild (JPG/PNG/WebP) plus
+  ein Canvas-Farbwähler für Fenster- und Akzentfarbe (RGB/HEX; Textfarbe automatisch, die Mini-Leiste folgt denselben Farben).
 - **Sprachen**: Deutsch, Englisch, Türkisch, Russisch, Polnisch — eine neue Sprache ist eine einzige JSON-Datei.
 - **Erster Start**: Sprachauswahl, dann eine kurze Einführung in Bildschirm und Einstellungsreiter
   (jederzeit neu startbar unter Einstellungen → App).

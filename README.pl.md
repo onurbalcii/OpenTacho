@@ -85,7 +85,8 @@ odpowiadają temu, co naprawdę zrobiłeś.
   zawsze widoczny wskaźnik nad grą — ikona statusu, pozostały czas, następny krok, trzy mini paski,
   zegar gry, znaczniki, termin dostawy oraz przyciski Przerwa / Manewry / Pomiń — przeciągaj gdziekolwiek.
 - **Motywy**: Van Gogh (domyślny, algorytmicznie namalowane tło w stylu *Gwiaździstej nocy*
-  ze szklanymi panelami), prosty ciemny, prosty jasny.
+  ze szklanymi panelami), prosty ciemny, prosty jasny i **Własny**: własny obraz tła (JPG/PNG/WebP) plus
+  próbnik kolorów na canvasie dla koloru okna i akcentu (RGB/HEX; kolor tekstu dobierany automatycznie, mini pasek używa tych samych kolorów).
 - **Języki**: polski, angielski, turecki, niemiecki, rosyjski — nowy język to jeden plik JSON.
 - **Pierwsze uruchomienie**: wybór języka, potem krótki samouczek po ekranie i kartach ustawień
   (w każdej chwili do ponownego uruchomienia z Ustawienia → Aplikacja).
