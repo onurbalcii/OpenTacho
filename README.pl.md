@@ -67,6 +67,10 @@ odpowiadają temu, co naprawdę zrobiłeś.
   późniejsza przerwa ≥ 30 min odnawia blok (zasada UE). Można wyłączyć.
 - **Dzielony odpoczynek dzienny (3 + 9)** z paskiem przebiegu dnia pokazującym każdy ukończony blok,
   bieżący i plan; jednoczęściowy odpoczynek 11 h nadal działa jak zwykle. Można zablokować na jednoczęściowy.
+- **Zasady tygodniowe** (opcjonalne, Ustawienia → Zasady; domyślnie tryb prosty): **56 h** tygodniowo / **90 h** w dwóch
+  tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
+  w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),
+  **odpoczynek tygodniowy** 45 h / skrócony 24 h (najpóźniej po 6 dniach; jeden przycisk pomija go w dwóch krokach), karty tygodni w historii, nowe rodzaje naruszeń.
 - **Obsługa skoków czasu**: sen / prom / pociąg liczą się jako odpoczynek; **ładowanie i rozładunek
   naczepy — nie**; wczytanie zapisu cofa liczniki do tej chwili.
 - **Tryb bez zlecenia**: brak aktywnej dostawy → nic się nie liczy (odpoczynek opcjonalnie tak). Ustawienie
@@ -105,6 +109,7 @@ odpowiadają temu, co naprawdę zrobiłeś.
 | Postój 15–44 min przerwany jazdą | Zachowany jako część 1 przerwy; późniejsza przerwa 30 min odnawia blok 4,5 h. |
 | Odpoczynek ≥ 3:00 przerwany jazdą | Zachowany jako część 1 dzielonego odpoczynku; kolejne 9:00 kończy dzień. |
 | Czas gry cofa się | Wczytano zapis → liczniki przywrócone z historii minutowej. |
+| Zasady tygodniowe włączone | Pozostała jazda = najmniejsza z puli bloku / dnia / tygodnia / dwóch tygodni; koniec dnia i termin odpoczynku tygodniowego na głównym panelu; odpoczynek ≥ 24 h liczy się jako skrócony, ≥ 45 h jako pełny tygodniowy. |
 | Brak aktywnego zlecenia i trasy GPS | Bez zlecenia: nic nie postępuje. |
 
 Wszystko jest przechowywane w `state.json` / `history.json` obok `OpenTacho.exe`; usuń je, aby zacząć
@@ -132,6 +137,10 @@ znaczenia; American Truck Simulator używa tej samej wtyczki.
 Windows nie potrafi rysować nakładek nad grą w trybie *pełnoekranowym wyłącznym*. Ustaw tryb
 wyświetlania gry na *okno* lub *pełny ekran bez ramki* (ETS2: Opcje → Grafika → Pełny ekran wył.) —
 pasek pojawi się na górze, a gra będzie widoczna przez jego półprzezroczyste tło.
+
+**Czy są limity tygodniowe 56 / 90 h?**
+Tak, opcjonalnie: Ustawienia → Zasady → *Stosuj zasady tygodniowe*. Domyślnie działa tryb prosty (tylko 4:30 / 45 / 11);
+po włączeniu dochodzą jazda tygodniowa i dwutygodniowa, wydłużenie do 10 h, skrócenie do 9 h, rozpiętość dnia i 45-godzinny odpoczynek tygodniowy.
 
 **Czy zostawić włączoną symulację zmęczenia w grze?**
 Nie. Wyłącz ją (*Opcje → Rozgrywka*) i pomijaj przerwy oraz odpoczynki przyciskami ⏩ Pomiń / Pełny

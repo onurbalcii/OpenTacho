@@ -68,6 +68,10 @@ actually did.
   later ≥ 30 min break renews the block (EU rule). Can be turned off.
 - **Split daily rest (3 + 9)** with a day-flow strip that shows every completed block, the
   current one and the plan; single 11 h rest still works as usual. Can be locked to single.
+- **Weekly rules** (optional, Settings → Rules; simple mode by default): weekly **56 h** / fortnightly **90 h**
+  driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
+  times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**
+  45 h / reduced 24 h (due within 6 days; one button skips it in two steps), week cards in the history, new violation kinds.
 - **Time skips handled**: sleeping / ferry / train count as rest; **trailer loading and
   unloading do not**; loading a save rolls the counters back to that moment.
 - **Off-job mode**: no active delivery → nothing counts (rest optionally still does). Setting a
@@ -109,6 +113,7 @@ actually did.
 | Rest ≥ 3:00 interrupted by driving | Kept as part 1 of a split rest; 9:00 later completes the day. |
 | Game time goes backwards | Save reload → counters restored from the per-minute history. |
 | No active job and no GPS route | Off job: nothing advances. |
+| Weekly rules on | Driving left = the smallest of block / daily / weekly / fortnightly allowances; day-end and weekly-rest deadlines in the main panel; a rest ≥ 24 h counts as reduced, ≥ 45 h as a full weekly rest. |
 
 Everything is stored in `state.json` / `history.json` next to `OpenTacho.exe`; delete them to
 start fresh (or use *Reset counters* in the settings).
@@ -135,6 +140,10 @@ American Truck Simulator uses the same plugin.
 Windows cannot draw any overlay over a game in *exclusive fullscreen*. Set the game's display
 mode to *windowed* or *borderless fullscreen* (ETS2: Options → Graphics → Fullscreen off) and the
 strip appears on top, with the game visible through its translucent background.
+
+**Are the weekly 56 / 90 h limits included?**
+Yes, optionally: Settings → Rules → *Apply the weekly rules*. Simple mode (4:30 / 45 / 11 only) is the default; switching
+it on adds weekly and fortnightly driving, the 10 h extension, the 9 h reduced rest, the day spread and the 45 h weekly rest.
 
 **Should I keep the game's fatigue simulation on?**
 No. Turn it off (*Options → Gameplay*) and skip breaks and rests with the app's ⏩ Skip / Full rest buttons

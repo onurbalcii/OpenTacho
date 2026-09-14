@@ -79,6 +79,18 @@ ALERT_BEFORE = 15      # sesli ön uyarı: bitime bu kadar dk kala
 REST_MIN = 660         # 11 saat günlük dinlenme
 SPLIT_PART1 = 180      # bölünmüş günlük dinlenme: 1. kısım en az 3 saat...
 SPLIT_PART2 = 540      # ...2. kısım en az 9 saat (AB 561/2006, md. 4g)
+# Haftalık kurallar (isteğe bağlı; varsayılan basit mod): AB 561/2006 md. 6–8
+DRIVE_WEEK = 3360      # 56 sa haftalık sürüş (takvim haftası: Pzt 00:00 – Paz 24:00, oyun yerel saati)
+DRIVE_FORTNIGHT = 5400 # 90 sa iki ardışık haftada
+DRIVE_DAILY_EXT = 600  # günlük sürüş haftada 2 kez 10 saate uzatılabilir
+EXT_PER_WEEK = 2
+REST_REDUCED = 540     # günlük dinlenme haftada 3 kez 9 saate düşürülebilir
+RED_PER_WEEK = 3
+WREST_MIN = 2700       # 45 sa haftalık dinlenme
+WREST_REDUCED = 1440   # 24 sa azaltılmış haftalık dinlenme (telafi izlenmez)
+WREST_SPAN = 6 * 1440  # bir önceki haftalık dinlenmenin bitiminden en geç 6×24 sa sonra başlamalı
+WEEK_MIN = 7 * 1440
+SKIP_CHUNK_MAX = 1380  # g_set_time tek seferde günün saatini kurar: her adım en fazla 23 sa ileri
 JUMP_MIN = 30          # tek tikte >= bu kadar dk ilerlerse (uyku/feribot/tren) dinlenme sayılır
 MOVE_KMH = 5.0         # bunun üstü "hareket ediyor"
 YARD_MAX_KMH = 40.0    # iç hareket bu hızın üstünde otomatik biter (yükleme sahası tek seferlik olduğu için toleranslı)
@@ -189,7 +201,16 @@ DEFAULT_STATE = {
     "rest_part1": 0,           # bölünmüş dinlenmenin tamamlanmış 1. kısmı (dk, 0 = yok)
     "rest_daily_done": False,  # bu dinlenme süresi içinde günlük dinlenme tamamlandı mı
     "day_segments": [],        # günün akışı: [{"t": "drive"|"rest", "m": dk, "k": rest türü, "a": başlangıç (yerel dk)}]
-    "day_violations": [],      # bugünkü ihlaller: [{"t": yerel dk, "kind": "block"|"daily", "over": aşım dk, "open": bool}]
+    "day_violations": [],      # bugünkü ihlaller: [{"t": yerel dk, "kind": block|daily|weekly|fortnight|span|wrest, "over": aşım dk, "open": bool}]
+    "weekly_rules": False,     # haftalık kurallar (56/90 sa, gün yayılımı, haftalık dinlenme); kapalı = basit mod
+    "auto_ext": True,          # otomatik uzatılmış sürüş: 9 sa aşılırsa gün 10 saate uzar (haftada 2×)
+    "ext_drive": False,        # bugün günlük sürüş 10 saate uzatıldı (9 sa aşıldı, hak bu hafta harcandı)
+    "ext_consumed": False,     # (ext_drive ile aynı anda set edilir; eski kayıtlarla uyum için tutulur)
+    "auto_red": True,          # otomatik kısa dinlenme: 9 sa dinlenip yola çıkınca hak varsa (haftada 3×) gün tamamlanmış sayılır
+    "week": {"start": None, "ext_used": 0, "red_used": 0, "wrest": None},   # içinde bulunulan takvim haftası
+    "weeks_meta": {},          # geçmiş haftalar: {"<hafta başı>": {"ext_used", "red_used", "wrest"}}
+    "last_wrest_end": None,    # son haftalık dinlenmenin bittiği yerel dk (sonraki en geç +6 gün)
+    "wrest_kind": None,        # süren dinlenme haftalık dinlenme eşiğini geçtiyse "reduced" | "regular"
     "days": [],                # arşiv: günlük dinlenme tamamlanınca (ya da sıfırlamada) kapanan günler (takograf geçmişi)
     "last_abs": None,          # en son görülen oyun saati (dk)
     "last_move_abs": None,
@@ -961,14 +982,101 @@ class Tacho:
 
     def remaining(self):
         s = self.s
-        return min(DRIVE_BLOCK - s["drive_block"], DRIVE_DAILY - s["drive_daily"])
+        r = min(DRIVE_BLOCK - s["drive_block"], self.daily_limit() - s["drive_daily"])
+        wi = self.week_info()
+        if wi:
+            r = min(r, DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"])
+        return r
+
+    # ---- haftalık kurallar ----
+    def weekly_on(self):
+        return bool(self.s["weekly_rules"])
+
+    def daily_limit(self):
+        """Bugünkü günlük sürüş sınırı: 9 sa, uzatıldıysa 10 sa."""
+        return DRIVE_DAILY_EXT if (self.weekly_on() and self.s["ext_drive"]) else DRIVE_DAILY
+
+    def ext_available(self):
+        """Bugün otomatik uzatma devreye girebilir mi (hak var, henüz kullanılmadı)."""
+        s = self.s
+        return self.weekly_on() and bool(s["auto_ext"]) and not s["ext_drive"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK
+
+    def red_available(self):
+        """9 saatlik dinlenme kısa günlük dinlenme olarak sayılabilir mi (otomatik açık, hak var)."""
+        s = self.s
+        return self.weekly_on() and bool(s["auto_red"]) and s["week"].get("red_used", 0) < RED_PER_WEEK
+
+    @staticmethod
+    def week_start_of(local):
+        """Takvim haftasının başı (Pzt 00:00), yerel dk. Oyun gün 0 = Pazartesi."""
+        return local - (local % WEEK_MIN)
+
+    def _today_start(self):
+        for x in self.s["day_segments"]:
+            if x.get("a") is not None:
+                return x["a"]
+        return None
+
+    def week_drive(self, ws):
+        """ws ile başlayan takvim haftasındaki sürüş (arşiv + bugün); gün, başladığı haftaya yazılır."""
+        s = self.s
+        total = 0
+        for d in s.get("days") or []:
+            a = d.get("start")
+            if a is not None and ws <= a < ws + WEEK_MIN:
+                total += d.get("drive", 0)
+        ts = self._today_start()
+        if ts is not None and ws <= ts < ws + WEEK_MIN:
+            total += sum(x["m"] for x in s["day_segments"] if x["t"] == "drive")
+        return total
+
+    def week_info(self):
+        """Haftalık kurallar açıksa: hafta başı, bu hafta ve iki haftalık sürüş."""
+        if not self.weekly_on():
+            return None
+        local = self.local_abs()
+        if local is None:
+            return None
+        ws = self.week_start_of(local)
+        wd = self.week_drive(ws)
+        return {"start": ws, "drive": wd, "fortnight": wd + self.week_drive(ws - WEEK_MIN)}
+
+    def _roll_week(self):
+        """Takvim haftası değiştiyse haftalık sayaçları sıfırlar (eskisini weeks_meta'ya yazar)."""
+        s = self.s
+        local = self.local_abs()
+        if local is None:
+            return
+        ws = self.week_start_of(local)
+        w = s["week"]
+        if w.get("start") != ws:
+            if w.get("start") is not None:
+                meta = s.setdefault("weeks_meta", {})
+                meta[str(w["start"])] = {"ext_used": w.get("ext_used", 0), "red_used": w.get("red_used", 0), "wrest": w.get("wrest")}
+                for k in sorted(meta, key=int)[:-20]:
+                    del meta[k]
+            s["week"] = {"start": ws, "ext_used": 0, "red_used": 0, "wrest": None}
+            self.dirty = True
+
+    def rest_deadline(self):
+        """Günlük dinlenmenin en geç başlaması gereken yerel dk (gün başı + 24 sa − dinlenme); gün yayılımı 13/15 sa."""
+        if not self.weekly_on() or self.s["rest_daily_done"]:
+            return None
+        ts = self._today_start()
+        return None if ts is None else ts + 1440 - self.daily_need()
+
+    def wrest_due(self):
+        """Haftalık dinlenmenin en geç başlaması gereken yerel dk."""
+        if not self.weekly_on() or self.s["last_wrest_end"] is None:
+            return None
+        return self.s["last_wrest_end"] + WREST_SPAN
 
     def split_active(self):
         """Bölünmüş dinlenme açık ve geçerli bir 1. kısım saklı mı."""
         return bool(self.s["split_rest"]) and self.s["rest_part1"] >= SPLIT_PART1
 
     def daily_need(self):
-        """Günlük dinlenmeyi tamamlamak için gereken kesintisiz süre: 11 sa, ya da 1. kısım varsa 9 sa."""
+        """Günlük dinlenmeyi tamamlamak için gereken kesintisiz süre: 11 sa; 1. kısım varsa ya da kısa dinlenme seçildiyse 9 sa."""
         return SPLIT_PART2 if self.split_active() else REST_MIN
 
     def break_need(self):
@@ -979,7 +1087,7 @@ class Tacho:
         """Şu an işe yarayan dinlenme hedefi (mola ihtiyacı ya da günlük ihtiyaç)."""
         s = self.s
         rem_block = DRIVE_BLOCK - s["drive_block"]
-        rem_daily = DRIVE_DAILY - s["drive_daily"]
+        rem_daily = self.daily_limit() - s["drive_daily"]
         next_break = rem_daily > rem_block
         bn = self.break_need()
         if not s["rest_credited"] and s["rest"] < bn and rem_daily > 0 and next_break:
@@ -1014,43 +1122,75 @@ class Tacho:
             else:
                 self.log(L("log.break_done"))
             s["break_part1"] = 0
-            self._close_violation()
+            self._close_violation(("block",))
             self._sound("done")
         if not s["rest_daily_done"] and after >= need:
-            self._archive_day("daily")
-            s["drive_block"] = 0
-            s["drive_daily"] = 0
-            s["break_credited"] = False
-            s["rest_daily_done"] = True
-            if self.split_active():
-                self.log(L("log.split_done", p1=hm(s["rest_part1"]), p2=hm(need)))
-            else:
-                self.log(L("log.daily_done"))
-            s["rest_part1"] = 0
-            s["break_part1"] = 0
-            s["day_segments"] = []   # yeni gün: akış sıfırdan
-            self._sound("done")
+            self._complete_daily(reduced=False)
+        if self.weekly_on():
+            kind = "regular" if after >= WREST_MIN else ("reduced" if after >= WREST_REDUCED else None)
+            if kind:
+                if kind != s["wrest_kind"]:
+                    s["wrest_kind"] = kind
+                    s["week"]["wrest"] = kind
+                    self.log(L("log.wrest_" + kind))
+                    self._close_violation(("weekly", "fortnight", "wrest"))
+                    self._sound("done")
+                s["last_wrest_end"] = self.local_abs()   # dinlenme sürdükçe bitişi ileri taşı
         self.dirty = True
+
+    def _complete_daily(self, reduced):
+        """Günlük dinlenme tamamlandı: günü arşivle, sayaçları sıfırla. reduced=True: 9 sa kısa dinlenme (haftalık hak harcanır)."""
+        s = self.s
+        need = self.daily_need()
+        self._archive_day("daily")
+        s["drive_block"] = 0
+        s["drive_daily"] = 0
+        s["break_credited"] = False
+        s["rest_daily_done"] = True
+        if self.split_active():
+            self.log(L("log.split_done", p1=hm(s["rest_part1"]), p2=hm(need)))
+        elif reduced:
+            s["week"]["red_used"] = s["week"].get("red_used", 0) + 1
+            self.log(L("log.red_done", n=s["week"]["red_used"], max=RED_PER_WEEK))
+        else:
+            self.log(L("log.daily_done"))
+        s["rest_part1"] = 0
+        s["break_part1"] = 0
+        s["day_segments"] = []   # yeni gün: akış sıfırdan
+        s["ext_drive"] = s["ext_consumed"] = False   # uzatma yeni günde sıfır
+        self._sound("done")
 
     # ---- ihlal kaydı ve takograf geçmişi ----
     def _track_violation(self):
-        """Sürüş hakkı eksiye düşünce ihlal açar, sürdükçe aşımı günceller."""
+        """Sürerken aşılan her sınır için ihlal açar / aşımı günceller (blok, günlük, haftalık, iki haftalık, gün yayılımı, haftalık dinlenme)."""
         s = self.s
-        rem = self.remaining()
-        v = s["day_violations"]
-        if rem >= 0:
-            return
-        kind = "daily" if (DRIVE_DAILY - s["drive_daily"]) < (DRIVE_BLOCK - s["drive_block"]) else "block"
-        if v and v[-1].get("open") and v[-1]["kind"] == kind:
-            v[-1]["over"] = max(v[-1]["over"], -rem)
-        else:
-            self._close_violation()
-            v.append({"t": self.local_abs(), "kind": kind, "over": -rem, "open": True})
+        rems = {"block": DRIVE_BLOCK - s["drive_block"], "daily": self.daily_limit() - s["drive_daily"]}
+        wi = self.week_info()
+        if wi:
+            rems["weekly"] = DRIVE_WEEK - wi["drive"]
+            rems["fortnight"] = DRIVE_FORTNIGHT - wi["fortnight"]
+            local = self.local_abs()
+            rd, wd = self.rest_deadline(), self.wrest_due()
+            if rd is not None and local is not None:
+                rems["span"] = rd - local
+            if wd is not None and local is not None:
+                rems["wrest"] = wd - local
+        for kind, rem in rems.items():
+            if rem < 0:
+                self._open_violation(kind, -rem)
 
-    def _close_violation(self):
+    def _open_violation(self, kind, over):
         v = self.s["day_violations"]
-        if v and v[-1].get("open"):
-            v[-1]["open"] = False
+        for x in v:
+            if x.get("open") and x["kind"] == kind:
+                x["over"] = max(x["over"], over)
+                return
+        v.append({"t": self.local_abs(), "kind": kind, "over": over, "open": True})
+
+    def _close_violation(self, kinds=None):
+        for x in self.s["day_violations"]:
+            if x.get("open") and (kinds is None or x["kind"] in kinds):
+                x["open"] = False
 
     def day_summary(self, segs=None, viols=None):
         """Bir günün özeti: toplam sürüş / dinlenme, dinlenme sayısı, aralık, ihlaller."""
@@ -1088,7 +1228,38 @@ class Tacho:
         self.dirty = True
 
     def history(self):
-        return {"today": self.day_summary(), "days": list(reversed(self.s.get("days") or []))}
+        return {"today": self.day_summary(), "days": list(reversed(self.s.get("days") or [])), "weeks": self.week_summaries()}
+
+    def week_summaries(self):
+        """Takvim haftası başına özet (en yeni önce): sürüş, gün sayısı, ihlal sayısı, haftalık dinlenme, uzatma/kısa dinlenme sayıları."""
+        s = self.s
+        local = self.local_abs()
+        if not self.weekly_on() or local is None:
+            return []
+        cur = self.week_start_of(local)
+        weeks = {}
+        def bucket(ws):
+            if ws not in weeks:
+                meta = s["week"] if s["week"].get("start") == ws else (s.get("weeks_meta") or {}).get(str(ws), {})
+                weeks[ws] = {"start": ws, "drive": 0, "days": 0, "violations": 0, "wrest": meta.get("wrest"),
+                             "ext_used": meta.get("ext_used", 0), "red_used": meta.get("red_used", 0)}
+            return weeks[ws]
+        for d in s.get("days") or []:
+            if d.get("start") is None:
+                continue
+            b = bucket(self.week_start_of(d["start"]))
+            b["drive"] += d.get("drive", 0); b["days"] += 1; b["violations"] += len(d.get("violations") or [])
+        ts = self._today_start()
+        today = self.day_summary()
+        if ts is not None and (today["drive"] > 0 or today["segments"]):
+            b = bucket(self.week_start_of(ts))
+            b["drive"] += today["drive"]; b["days"] += 1; b["violations"] += len(today["violations"])
+        bucket(cur)
+        out = [weeks[k] for k in sorted(weeks, reverse=True)]
+        for w in out:
+            w["ago"] = (cur - w["start"]) // WEEK_MIN
+            w["limit"] = DRIVE_WEEK
+        return out
 
     def _close_rest_segment(self, kind):
         """Sürüş yeniden başlarken biten dinlenme segmentini sınıflandırır."""
@@ -1103,9 +1274,11 @@ class Tacho:
         s = self.s
         st = s["status"]
         if st == "DRIVING":
+            r = s["rest"]
+            if not s["rest_daily_done"] and r >= REST_REDUCED and self.red_available():
+                self._complete_daily(reduced=True)   # 9 sa dinlendi, 11'i beklemeden yola çıktı: kısa günlük dinlenme
             s["drive_block"] += d
             s["drive_daily"] += d
-            r = s["rest"]
             kind = "short"
             if r > 0 and s["rest_daily_done"]:
                 kind = "break"  # günlük dinlenme zaten tamamlanmıştı, fazlası önemsiz
@@ -1129,7 +1302,17 @@ class Tacho:
             s["rest"] = 0
             s["rest_daily_done"] = False
             s["rest_credited"] = False
+            s["wrest_kind"] = None
             self._seg_add("drive", d)
+            if self.weekly_on():
+                self._roll_week()
+                if s["last_wrest_end"] is None:
+                    local = self.local_abs()
+                    s["last_wrest_end"] = (local - d) if local is not None else None   # ilk sürüş: haftalık dinlenme yeni bitmiş sayılır
+                if not s["ext_drive"] and s["auto_ext"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK and s["drive_daily"] > DRIVE_DAILY:
+                    s["ext_drive"] = s["ext_consumed"] = True   # 9 sa aşıldı: bugün 10 sa, hak harcandı
+                    s["week"]["ext_used"] = s["week"].get("ext_used", 0) + 1
+                    self.log(L("log.ext_used", n=s["week"]["ext_used"], max=EXT_PER_WEEK))
             self._track_violation()
         elif st == "OFF_DUTY":
             self.add_rest(d)
@@ -1138,7 +1321,7 @@ class Tacho:
 
     # ---- tik ----
     PROV_KEYS = ("status", "drive_block", "drive_daily", "rest", "break_credited", "rest_part1", "rest_daily_done", "day_segments",
-                 "break_part1", "rest_credited", "day_violations")
+                 "break_part1", "rest_credited", "day_violations", "ext_drive", "ext_consumed", "week", "last_wrest_end", "wrest_kind")
 
     HIST_KEYS = PROV_KEYS + ("prov", "last_move_abs")
 
@@ -1491,6 +1674,90 @@ class Tacho:
         return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(), "minutes": need + SKIP_MARGIN,
                 "label": L("fullrest.part2", d=hm(self.daily_need())) if self.split_active() else L("fullrest.label", d=hm(self.daily_need()))}
 
+    def wrest_info(self):
+        """Ana paneldeki 'Haftalık dinlenme (45 sa)' düğmesi (yalnızca haftalık kurallar açıkken, araç dururken)."""
+        s = self.s
+        if not self.weekly_on() or s["mode"] != "auto" or not self.connected or self.speed > MOVE_KMH:
+            return {"available": False}
+        if self.offjob and not s["offjob_rest"]:
+            return {"available": False}
+        if s["wrest_kind"] == "regular":
+            return {"available": False}
+        need = WREST_MIN - s["rest"]
+        if need <= 0:
+            return {"available": False}
+        return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(),
+                "minutes": need + SKIP_MARGIN, "label": L("wrest.label", d=hm(WREST_MIN))}
+
+    def act_weekly_rest(self):
+        with self.lock:
+            info = self.wrest_info()
+            if not info["available"] or info["busy"] or info["blocked"]:
+                return
+            if self.s["status"] != "OFF_DUTY":
+                self.act_set_status_locked("OFF_DUTY")
+            self._start_skip(info["minutes"])
+        threading.Thread(target=self._skip_worker, daemon=True).start()
+
+    def act_set_weekly_rules(self, flag):
+        with self.lock:
+            s = self.s
+            flag = bool(flag)
+            if flag == bool(s["weekly_rules"]):
+                return
+            s["weekly_rules"] = flag
+            if flag:
+                self._roll_week()
+                if s["last_wrest_end"] is None:
+                    s["last_wrest_end"] = self.local_abs()
+            else:
+                s["ext_drive"] = s["ext_consumed"] = False
+            self.dirty = True
+            self.log(L("log.weekly_on" if flag else "log.weekly_off"))
+
+    def act_set_auto_ext(self, flag):
+        with self.lock:
+            s = self.s
+            flag = bool(flag)
+            if flag == bool(s["auto_ext"]):
+                return
+            s["auto_ext"] = flag
+            self.dirty = True
+            self.log(L("log.auto_ext_on" if flag else "log.auto_ext_off"))
+
+    def act_set_auto_red(self, flag):
+        with self.lock:
+            s = self.s
+            flag = bool(flag)
+            if flag == bool(s["auto_red"]):
+                return
+            s["auto_red"] = flag
+            self.dirty = True
+            self.log(L("log.auto_red_on" if flag else "log.auto_red_off"))
+
+    def red_rest_info(self):
+        """Ana paneldeki 'Kısa dinlenme (9 sa)' çipi: otomatik kısa dinlenme açık, hak var, araç duruyor."""
+        s = self.s
+        if not self.red_available() or s["mode"] != "auto" or not self.connected or self.speed > MOVE_KMH:
+            return {"available": False}
+        if s["rest_daily_done"] or self.split_active() or s["rest"] >= REST_REDUCED:
+            return {"available": False}
+        if self.offjob and not s["offjob_rest"]:
+            return {"available": False}
+        need = REST_REDUCED - s["rest"]
+        return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(), "minutes": need + SKIP_MARGIN,
+                "label": L("redrest.label", d=hm(REST_REDUCED)), "n": s["week"].get("red_used", 0) + 1, "max": RED_PER_WEEK}
+
+    def act_red_rest(self):
+        with self.lock:
+            info = self.red_rest_info()
+            if not info["available"] or info["busy"] or info["blocked"]:
+                return
+            if self.s["status"] != "OFF_DUTY":
+                self.act_set_status_locked("OFF_DUTY")
+            self._start_skip(info["minutes"])
+        threading.Thread(target=self._skip_worker, daemon=True).start()
+
     def act_full_rest(self):
         with self.lock:
             info = self.full_rest_info()
@@ -1502,14 +1769,23 @@ class Tacho:
         threading.Thread(target=self._skip_worker, daemon=True).start()
 
     def _start_skip(self, need):
-        """g_set_time komutunu hazırlar ve atlama işini başlatır (kilit tutulmuş olmalı)."""
+        """Atlama işini başlatır (kilit tutulmuş olmalı). g_set_time günün saatini kurduğu için 23 saatten uzun
+        atlamalar (haftalık dinlenme) art arda birkaç komutla yapılır."""
+        chunks = []
+        left = need
+        while left > 0:
+            c = min(left, SKIP_CHUNK_MAX)
+            chunks.append(c)
+            left -= c
+        self.skip = {"chunks": chunks, "need": need, "start_abs": self.tel_abs, "t0": time.monotonic()}
+        self.skip_at = time.monotonic()
+        self.log(L("log.skip_sending", d=hm(need), cmd=self._skip_cmd(chunks[0])) + (L("log.skip_steps", n=len(chunks)) if len(chunks) > 1 else ""))
+
+    def _skip_cmd(self, delta):
         base_now = self.tel_abs
         frame_now = base_now if self.s["set_time_frame"] == "base" else base_now + self.tz_offset()
-        target = frame_now + need
-        cmd = f"g_set_time {(target % 1440) // 60} {target % 60}"
-        self.skip = {"cmd": cmd, "need": need, "start_abs": base_now, "t0": time.monotonic()}
-        self.skip_at = time.monotonic()
-        self.log(L("log.skip_sending", d=hm(need), cmd=cmd))
+        target = frame_now + delta
+        return f"g_set_time {(target % 1440) // 60} {target % 60}"
 
     def act_skip_rest(self):
         with self.lock:
@@ -1522,24 +1798,35 @@ class Tacho:
     def _skip_worker(self):
         sk = self.skip
         try:
-            ok, err = self.console.send_command(sk["cmd"])
-            if not ok:
+            total = 0
+            for i, chunk in enumerate(sk["chunks"]):
                 with self.lock:
-                    self.log(L("log.skip_failed", err=err))
-                return
-            # oyun saati değişsin diye bekle (duraklatılmışsa devam edince görünür)
-            t0 = time.monotonic()
-            while time.monotonic() - t0 < 8 and self.tel_abs == sk["start_abs"]:
-                time.sleep(0.2)
-            time.sleep(0.5)
-            delta = (self.tel_abs or sk["start_abs"]) - sk["start_abs"]
-            with self.lock:
+                    base = self.tel_abs
+                    cmd = self._skip_cmd(chunk)
+                    self.skip_at = time.monotonic()
+                ok, err = self.console.send_command(cmd)
+                if not ok:
+                    with self.lock:
+                        self.log(L("log.skip_failed", err=err))
+                    return
+                # oyun saati değişsin diye bekle (duraklatılmışsa devam edince görünür)
+                t0 = time.monotonic()
+                while time.monotonic() - t0 < 8 and self.tel_abs == base:
+                    time.sleep(0.2)
+                time.sleep(0.5)
+                delta = (self.tel_abs or base) - base
                 if delta == 0:
-                    self.log(L("log.skip_nochange"))
-                elif abs(delta - sk["need"]) <= 2:
-                    self.log(L("log.skip_ok", d=hm(delta)))
+                    with self.lock:
+                        self.log(L("log.skip_nochange"))
+                    return
+                total += delta
+                if i < len(sk["chunks"]) - 1:
+                    time.sleep(1.5)   # sayaçlar bu adımı işlesin, sonra sıradaki adım
+            with self.lock:
+                if abs(total - sk["need"]) <= 2 * len(sk["chunks"]):
+                    self.log(L("log.skip_ok", d=hm(total)))
                 else:
-                    self.log(L("log.skip_mismatch", need=hm(sk["need"]), d=hm(delta)))
+                    self.log(L("log.skip_mismatch", need=hm(sk["need"]), d=hm(total)))
         except Exception:
             log_error(traceback.format_exc())
         finally:
@@ -1582,7 +1869,7 @@ class Tacho:
         break_seen = any(b["k"] == "break" for b in boxes)
         need = SPLIT_PART2 if (split_on and (part1_seen or s["rest_part1"] >= SPLIT_PART1)) else REST_MIN
         bn = self.break_need()
-        rem_daily = DRIVE_DAILY - s["drive_daily"]
+        rem_daily = self.daily_limit() - s["drive_daily"]
         rest = s["rest"]
         credited = s["rest_credited"]
 
@@ -1612,9 +1899,9 @@ class Tacho:
                 boxes.append({"k": "daily", "v": hm(need), "st": "active", "n": "2/2" if need == SPLIT_PART2 else None})
         else:
             before_block = s["drive_daily"] - s["drive_block"]
-            limit = max(0, min(DRIVE_BLOCK, DRIVE_DAILY - before_block))
+            limit = max(0, min(DRIVE_BLOCK, self.daily_limit() - before_block))
             boxes.append({"k": "drive", "v": hm(max(0, limit - block_used_before)), "st": "active"})
-            after = DRIVE_DAILY - (before_block + limit)
+            after = self.daily_limit() - (before_block + limit)
             if not break_seen and not s["break_credited"]:
                 boxes.append({"k": "break", "v": hm(bn), "st": "plan"})
                 if after > 0:
@@ -1818,6 +2105,21 @@ class Tacho:
                 self.s["break_part1"] = 0
             self.dirty = True
 
+    def weekly_view(self, wi, local):
+        s = self.s
+        if not self.weekly_on():
+            return {"on": False}
+        w = s["week"]
+        out = {"on": True, "drive": wi["drive"] if wi else 0, "fortnight": wi["fortnight"] if wi else 0,
+               "week_limit": DRIVE_WEEK, "fortnight_limit": DRIVE_FORTNIGHT,
+               "rest_deadline": self.rest_deadline(), "wrest_due": self.wrest_due(), "wrest_kind": s["wrest_kind"],
+               "ext": {"auto": bool(s["auto_ext"]), "on": bool(s["ext_drive"]), "bonus": bool(s["ext_drive"]) or self.ext_available(), "used": w.get("ext_used", 0), "max": EXT_PER_WEEK},
+               "red": {"auto": bool(s["auto_red"]), "used": w.get("red_used", 0), "max": RED_PER_WEEK},
+               "local": local}
+        rd = out["rest_deadline"]
+        out["day_left"] = None if (rd is None or local is None) else rd - local
+        return out
+
     def flags(self):
         """Ana göstergede metin yerine ikonla gösterilecek durum bayrakları."""
         s = self.s
@@ -1836,6 +2138,14 @@ class Tacho:
         elif s["status"] == "YARD_MOVE":
             f.append({"ic": "yard", "t": {"pickup": L("flag.yard_pickup"), "delivery": L("flag.yard_delivery")}.get(self.auto_yard, L("flag.yard"))})
             f.append({"ic": "timer-off", "t": L("flag.not_driving")})
+        if self.weekly_on() and s["status"] != "OFF_DUTY":
+            rd, local = self.rest_deadline(), self.local_abs()
+            if rd is not None and local is not None:
+                left = rd - local
+                if left >= 0:
+                    f.append({"ic": "clock", "t": L("flag.day_end", t=self.clock_text(rd), r=hm(left)), "warn": left <= 60})
+                else:
+                    f.append({"ic": "clock", "t": L("flag.day_end_over", r=hm(-left)), "bad": True})
         return f
 
     # ---- görünüm ----
@@ -1844,12 +2154,18 @@ class Tacho:
         abs_now = self.current_abs()
         off = self.tz_offset()
         local = None if abs_now is None else abs_now + off
+        self._roll_week()
         rem_block = DRIVE_BLOCK - s["drive_block"]
-        rem_daily = DRIVE_DAILY - s["drive_daily"]
-        remaining = min(rem_block, rem_daily)
-        next_req = "REST" if rem_daily <= rem_block else "BREAK"
+        rem_daily = self.daily_limit() - s["drive_daily"]
+        wi = self.week_info()
+        rem_week = min(DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"]) if wi else None
+        remaining = min(rem_block, rem_daily) if rem_week is None else min(rem_block, rem_daily, rem_week)
+        if rem_week is not None and rem_week <= rem_daily and rem_week <= rem_block:
+            next_req = "WREST"
+        else:
+            next_req = "REST" if rem_daily <= rem_block else "BREAK"
         need_txt = L("need.part2", d=hm(self.daily_need())) if self.split_active() else L("need.daily")
-        next_txt = need_txt if next_req == "REST" else L("need.break")
+        next_txt = {"WREST": L("need.wrest"), "REST": need_txt}.get(next_req, L("need.break"))
         rest = s["rest"]
         status = s["status"]
         target = self.rest_target()
@@ -1864,6 +2180,9 @@ class Tacho:
             if s["rest_daily_done"] or rest >= need:
                 label, value = L("big.daily_done"), hm(rest)
                 sub = L("big.daily_done_sub")
+            elif rest >= REST_REDUCED and self.red_available():
+                label, value = L("big.red_ready"), f"{hm(rest)} / {hm(need)}"
+                sub = L("big.red_ready_sub", n=s["week"].get("red_used", 0) + 1, max=RED_PER_WEEK, d=hm(need))
             elif s["rest_credited"]:
                 value = f"{hm(rest)} / {hm(need)}"
                 if remaining > 0:
@@ -1938,7 +2257,10 @@ class Tacho:
                 "offset": off,
             },
             "drive_block": s["drive_block"], "drive_daily": s["drive_daily"], "rest": s["rest"],
-            "limits": {"block": DRIVE_BLOCK, "daily": DRIVE_DAILY, "break": BREAK_MIN, "break2": BREAK_PART2, "rest": REST_MIN},
+            "limits": {"block": DRIVE_BLOCK, "daily": self.daily_limit(), "break": BREAK_MIN, "break2": BREAK_PART2, "rest": REST_MIN},
+            "weekly": self.weekly_view(wi, local),
+            "wrest": self.wrest_info(),
+            "red_rest": self.red_rest_info(),
             "rest_target": need if s["rest_credited"] else target,
             "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= BREAK_PART1) else 0,
             "split_break": bool(s["split_break"]),
@@ -2190,6 +2512,9 @@ class Tacho:
         with self.lock:
             s = self.s
             self._archive_day("reset")
+            s["ext_drive"] = s["ext_consumed"] = False
+            s["wrest_kind"] = None
+            s["last_wrest_end"] = self.local_abs()
             s["drive_block"] = 0
             s["drive_daily"] = 0
             s["rest"] = 0
@@ -2340,6 +2665,26 @@ class Api:
 
     def full_rest(self):
         self._t.act_full_rest()
+        return self.get_state()
+
+    def weekly_rest(self):
+        self._t.act_weekly_rest()
+        return self.get_state()
+
+    def set_weekly_rules(self, flag):
+        self._t.act_set_weekly_rules(flag)
+        return self.get_state()
+
+    def set_auto_ext(self, flag):
+        self._t.act_set_auto_ext(flag)
+        return self.get_state()
+
+    def set_auto_red(self, flag):
+        self._t.act_set_auto_red(flag)
+        return self.get_state()
+
+    def red_rest(self):
+        self._t.act_red_rest()
         return self.get_state()
 
     def get_history(self):

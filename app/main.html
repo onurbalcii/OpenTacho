@@ -183,6 +183,26 @@
   .flag { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; color: var(--gold); }
   .flag .ic { font-size: 22px; filter: drop-shadow(0 0 6px rgba(253,202,79,.35)); }
   .flag .ic svg { stroke-width: 1.6; }
+  .flag.warn { color: var(--warn); } .flag.bad { color: var(--bad); }
+  .flag.warn .ic, .flag.bad .ic { filter: none; }
+  /* haftalık kurallar */
+  .wline { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 2px 2px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .wline b { color: var(--text); font-family: var(--display); font-weight: 600; }
+  .wline .bad, .wline .bad b { color: var(--bad); }
+  .wline .warn, .wline .warn b { color: var(--warn); }
+  .hero .skip.chipbtn { min-height: 34px; padding: 4px 12px 4px 6px; margin-top: 8px; }
+  .hero .skip.chipbtn .ring { width: 24px; height: 24px; font-size: 13px; }
+  .hero .skip.chipbtn .tx b { font-size: 12px; }
+  .hero .skip.chipbtn .tx small { font-size: 10px; }
+  .hero .skip-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .hweek { border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px; background: rgba(255,255,255,.035); display: grid; gap: 5px; }
+  .hweek.cur { border-color: var(--gold-line); }
+  .hweek .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hweek .hd b { font-family: var(--serif); font-style: var(--italic); color: var(--gold); font-size: 14px; }
+  .hweek .hd span { color: var(--dim); font-size: 11.5px; }
+  .hweek .track { height: 8px; }
+  .hsub { color: var(--dim); font-size: 11.5px; letter-spacing: .4px; text-transform: uppercase; margin: 4px 0 -4px; }
+  .kv.wk { font-size: 12px; color: var(--muted); line-height: 1.5; }
   .flag small { font-family: var(--serif); font-style: var(--italic); font-size: 11px; color: var(--muted); letter-spacing: .2px; }
   .hero.ok { --tone: var(--gold); }
   .hero.warn { --tone: var(--warn); --glow-c: var(--warn); }
@@ -203,6 +223,7 @@
   .bar + .bar { border-top: 1px solid var(--line-soft); }
   .bar .name { color: var(--text); font-family: var(--serif); font-style: var(--italic); font-size: clamp(14px, 3.8vw, 15.5px); }
   .bar .val { font-variant-numeric: tabular-nums; color: var(--text); min-width: 92px; text-align: right; font-family: var(--display); font-size: 15px; }
+  .bar .val small { display: block; font-size: 10.5px; line-height: 1.15; color: var(--gold); font-weight: 600; letter-spacing: .2px; }
   .track { height: 13px; background: var(--track); border-radius: 8px; overflow: hidden; border: 1px solid var(--line-soft); position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,.35); }
   .fill { height: 100%; width: 0; border-radius: 8px; transition: width .5s ease;
           background: linear-gradient(90deg, var(--gold2), var(--gold)); box-shadow: 0 0 12px rgba(253,202,79,.5); position: relative; }
@@ -644,12 +665,18 @@
     <div class="flags" id="flags" hidden></div>
     <button class="skip btn glass ornate" id="skip" hidden><span class="ring"><i class="ic" data-ic="skip"></i></span><span class="tx" id="skipTx"></span></button>
     <button class="skip mini-skip btn glass ornate" id="fullRest" hidden><span class="ring"><i class="ic" data-ic="bed"></i></span><span class="tx" id="fullRestTx"></span></button>
+    <div class="skip-row">
+      <button class="skip mini-skip chipbtn btn glass ornate" id="redRestBtn" hidden><span class="ring"><i class="ic" data-ic="bed"></i></span><span class="tx" id="redRestTx"></span></button>
+      <button class="skip mini-skip chipbtn btn glass ornate" id="wRest" hidden><span class="ring"><i class="ic" data-ic="calendar"></i></span><span class="tx" id="wRestTx"></span></button>
+    </div>
   </div>
 
   <div class="bars glass ornate">
     <div class="bar"><span class="ring"><i class="ic" data-ic="wheel"></i></span><span class="name" data-i18n="ui.bar.block">Sürüş bloğu</span><div class="track"><div class="fill" id="fBlock"></div></div><span class="val" id="vBlock">0:00 / 4:30</span></div>
-    <div class="bar"><span class="ring"><i class="ic" data-ic="road"></i></span><span class="name" data-i18n="ui.bar.daily">Günlük sürüş</span><div class="track"><div class="fill" id="fDaily"></div><div class="mark" style="left:50%"></div></div><span class="val" id="vDaily">0:00 / 9:00</span></div>
+    <div class="bar"><span class="ring"><i class="ic" data-ic="road"></i></span><span class="name" data-i18n="ui.bar.daily">Günlük sürüş</span><div class="track"><div class="fill" id="fDaily"></div><div class="mark" style="left:50%"></div></div><span class="val"><span id="vDaily">0:00 / 9:00</span><small id="vDailyExt" hidden></small></span></div>
     <div class="bar"><span class="ring"><i class="ic" data-ic="bed"></i></span><span class="name" id="nRest">Dinlenme</span><div class="track"><div class="fill rest" id="fRest"></div><div class="mark" id="mRest" style="left:6.8%"></div></div><span class="val" id="vRest">0:00 / 0:45</span></div>
+    <div class="bar" id="barWeek" hidden><span class="ring"><i class="ic" data-ic="calendar"></i></span><span class="name" data-i18n="ui.bar.week">Haftalık sürüş</span><div class="track"><div class="fill" id="fWeek"></div></div><span class="val" id="vWeek">0:00 / 56:00</span></div>
+    <div class="wline" id="wLine" hidden></div>
   </div>
 
   <div class="seq" id="seq"></div>
@@ -743,6 +770,17 @@
       <h4><i class="ic" data-ic="nojob"></i><span data-i18n="ui.sec.offjob">Görev dışı</span></h4>
       <div class="hint" data-i18n-html="ui.hint.offjob"></div>
       <label class="check"><input type="checkbox" id="offjobRest"> <span data-i18n="ui.offjob_rest">Görev dışındayken dinlenme yine sayılsın</span></label>
+    </div>
+
+    <div class="sec">
+      <h4><i class="ic" data-ic="calendar"></i><span data-i18n="ui.sec.weekly">Haftalık kurallar</span></h4>
+      <label class="check"><input type="checkbox" id="weeklyRules"> <span data-i18n="ui.weekly_rules">Haftalık kuralları uygula</span></label>
+      <div class="hint" data-i18n-html="ui.hint.weekly"></div>
+      <div id="weeklyOpts" hidden>
+        <label class="check"><input type="checkbox" id="autoExt"> <span id="autoExtText"></span></label>
+        <label class="check"><input type="checkbox" id="autoRed"> <span id="autoRedText"></span></label>
+        <div class="kv wk" id="weeklyInfo"></div>
+      </div>
     </div>
 
     <div class="sec">
@@ -918,6 +956,7 @@
     bed: SVG(`<path d="M3 19V7"/><path d="M3 12.5h18V19"/><path d="M3 16h18"/><path d="M7 12.5V10a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 10v2.5"/><path d="M21 19v-2" opacity=".6"/>`),
     road: SVG(`<path d="M8.5 3.5L4.5 20.5M15.5 3.5l4 17"/><path d="M12 4.5v2.5M12 10.5v3M12 17v3.5"/>`),
     clock: SVG(`<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>`),
+    calendar: SVG(`<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3M13 14h3" opacity=".6"/>`),
     yard: SVG(`<path d="M2.5 7.5h10v8h-10z"/><path d="M12.5 10.5h3.6l2.9 3v2h-6.5z"/><circle cx="6" cy="17.6" r="1.7"/><circle cx="15.5" cy="17.6" r="1.7"/><path d="M17 5h4.5m0 0l-1.8-1.8M21.5 5l-1.8 1.8"/>`),
     doc: SVG(`<path d="M7 3h7.5L19 7.5V21H7z"/><path d="M14.5 3v4.5H19"/><path d="M10 12h6M10 15.5h6M10 19h3.5"/>`),
     gear: SVG(`<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>`),
@@ -1078,6 +1117,22 @@
           : fr.blocked ? `<b>${fr.label}</b><small>⚠ ${fr.blocked}</small>`
           : `<b>${fr.label}</b><small>${T("fullrest.sub", { d: hm(fr.minutes) })}</small>`;
       }
+      const rr = st.red_rest || {};
+      $("redRestBtn").hidden = !rr.available;
+      if (rr.available) {
+        $("redRestBtn").disabled = !!rr.busy || !!rr.blocked;
+        $("redRestTx").innerHTML = rr.busy ? `<b>${rr.label}</b><small>${T("skip.sending")}</small>`
+          : rr.blocked ? `<b>${rr.label}</b><small>⚠ ${rr.blocked}</small>`
+          : `<b>${rr.label}</b><small>${T("redrest.sub", { d: hm(rr.minutes), n: rr.n, max: rr.max })}</small>`;
+      }
+      const wr = st.wrest || {};
+      $("wRest").hidden = !wr.available;
+      if (wr.available) {
+        $("wRest").disabled = !!wr.busy || !!wr.blocked;
+        $("wRestTx").innerHTML = wr.busy ? `<b>${wr.label}</b><small>${T("skip.sending")}</small>`
+          : wr.blocked ? `<b>${wr.label}</b><small>⚠ ${wr.blocked}</small>`
+          : `<b>${wr.label}</b><small>${T("wrest.sub", { d: hm(wr.minutes) })}</small>`;
+      }
     }
 
     // çubuklar
@@ -1088,6 +1143,26 @@
     $("vBlock").textContent = `${hm(st.drive_block)} / ${hm(L.block)}`;
     $("fDaily").style.width = pct(st.drive_daily, L.daily); $("fDaily").className = "fill " + tone(st.drive_daily, L.daily);
     $("vDaily").textContent = `${hm(st.drive_daily)} / ${hm(L.daily)}`;
+    $("fDaily").nextElementSibling.style.left = (L.block / L.daily * 100) + "%";
+    { const ex = st.weekly && st.weekly.on ? st.weekly.ext : null; const show = !!(ex && ex.bonus);
+      $("vDailyExt").hidden = !show;
+      if (show) $("vDailyExt").textContent = `+1:00 · ${ex.used}/${ex.max}`; }
+    {
+      const wk = st.weekly || { on: false };
+      $("barWeek").hidden = !wk.on; $("wLine").hidden = !wk.on;
+      if (wk.on) {
+        $("fWeek").style.width = pct(wk.drive, wk.week_limit); $("fWeek").className = "fill " + tone(wk.drive, wk.week_limit);
+        $("vWeek").textContent = `${hm(wk.drive)} / ${hm(wk.week_limit)}`;
+        const fCls = wk.fortnight > wk.fortnight_limit ? "bad" : (wk.fortnight_limit - wk.fortnight <= 60 ? "warn" : "");
+        let due = "";
+        if (wk.wrest_kind) due = `<span>${T(wk.wrest_kind === "regular" ? "ui.wrest.done" : "ui.wrest.reduced_done")}</span>`;
+        else if (wk.wrest_due != null && wk.local != null) {
+          const left = wk.wrest_due - wk.local;
+          due = `<span class="${left < 0 ? "bad" : left <= 1440 ? "warn" : ""}">${left < 0 ? T("ui.wrest.over", { r: hm(-left) }) : T("ui.wrest.due", { t: fmtAbs(wk.wrest_due) })}</span>`;
+        }
+        $("wLine").innerHTML = `<span class="${fCls}">${T("ui.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) })}</span>${due}`;
+      }
+    }
     const rt = st.rest_target;
     const sp = st.split || { part1: 0, need: L.rest };
     $("fRest").style.width = pct(st.rest, rt);
@@ -1100,7 +1175,7 @@
     // bayraklar
     const fl = st.flags || [];
     $("flags").hidden = !fl.length;
-    $("flags").innerHTML = fl.map(f => `<span class="flag"><i class="ic">${ICONS[f.ic] || ""}</i><small>${f.t}</small></span>`).join("");
+    $("flags").innerHTML = fl.map(f => `<span class="flag${f.bad ? " bad" : f.warn ? " warn" : ""}"><i class="ic">${ICONS[f.ic] || ""}</i><small>${f.t}</small></span>`).join("");
 
     // akış kutucukları (günün gerçek akışından üretilir; değişince yeniden kurulur)
     renderSeq(st.seq_boxes || []);
@@ -1124,6 +1199,21 @@
     $("onTop").checked = !!st.on_top;
     if (document.activeElement !== $("miniOpacity") && st.mini_opacity != null) { $("miniOpacity").value = Math.round(st.mini_opacity * 100); $("miniOpacityVal").textContent = Math.round(st.mini_opacity * 100) + "%"; }
     $("autoBreak").checked = !!st.auto_break;
+    {
+      const wk = st.weekly || { on: false };
+      $("weeklyRules").checked = !!wk.on;
+      $("weeklyOpts").hidden = !wk.on;
+      if (wk.on) {
+        $("autoExt").checked = !!wk.ext.auto;
+        $("autoExtText").textContent = T("ui.auto_ext", { n: wk.ext.used, max: wk.ext.max });
+        $("autoRed").checked = !!wk.red.auto;
+        $("autoRedText").textContent = T("ui.auto_red", { n: wk.red.used, max: wk.red.max });
+        const parts = [T("ui.weekly_info.week", { d: hm(wk.drive), l: hm(wk.week_limit) }), T("ui.weekly_info.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) })];
+        if (wk.rest_deadline != null) parts.push(T("ui.weekly_info.day_end", { t: fmtAbs(wk.rest_deadline) }));
+        if (wk.wrest_due != null) parts.push(T("ui.weekly_info.wrest", { t: fmtAbs(wk.wrest_due) }));
+        $("weeklyInfo").innerHTML = parts.map(esc).join("<br>");
+      }
+    }
     {
       const en = !!(st.split && st.split.enabled);
       $("splitOn").classList.toggle("on", en);
@@ -1191,6 +1281,11 @@
   document.querySelectorAll("[data-jump]").forEach(b => b.addEventListener("click", () => call("jump", +b.dataset.jump)));
   $("onTop").addEventListener("change", () => call("set_on_top", $("onTop").checked));
   $("autoBreak").addEventListener("change", () => call("set_auto_break", $("autoBreak").checked));
+  $("weeklyRules").addEventListener("change", () => call("set_weekly_rules", $("weeklyRules").checked));
+  $("autoExt").addEventListener("change", () => call("set_auto_ext", $("autoExt").checked));
+  $("autoRed").addEventListener("change", () => call("set_auto_red", $("autoRed").checked));
+  $("redRestBtn").addEventListener("click", () => call("red_rest"));
+  $("wRest").addEventListener("click", () => call("weekly_rest"));
   $("offjobRest").addEventListener("change", () => call("set_offjob_rest", $("offjobRest").checked));
   $("splitOn").addEventListener("click", () => call("set_split_rest", true));
   $("splitOff").addEventListener("click", () => call("set_split_rest", false));
@@ -1220,6 +1315,23 @@
     let h; try { h = await api.get_history(); } catch (e) { return; }
     const out = [];
     const td = h.today || {};
+    const weeks = h.weeks || [];
+    if (weeks.length) {
+      out.push(`<div class="hsub">${T("ui.hist.weeks")}</div>`);
+      weeks.forEach(w => {
+        const title = w.ago === 0 ? T("ui.hist.week_this") : w.ago === 1 ? T("ui.hist.week_last") : T("ui.hist.week_ago", { n: w.ago });
+        const wr = w.wrest === "regular" ? T("ui.hist.wrest_regular") : w.wrest === "reduced" ? T("ui.hist.wrest_reduced") : T("ui.hist.wrest_none");
+        const extra = [];
+        if (w.ext_used) extra.push(T("ui.hist.ext_used", { n: w.ext_used }));
+        if (w.red_used) extra.push(T("ui.hist.red_used", { n: w.red_used }));
+        out.push(`<div class="hweek${w.ago === 0 ? " cur" : ""}"><div class="hd"><b>${title}</b><span>${T("ui.hist.wdays", { n: w.days })}</span></div>` +
+                 `<div class="track"><div class="fill ${w.drive > w.limit ? "bad" : ""}" style="width:${Math.min(100, w.drive / w.limit * 100)}%"></div></div>` +
+                 `<div class="hstats"><span><i class="ic">${ICONS.wheel}</i><b>${hm(w.drive)}</b> / ${hm(w.limit)}</span>` +
+                 (w.violations ? `<span class="bad"><i class="ic">${ICONS.bell}</i><b>${w.violations}</b> ${T("ui.hist.viol")}</span>` : `<span class="ok"><i class="ic">${ICONS.check}</i>${T("ui.hist.ok")}</span>`) +
+                 `<span>${wr}</span>${extra.map(x => `<span>${x}</span>`).join("")}</div></div>`);
+      });
+      out.push(`<div class="hsub">${T("ui.hist.days")}</div>`);
+    }
     if (td.drive > 0 || (td.segments || []).length) out.push(dayCard(td, T("ui.hist.today"), true));
     (h.days || []).forEach((d, i) => out.push(dayCard(d, T("ui.hist.day", { n: (h.days.length - i) }), false)));
     $("histList").innerHTML = out.join("") || `<div class="hempty">${T("ui.hist.none")}</div>`;
@@ -1533,7 +1645,7 @@
   setTimeout(() => {
     if (api) return;
     const L = { block: 270, daily: 540, break: 45, rest: 660 };
-    const m = { mode: "auto", status: (new URLSearchParams(location.search).get("status")) || "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
+    const m = { weekly: !!new URLSearchParams(location.search).get("weekly"), mode: "auto", status: (new URLSearchParams(location.search).get("status")) || "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
                 log: [{ t: "05:52", m: "Oyuna bağlanıldı" }, { t: "05:53", m: "Sürüş başladı" }] };
     let strings = {};
     const view = () => {
@@ -1554,11 +1666,15 @@
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         full_rest: m.status !== "DRIVING" ? { available: true, busy: false, minutes: 661, label: "Tam dinlenme (11:00)" } : { available: false },
+        red_rest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 541, label: "Kısa dinlenme (9:00)", n: 1, max: 3 } : { available: false },
+        wrest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 2701, label: "Haftalık dinlenme (45:00)" } : { available: false },
+        weekly: m.weekly ? { on: true, drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
+                             ext: { auto: true, on: false, bonus: true, used: 1, max: 2 }, red: { auto: true, used: 0, max: 3 }, local: m.abs, day_left: 300 } : { on: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
         split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7,
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
           : [{ k: "drive", v: "4:30", st: "active" }, { k: "break", v: "0:45", st: "plan" }, { k: "drive", v: "4:30", st: "plan" }, { k: "daily", v: "11:00", st: "plan" }],
-        flags: m.status === "ON_DUTY" ? [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] : [],
+        flags: [...(m.status === "ON_DUTY" ? [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] : []), ...(m.weekly && m.status !== "OFF_DUTY" ? [{ ic: "clock", t: "gün sonu 22:10 · kalan 5:00", warn: true }] : [])],
         tz: { source: "BST (UTC+1:00)", adjust: 0, offset: -60, error: null, frame: "local", base: 120, zones_enabled: true, save_age: 2 },
         tel: { ok: true, rev: 12, game: 1, abs: m.abs, scale: 19 }, onboarded: m.onboarded };
     };
@@ -1570,10 +1686,10 @@
       set_mode: async v => { m.mode = v; return view(); }, set_manual_clock: async (d, h, mi) => { m.abs = d * 1440 + h * 60 + mi; return view(); },
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
-      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
+      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_weekly_rules: async f => { m.weekly = f; return view(); }, set_auto_ext: async () => view(), set_auto_red: async () => view(), red_rest: async () => view(), weekly_rest: async () => view(), set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
       set_custom_bg: async d => { m.cbgdata = d; m.cbg = true; m.cbgrev = (m.cbgrev || 1) + 1; return { ok: true }; }, clear_custom_bg: async () => { m.cbg = false; m.cbgdata = ""; m.cbgrev = (m.cbgrev || 1) + 1; return view(); }, get_custom_bg: async () => m.cbgdata || "", open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
       set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, full_rest: async () => view(),
-      get_history: async () => ({ today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
+      get_history: async () => ({ weeks: m.weekly ? [{ start: 15 * 1440, drive: 2058, days: 4, violations: 1, wrest: null, ext_used: 1, red_used: 0, ago: 0, limit: 3360 }, { start: 8 * 1440, drive: 3190, days: 6, violations: 0, wrest: "regular", ext_used: 0, red_used: 1, ago: 1, limit: 3360 }] : [], today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
         days: [{ drive: 512, rest: 705, rests: 2, start: 400, end: 2100, saved: "2026-09-13 21:10", reason: "daily", segments: [{ t: "drive", m: 268, a: 400 }, { t: "rest", m: 45, k: "break", a: 668 }, { t: "drive", m: 244, a: 713 }, { t: "rest", m: 660, k: "daily", a: 957 }], violations: [{ t: 680, kind: "block", over: 12 }] }] }), toggle_mini: async () => view(), set_hotkey: async () => view(),
       set_auto_break: async () => view(), set_offjob_rest: async () => view(), set_split_rest: async () => view(), clear_part1: async () => view(), tz_adjust: async () => view(), set_time_frame: async () => view(), skip_rest: async () => { for (let i = 0; i < 46 - m.rest; i++) tickMock(); return view(); },
     };

@@ -67,6 +67,10 @@ gerçekten yaptığınla birebir örtüşür.
   sonraki ≥ 30 dk mola bloğu yeniler (AB kuralı). Kapatılabilir.
 - **Bölünmüş günlük dinlenme (3 + 9)** ve günün gerçek akışını gösteren kutucuk şeridi
   (tamamlanan bloklar ✓, şu anki, plan). Tek parça 11 saat aynen çalışır; tek parçaya kilitlenebilir.
+- **Haftalık kurallar** (isteğe bağlı, Ayarlar → Kurallar; varsayılan basit mod): haftalık **56 sa** / iki haftalık **90 sa**
+  sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
+  düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /
+  azaltılmış 24 sa (en geç 6 gün sonra; tek düğmeyle iki adımda atlanır), geçmişte hafta kartları ve ihlal türleri.
 - **Zaman atlamaları**: uyku / feribot / tren dinlenme sayılır; **dorse yükleme/boşaltma sayılmaz**;
   kayıt yüklenince sayaçlar o ana geri döner.
 - **Görev dışı modu**: aktif teslimat yoksa hiçbir şey ilerlemez (dinlenme isteğe bağlı sayılır).
@@ -106,6 +110,7 @@ gerçekten yaptığınla birebir örtüşür.
 | ≥ 3:00 dinlenme sürüşle kesilirse | Bölünmüş dinlenmenin 1. kısmı olarak saklanır; sonraki 9:00 günü tamamlar. |
 | Oyun saati geri giderse | Kayıt yüklendi → sayaçlar dakikalık geçmişten o ana döner. |
 | Aktif iş ve GPS rotası yoksa | Görev dışı: hiçbir şey ilerlemez. |
+| Haftalık kurallar açıksa | Kalan sürüş = blok / günlük / haftalık / iki haftalık hakların en küçüğü; gün sonu ve haftalık dinlenme tarihleri ana panelde; ≥ 24 sa dinlenme azaltılmış, ≥ 45 sa tam haftalık dinlenme sayılır. |
 
 Her şey `OpenTacho.exe`'nin yanındaki `state.json` / `history.json` dosyalarında tutulur; sıfırdan
 başlamak için silebilirsin (ya da Ayarlar → *Sayaçları sıfırla*).
@@ -132,6 +137,10 @@ American Truck Simulator da aynı eklentiyi kullanır.
 Windows, *özel tam ekran* (exclusive fullscreen) modundaki bir oyunun üstüne hiçbir şey çizemez.
 Oyunun görüntü modunu *pencereli* ya da *kenarlıksız tam ekran* yap (ETS2: Seçenekler → Grafik →
 Tam ekran kapalı); şerit üstte görünür, saydam arka planından oyun seçilir.
+
+**Haftalık 56 / 90 saat kuralı da var mı?**
+Var, isteğe bağlı: Ayarlar → Kurallar → *Haftalık kuralları uygula*. Varsayılan basit moddur (yalnızca 4:30 / 45 / 11);
+açınca haftalık ve iki haftalık sürüş, 10 saate uzatma, 9 saate düşürme, gün yayılımı ve 45 saatlik haftalık dinlenme eklenir.
 
 **Oyunun yorgunluk simülasyonunu açık mı bırakmalıyım?**
 Hayır. Kapat (*Seçenekler → Oynanış*) ve oyunda uyumak yerine molayı/dinlenmeyi uygulamanın ⏩ Atla /

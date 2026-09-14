@@ -70,6 +70,11 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   eine spätere Pause von ≥ 30 min erneuert den Block (EU-Regel). Abschaltbar.
 - **Geteilte Tagesruhezeit (3 + 9)** mit einer Tagesablauf-Leiste, die jeden abgeschlossenen Block,
   den aktuellen und den Plan zeigt; eine einteilige 11-h-Ruhezeit funktioniert weiterhin. Kann auf einteilig festgelegt werden.
+- **Wochenregeln** (optional, Einstellungen → Regeln; Standard: einfacher Modus): **56 h** pro Woche / **90 h** in zwei
+  Wochen (Spiel-Kalenderwoche), Tageslenkzeit zweimal pro Woche auf **10 h** verlängert, Tagesruhezeit dreimal pro Woche
+  auf **9 h** verkürzt, **Tagesspanne** (Ruhezeit muss innerhalb von 13/15 h beginnen; im Hauptfeld als „Tagesende“),
+  **Wochenruhezeit** 45 h / verkürzt 24 h (fällig innerhalb von 6 Tagen; eine Schaltfläche überspringt sie in zwei Schritten),
+  Wochenkarten im Verlauf, neue Verstoßarten.
 - **Zeitsprünge verarbeitet**: Schlafen / Fähre / Zug zählen als Ruhezeit; **Anhänger be- und
   entladen nicht**; das Laden eines Spielstands setzt die Zähler auf diesen Moment zurück.
 - **Modus „Kein Auftrag“**: ohne aktive Lieferung zählt nichts (Ruhezeit optional weiterhin). Eine
@@ -108,6 +113,7 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
 | Halt von 15–44 min, durch Fahren unterbrochen | Als Pause Teil 1 behalten; eine spätere 30-min-Pause erneuert den 4,5-h-Block. |
 | Ruhezeit ≥ 3:00, durch Fahren unterbrochen | Als Teil 1 einer geteilten Ruhezeit behalten; 9:00 später schließt den Tag ab. |
 | Spielzeit läuft rückwärts | Spielstand geladen → Zähler aus dem Minutenverlauf wiederhergestellt. |
+| Wochenregeln aktiv | Restlenkzeit = kleinstes von Block / Tag / Woche / zwei Wochen; Tagesende und Wochenruhezeit-Termin im Hauptfeld; eine Ruhezeit ≥ 24 h zählt als verkürzte, ≥ 45 h als volle Wochenruhezeit. |
 | Kein aktiver Auftrag und keine GPS-Route | Kein Auftrag: nichts läuft weiter. |
 
 Alles liegt in `state.json` / `history.json` neben `OpenTacho.exe`; lösche sie, um neu zu
@@ -135,6 +141,10 @@ also keine Rolle; American Truck Simulator nutzt dasselbe Plugin.
 Windows kann über ein Spiel im *exklusiven Vollbild* kein Overlay zeichnen. Stelle den Anzeigemodus
 des Spiels auf *Fenster* oder *randloses Vollbild* (ETS2: Optionen → Grafik → Vollbild aus) — dann
 liegt die Leiste oben, und das Spiel scheint durch ihren transparenten Hintergrund.
+
+**Sind die wöchentlichen 56 / 90 h enthalten?**
+Ja, optional: Einstellungen → Regeln → *Wochenregeln anwenden*. Standard ist der einfache Modus (nur 4:30 / 45 / 11);
+eingeschaltet kommen Wochen- und Zwei-Wochen-Lenkzeit, die 10-h-Verlängerung, die 9-h-Verkürzung, die Tagesspanne und die 45-h-Wochenruhezeit dazu.
 
 **Soll die Müdigkeitssimulation des Spiels an bleiben?**
 Nein. Ausschalten (*Optionen → Gameplay*) und Pausen/Ruhezeiten mit ⏩ Überspringen / Volle Ruhezeit der App
