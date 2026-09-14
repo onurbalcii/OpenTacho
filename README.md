@@ -68,6 +68,11 @@ actually did.
   later ≥ 30 min break renews the block (EU rule). Can be turned off.
 - **Split daily rest (3 + 9)** with a day-flow strip that shows every completed block, the
   current one and the plan; single 11 h rest still works as usual. Can be locked to single.
+- **Job planner**: type the distance and delivery time from the offer — the app simulates breaks and daily/weekly rests with
+  your current allowances and gives total time, arrival and margin (**fits / doesn't fit**); with a job accepted the route time
+  and delivery window come from the game and the result shows live in the job line. Average speed is learned from the odometer.
+- **Game profile**: the active profile is recognised (name · level · company in the top card); counters, history and events are
+  kept **per profile** — switch profiles in the game and the app switches counters (`profiles\` folder).
 - **Weekly rules** (optional, Settings → Rules; simple mode by default): weekly **56 h** / fortnightly **90 h**
   driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
   times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**

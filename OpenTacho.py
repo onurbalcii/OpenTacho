@@ -43,6 +43,12 @@ else:
     DATA_DIR = APP_DIR
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
 HIST_FILE = os.path.join(DATA_DIR, "history.json")
+PROFILES_DIR = os.path.join(DATA_DIR, "profiles")       # profil başına sayaçlar: <oyun>_<profil id>.json (+ .hist.json)
+# ETS2/ATS seviye tablosu (def/economy_data.sii level_xp[]: bir sonraki seviye için gereken XP; tablo bitince son değer tekrar eder)
+LEVEL_XP = [200, 500, 700, 900, 1000, 1100, 1300, 1600, 1700, 2100, 2300, 2600, 2700, 2900, 3000, 3100, 3400, 3700, 4000, 4300,
+            4600, 4700, 4900, 5200, 5700, 5900, 6000, 6200, 6600, 6800]
+LEVEL_LAST = 150
+PLAN_DEFAULT_KMH = 70.0   # ortalama hız öğrenilene kadar planlayıcının varsayımı (oyun km / oyun saati)
 ERR_FILE = os.path.join(DATA_DIR, "error.log")
 UI_DIR = os.path.join(APP_DIR, "app")              # pencerelerin yüklediği her şey (html + assets)
 UI_FILE = os.path.join(UI_DIR, "main.html")
@@ -91,6 +97,31 @@ WREST_REDUCED = 1440   # 24 sa azaltılmış haftalık dinlenme (telafi izlenmez
 WREST_SPAN = 6 * 1440  # bir önceki haftalık dinlenmenin bitiminden en geç 6×24 sa sonra başlamalı
 WEEK_MIN = 7 * 1440
 SKIP_CHUNK_MAX = 1380  # g_set_time tek seferde günün saatini kurar: her adım en fazla 23 sa ileri
+
+
+def xp_to_level(xp):
+    """Toplam XP → sürücü seviyesi (economy_data.sii tablosu)."""
+    try:
+        xp = int(xp)
+    except Exception:
+        return None
+    lvl, need = 0, 0
+    while lvl < LEVEL_LAST:
+        step = LEVEL_XP[lvl] if lvl < len(LEVEL_XP) else LEVEL_XP[-1]
+        if xp < need + step:
+            break
+        need += step
+        lvl += 1
+    return lvl
+
+
+def sii_text(v):
+    """SII metin değeri: ters bölü-x-NN kaçışlarını UTF-8 baytı olarak çözer."""
+    try:
+        b = re.sub(r"\\x([0-9a-fA-F]{2})", lambda m: chr(int(m.group(1), 16)), v).encode("latin-1", "replace")
+        return b.decode("utf-8", "replace")
+    except Exception:
+        return v
 JUMP_MIN = 30          # tek tikte >= bu kadar dk ilerlerse (uyku/feribot/tren) dinlenme sayılır
 MOVE_KMH = 5.0         # bunun üstü "hareket ediyor"
 YARD_MAX_KMH = 40.0    # iç hareket bu hızın üstünde otomatik biter (yükleme sahası tek seferlik olduğu için toleranslı)
@@ -234,6 +265,8 @@ DEFAULT_STATE = {
     "lang": DEFAULT_LANG,      # arayüz dili (lang/<kod>.json)
     "theme": DEFAULT_THEME,    # vangogh | dark | light | custom
     "custom": dict(DEFAULT_CUSTOM),   # özel tema ayarları (bkz. DEFAULT_CUSTOM)
+    "profile_key": None,       # sayaçların ait olduğu oyun profili ("<oyun>:<profil id>"); None = henüz tanınmadı
+    "spd_km": 0.0, "spd_min": 0.0,   # ortalama hız öğrenme: sürüşte gidilen km / dakika (yumuşatılmış toplamlar)
     "log": [],
 }
 
@@ -283,6 +316,8 @@ class Telemetry:
     OFF_CITY_SRC = 3004
     OFF_ON_JOB = 4300      # 12. bölge: bool onJob
     OFF_ROUTE_DIST = 1060  # truck_f.routeDistance (m); rota yoksa 0
+    OFF_ODOMETER = 1056    # truck_f.truckOdometer (km)
+    OFF_ROUTE_TIME = 1064  # truck_f.routeTime (sn, oyun saati); rota yoksa 0
     OFF_JOB_START = 444    # gameplay_ui.jobStartingTime (oyun dk)
     OFF_CARGO_LOADED = 1564  # truck_b.isCargoLoaded (5. bölge): yükleme/boşaltma anı
     OFF_FERRY = 4306       # special_b.ferry: her feribot kullanımında tersine çevrilir (değişim = olay)
@@ -348,6 +383,8 @@ class Telemetry:
                 "loaded": bool(buf[self.OFF_CARGO_LOADED]),
             },
             "route_m": max(0.0, struct.unpack_from("<f", buf, self.OFF_ROUTE_DIST)[0]),
+            "route_s": max(0.0, struct.unpack_from("<f", buf, self.OFF_ROUTE_TIME)[0]),
+            "odometer_km": struct.unpack_from("<f", buf, self.OFF_ODOMETER)[0],
             "ferry": bool(buf[self.OFF_FERRY]),
             "train": bool(buf[self.OFF_TRAIN]),
             "active": bool(buf[self.OFF_SDK_ACTIVE]),
@@ -384,6 +421,9 @@ class SaveWatcher(threading.Thread):
             log_error("SII_Decrypt.dll: %r" % e)
         self._tmp = os.path.join(tempfile.gettempdir(), "opentacho_save.sii")
         self.zones_enabled = True
+        self.profile = None       # {"key","id","name","company","xp","level","game"} — game.log'daki son yüklenen kayıt
+        self._prof_key = None
+        self._prof_mtime = None
         self.console_ok = None    # g_console + g_developer açık mı (None = config bulunamadı)
         self.game = 1             # 1 = ETS2, 2 = ATS (Tacho günceller); Belgeler klasörünü seçer
         self._cfg_at = 0.0
@@ -422,6 +462,64 @@ class SaveWatcher(threading.Thread):
         except Exception:
             self.console_ok = None
 
+    PROFILE_RE = re.compile(r"/home/(profiles|steam_profiles)/([0-9A-Fa-f]+)/")
+
+    def _detect_profile(self):
+        """Aktif profil: game.log.txt'deki son 'Loading save … /home/profiles/<id>/' satırı; yoksa en yeni profile.sii."""
+        kind = pid = None
+        try:
+            lp = os.path.join(self.docs_dir(), "game.log.txt")
+            size = os.path.getsize(lp)
+            with open(lp, "rb") as f:
+                f.seek(max(0, size - 262144))
+                tail = f.read().decode("utf-8", "replace")
+            for m in self.PROFILE_RE.finditer(tail):
+                kind, pid = m.group(1), m.group(2)
+        except Exception:
+            pass
+        if not pid:
+            cands = [p for d in ("profiles", "steam_profiles") for p in glob.glob(os.path.join(self.docs_dir(), d, "*", "profile.sii"))]
+            if cands:
+                best = max(cands, key=os.path.getmtime)
+                kind = os.path.basename(os.path.dirname(os.path.dirname(best)))
+                pid = os.path.basename(os.path.dirname(best))
+        if not pid:
+            self.profile = None
+            self._prof_key = None
+            return
+        key = "%d:%s" % (self.game, pid)
+        psii = os.path.join(self.docs_dir(), kind, pid, "profile.sii")
+        try:
+            mt = os.path.getmtime(psii)
+        except Exception:
+            mt = None
+        if key == self._prof_key and mt == self._prof_mtime:
+            return
+        try:
+            name = bytes.fromhex(pid).decode("utf-8", "replace").strip() or pid
+        except Exception:
+            name = pid
+        company, xp = "", None
+        if self._dec and mt is not None:
+            try:
+                rc = self._dec(psii.encode("utf-8"), self._tmp.encode("utf-8"))
+                if rc == 0:
+                    with open(self._tmp, "r", encoding="utf-8", errors="replace") as f:
+                        txt = f.read()
+                    m = re.search(r'^\s*company_name\s*:\s*"(.*)"\s*$', txt, re.M)
+                    if m:
+                        company = sii_text(m.group(1))
+                    m = re.search(r"^\s*cached_experience\s*:\s*(\d+)\s*$", txt, re.M)
+                    if m:
+                        xp = int(m.group(1))
+                    m = re.search(r'^\s*profile_name\s*:\s*"(.*)"\s*$', txt, re.M)
+                    if m and sii_text(m.group(1)).strip():
+                        name = sii_text(m.group(1)).strip()
+            except Exception as e:
+                log_error("profile.sii okunamadı: %r" % e)
+        self.profile = {"key": key, "id": pid, "name": name, "company": company, "xp": xp, "level": xp_to_level(xp) if xp is not None else None, "game": self.game}
+        self._prof_key, self._prof_mtime = key, mt
+
     def _newest_save(self):
         pats = [os.path.join(self.docs_dir(), d, "*", "save", "*", "game.sii") for d in ("profiles", "steam_profiles")]
         files = [f for p in pats for f in glob.glob(p)]
@@ -447,6 +545,7 @@ class SaveWatcher(threading.Thread):
     def run(self):
         while True:
             try:
+                self._detect_profile()
                 f = self._newest_save()
                 if time.monotonic() - self._cfg_at > 60 or f != self.save_file:
                     self._read_config(f)
@@ -883,6 +982,7 @@ class Tacho:
         self.last_save = time.monotonic()
         self.stop = False
         self.window = None
+        self.odo_prev = None       # ortalama hız için son odometre (km)
         self.bg_rev = 1            # özel arka plan görseli değişince artar (sayfa yeniden çeker)
 
     # ---- kalıcılık ----
@@ -1320,6 +1420,166 @@ class Tacho:
         self.dirty = True
 
     # ---- tik ----
+    # Profile bağlı olmayan (uygulama geneli) ayarlar; geri kalan her şey profil başına tutulur
+    SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
+                    "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
+                    "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min")
+
+    @classmethod
+    def counter_keys(cls):
+        return [k for k in DEFAULT_STATE if k not in cls.SETTING_KEYS]
+
+    @staticmethod
+    def _profile_file(key, hist=False):
+        safe = re.sub(r"[^0-9A-Za-z_]", "_", key.replace(":", "_", 1))
+        return os.path.join(PROFILES_DIR, safe + (".hist.json" if hist else ".json"))
+
+    def _check_profile(self):
+        """Oyun profili değiştiyse sayaçları değiştir: eskisini dosyaya yaz, yenisininkini yükle (yoksa sıfırdan)."""
+        p = self.saves.profile
+        if not p or p["key"] == self.s.get("profile_key"):
+            return
+        s = self.s
+        old = s.get("profile_key")
+        keys = self.counter_keys()
+        if old:
+            try:
+                os.makedirs(PROFILES_DIR, exist_ok=True)
+                with open(self._profile_file(old) + ".tmp", "w", encoding="utf-8") as f:
+                    json.dump({k: s[k] for k in keys}, f, ensure_ascii=False)
+                os.replace(self._profile_file(old) + ".tmp", self._profile_file(old))
+                with open(self._profile_file(old, True) + ".tmp", "w", encoding="utf-8") as f:
+                    json.dump({"hist": self.hist}, f, ensure_ascii=False)
+                os.replace(self._profile_file(old, True) + ".tmp", self._profile_file(old, True))
+            except Exception as e:
+                log_error("profil sayaçları yazılamadı: %r" % e)
+        new = p["key"]
+        nf = self._profile_file(new)
+        if os.path.exists(nf):
+            try:
+                with open(nf, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                fresh = json.loads(json.dumps(DEFAULT_STATE))
+                for k in keys:
+                    s[k] = data[k] if k in data else fresh[k]
+                s["log"] = data.get("log") or []
+                self.hist = []
+                try:
+                    with open(self._profile_file(new, True), "r", encoding="utf-8") as f:
+                        self.hist = [(int(a), sn) for a, sn in json.load(f).get("hist", [])][-HIST_MINUTES:]
+                except FileNotFoundError:
+                    pass
+            except Exception as e:
+                log_error("profil sayaçları okunamadı: %r" % e)
+        elif old is not None:
+            # yeni profil: sayaçlar sıfırdan (ilk tanınan profil mevcut sayaçları devralır: eski kullanıcılar bir şey kaybetmez)
+            fresh = json.loads(json.dumps(DEFAULT_STATE))
+            for k in keys:
+                s[k] = fresh[k]
+            s["log"] = []
+            self.hist = []
+        s["profile_key"] = new
+        self.pending_jump = None
+        self.auto_yard = None
+        self.odo_prev = None
+        self.alert_prev = {"rem": None, "rest_left": None}
+        self.hist_dirty = True
+        self.dirty = True
+        self.log(L("log.profile", name=p["name"], lvl=p["level"] if p["level"] is not None else "?"))
+
+    def profile_view(self):
+        p = self.saves.profile
+        if not p:
+            return None
+        return {"name": p["name"], "company": p["company"], "level": p["level"], "xp": p["xp"], "key": p["key"], "active": p["key"] == self.s.get("profile_key")}
+
+    # ---- ortalama hız (planlayıcı için) ----
+    def _learn_speed(self, d, odo):
+        s = self.s
+        if odo is None or odo <= 0:
+            return
+        if self.odo_prev is not None and s["status"] == "DRIVING":
+            km = odo - self.odo_prev
+            if 0 < km < 3.0 * d:                     # dakikada 3 km'den fazla = ışınlanma/kayıt yükleme, sayma
+                s["spd_km"] += km
+                s["spd_min"] += d
+                if s["spd_min"] > 600:               # son ~10 saatin ağırlığı kalsın
+                    s["spd_km"] *= 0.5
+                    s["spd_min"] *= 0.5
+        self.odo_prev = odo
+
+    def avg_kmh(self):
+        s = self.s
+        if s["spd_min"] >= 30 and s["spd_km"] > 0:
+            return s["spd_km"] / (s["spd_min"] / 60.0)
+        return PLAN_DEFAULT_KMH
+
+    # ---- yük planlayıcı ----
+    def plan_trip(self, drive_min, deadline_min=None, rest_first=False):
+        """drive_min dakikalık sürüşü mevcut haklarla simüle eder: molalar, günlük/haftalık dinlenmeler, toplam süre, pay."""
+        s = self.s
+        t = 0
+        breaks = rests = wrests = 0
+        block = DRIVE_BLOCK - s["drive_block"]
+        daily = self.daily_limit() - s["drive_daily"] + (60 if self.ext_available() else 0)
+        week = None
+        wi = self.week_info()
+        if wi:
+            week = min(DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"])
+        if s["status"] == "OFF_DUTY" and s["rest"] > 0 and not s["rest_credited"] and s["rest"] < self.break_need():
+            pass   # süren mola tamamlanmadan çıkılıyor sayılır (kalan mola yok sayılmaz, sayaçlar olduğu gibi)
+        if rest_first:
+            need_rest = 0 if s["rest_daily_done"] else max(0, self.daily_need() - s["rest"])
+            t += need_rest
+            rests += 1 if need_rest > 0 else 0
+            block, daily = DRIVE_BLOCK, DRIVE_DAILY + (60 if (self.weekly_on() and s["auto_ext"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK) else 0)
+        need = drive_min
+        guard = 0
+        while need > 0 and guard < 60:
+            guard += 1
+            lim = min(block, daily) if week is None else min(block, daily, week)
+            if lim <= 0:
+                if week is not None and week <= 0:
+                    t += WREST_MIN; wrests += 1; week = DRIVE_WEEK; block = DRIVE_BLOCK; daily = DRIVE_DAILY
+                elif daily <= 0:
+                    t += REST_MIN; rests += 1; block = DRIVE_BLOCK; daily = DRIVE_DAILY
+                else:
+                    t += BREAK_MIN; breaks += 1; block = DRIVE_BLOCK
+                continue
+            d = min(need, lim)
+            need -= d; t += d; block -= d; daily -= d
+            if week is not None:
+                week -= d
+        return {"total": t, "drive": drive_min, "breaks": breaks, "rests": rests, "wrests": wrests,
+                "margin": None if deadline_min is None else deadline_min - t}
+
+    def plan_view(self, km=None, hours=None):
+        """Planlayıcı çıktısı: rota (telemetri) ya da elle girilen km + teslim penceresi."""
+        s = self.s
+        src = None
+        drive_min = deadline = None
+        job_on = bool(self.job and self.job.get("on")) and s["mode"] == "auto" and self.connected
+        route_s = getattr(self, "route_s", 0.0) or 0.0
+        if km is not None and km > 0:
+            src = "manual"
+            drive_min = km / self.avg_kmh() * 60.0
+            deadline = hours * 60.0 if hours else None
+        elif s["mode"] == "auto" and self.connected and route_s > 60:
+            src = "route"
+            drive_min = route_s / 60.0
+            if job_on and self.job.get("delivery") and self.tel_abs:
+                deadline = int(self.job["delivery"]) - int(self.tel_abs)
+        if drive_min is None:
+            return {"available": False, "avg_kmh": round(self.avg_kmh()), "learned": s["spd_min"] >= 30}
+        now_plan = self.plan_trip(drive_min, deadline)
+        out = {"available": True, "src": src, "drive": round(drive_min), "deadline": None if deadline is None else round(deadline),
+               "avg_kmh": round(self.avg_kmh()), "learned": s["spd_min"] >= 30, "now": now_plan,
+               "eta_local": None if self.local_abs() is None else self.local_abs() + round(now_plan["total"])}
+        if now_plan["rests"] > 0 or now_plan["wrests"] > 0 or (now_plan["margin"] is not None and now_plan["margin"] < 0):
+            alt = self.plan_trip(drive_min, deadline, rest_first=True)
+            out["rest_first"] = alt
+        return out
+
     PROV_KEYS = ("status", "drive_block", "drive_daily", "rest", "break_credited", "rest_part1", "rest_daily_done", "day_segments",
                  "break_part1", "rest_credited", "day_violations", "ext_drive", "ext_consumed", "week", "last_wrest_end", "wrest_kind")
 
@@ -1443,10 +1703,12 @@ class Tacho:
             self.truck = tel["truck"]
             self.job = tel["job"]
             self.route_m = tel.get("route_m", 0.0)
+            self.route_s = tel.get("route_s", 0.0)
         self.connected = self.tel_ok and tel["time_abs"] > 0
         if not self.connected:
             return
         self.tel_abs = now = tel["time_abs"]
+        self._check_profile()
         s = self.s
         job_on = bool(self.job and self.job.get("on"))
         job_start = self.job.get("start") if self.job else None
@@ -1579,6 +1841,7 @@ class Tacho:
         # --- zamanı dağıt ---
         if delta > 0:
             self.attribute(delta)
+            self._learn_speed(delta, tel.get("odometer_km"))
         s["last_abs"] = now
         self._hist_push(now)
 
@@ -2261,6 +2524,8 @@ class Tacho:
             "weekly": self.weekly_view(wi, local),
             "wrest": self.wrest_info(),
             "red_rest": self.red_rest_info(),
+            "profile": self.profile_view(),
+            "plan": self.plan_view(),
             "rest_target": need if s["rest_credited"] else target,
             "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= BREAK_PART1) else 0,
             "split_break": bool(s["split_break"]),
@@ -2670,6 +2935,15 @@ class Api:
     def weekly_rest(self):
         self._t.act_weekly_rest()
         return self.get_state()
+
+    def plan(self, km, hours):
+        with self._t.lock:
+            try:
+                km = float(km) if km not in (None, "") else None
+                hours = float(hours) if hours not in (None, "") else None
+            except Exception:
+                km = hours = None
+            return self._t.plan_view(km, hours)
 
     def set_weekly_rules(self, flag):
         self._t.act_set_weekly_rules(flag)

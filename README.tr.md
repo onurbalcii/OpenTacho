@@ -67,6 +67,11 @@ gerçekten yaptığınla birebir örtüşür.
   sonraki ≥ 30 dk mola bloğu yeniler (AB kuralı). Kapatılabilir.
 - **Bölünmüş günlük dinlenme (3 + 9)** ve günün gerçek akışını gösteren kutucuk şeridi
   (tamamlanan bloklar ✓, şu anki, plan). Tek parça 11 saat aynen çalışır; tek parçaya kilitlenebilir.
+- **Yük planlayıcı**: ilan ekranındaki mesafeyi ve teslim süresini gir — mevcut sürüş haklarınla molaları ve günlük/haftalık
+  dinlenmeleri simüle eder, toplam süreyi, varış saatini ve payı verir (**yetişir / yetişmez**); yük alındığında rota süresi ve
+  teslim penceresi oyundan okunur, sonuç iş satırında canlı görünür. Ortalama hız odometreden öğrenilir.
+- **Oyun profili**: aktif profil tanınır (ad · seviye · şirket üst kartta); sayaçlar, geçmiş ve olaylar **profil başına** tutulur —
+  başka profile geçince o profilin sayaçları gelir (`profiles\` klasörü).
 - **Haftalık kurallar** (isteğe bağlı, Ayarlar → Kurallar; varsayılan basit mod): haftalık **56 sa** / iki haftalık **90 sa**
   sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
   düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /

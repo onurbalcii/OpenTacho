@@ -67,6 +67,11 @@ odpowiadają temu, co naprawdę zrobiłeś.
   późniejsza przerwa ≥ 30 min odnawia blok (zasada UE). Można wyłączyć.
 - **Dzielony odpoczynek dzienny (3 + 9)** z paskiem przebiegu dnia pokazującym każdy ukończony blok,
   bieżący i plan; jednoczęściowy odpoczynek 11 h nadal działa jak zwykle. Można zablokować na jednoczęściowy.
+- **Planer zlecenia**: wpisz dystans i czas dostawy z oferty — aplikacja symuluje przerwy oraz odpoczynki dzienne/tygodniowe z bieżącą
+  pulą i podaje łączny czas, przyjazd i zapas (**zdążysz / nie zdążysz**); przy przyjętym zleceniu czas trasy i okno dostawy
+  pochodzą z gry, a wynik widać w wierszu zlecenia. Średnia prędkość uczy się z licznika.
+- **Profil gry**: aktywny profil jest rozpoznawany (imię · poziom · firma w górnej karcie); liczniki, historia i zdarzenia są
+  prowadzone **dla każdego profilu** — po zmianie profilu w grze aplikacja przełącza liczniki (folder `profiles\`).
 - **Zasady tygodniowe** (opcjonalne, Ustawienia → Zasady; domyślnie tryb prosty): **56 h** tygodniowo / **90 h** w dwóch
   tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
   w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),

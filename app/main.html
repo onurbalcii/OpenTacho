@@ -146,8 +146,46 @@
   .conn-text { display: flex; flex-direction: column; min-width: 0; }
   .conn-text b { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .2px; }
   .conn-text small { color: var(--muted); font-variant-numeric: tabular-nums; font-family: var(--serif); font-style: var(--italic); font-size: 13px; }
+  /* oyun profili: ad · seviye · şirket (üst kartta tam genişlik satır) */
+  .top .prof { flex-basis: 100%; margin-top: -6px; font-size: 11.5px; color: var(--dim); display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+  .top .prof .ic { font-size: 13px; color: var(--gold); flex: none; }
+  .top .prof b { color: var(--muted); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .top .prof .lv { color: var(--gold); font-family: var(--display); font-weight: 600; letter-spacing: .3px; flex: none; }
+  .top .prof .co { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: var(--serif); font-style: var(--italic); }
+  .conn-text small.prof .lv { color: var(--gold); font-family: var(--display); font-weight: 600; letter-spacing: .3px; }
+  /* iş satırında plan özeti */
+  .job .eta { margin-left: 4px; }
+  .job .eta.ok { color: var(--sky); } .job .eta.warn { color: var(--warn); } .job .eta.bad { color: var(--bad); }
+  /* yük planlayıcı paneli */
+  body.plan-open .scrim { opacity: 1; pointer-events: auto; }
+  body.plan-open .drawer.plan { transform: none; }
+  body.open .drawer.plan, body.hist-open .drawer.plan { transform: translateX(102%); }
+  .pin { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pin label { display: grid; gap: 5px; font-size: 11.5px; color: var(--dim); letter-spacing: .2px; }
+  .pfield { position: relative; }
+  .pfield input, .pfield input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px 40px 10px 13px; border-radius: 12px; border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
+                  font: inherit; font-size: 17px; font-family: var(--display); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .3px; line-height: 1.2;
+                  -moz-appearance: textfield; appearance: textfield; transition: border-color .2s, box-shadow .2s; }
+  .pfield input::-webkit-outer-spin-button, .pfield input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pfield input::placeholder { color: var(--dim); opacity: .55; font-weight: 500; }
+  .pfield input:focus { outline: none; border-color: var(--gold-line); box-shadow: 0 0 0 3px var(--gold-soft); }
+  .pfield em { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 12px; color: var(--dim); font-family: var(--sans); pointer-events: none; }
+  .pcard { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: rgba(255,255,255,.035); display: grid; gap: 6px; }
+  .pcard.now { border-color: var(--gold-line); }
+  .pcard .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pcard .hd b { font-family: var(--serif); font-style: var(--italic); color: var(--gold); font-size: 14px; }
+  .pcard .verdict { font-family: var(--display); font-weight: 700; font-size: 14px; }
+  .pcard .verdict.ok { color: var(--sky); } .pcard .verdict.warn { color: var(--warn); } .pcard .verdict.bad { color: var(--bad); }
+  .pcard .steps { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 11.5px; color: var(--muted); }
+  .pcard .steps span { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-soft); background: var(--input-bg); white-space: nowrap; }
+  .pcard .big2 { font-family: var(--display); font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .pcard .big2 small { font-size: 12px; color: var(--dim); font-weight: 400; margin-left: 6px; }
+  .pnote { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
+  .psrc { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .psrc .ic { color: var(--gold); font-size: 14px; }
   .top .job { flex-basis: 100%; margin-top: -4px; padding-top: 6px; border-top: 1px solid var(--line); font-family: var(--serif); font-style: var(--italic);
-              font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+              font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; overflow: hidden; }
+  .top .job span { text-align: center; line-height: 1.35; }   /* uzun iş satırı (ETA ile) iki satıra sarılabilir */
   .top .job .ic { font-size: 15px; color: var(--gold); opacity: .85; }
   .top .job b { font-weight: 600; color: var(--text); font-style: normal; font-family: var(--display); font-variant-numeric: tabular-nums; }
   .top .job .late { color: var(--bad); font-weight: 600; font-style: normal; }
@@ -648,8 +686,10 @@
       <div class="quick">
         <button class="qb" id="quickMini" data-i18n-title="ui.mini_open"><i class="ic" data-ic="strip"></i></button>
         <button class="qb" id="quickHist" data-i18n-title="ui.hist.title"><i class="ic" data-ic="history"></i></button>
+        <button class="qb" id="quickPlan" data-i18n-title="ui.plan.title"><i class="ic" data-ic="route"></i></button>
       </div>
     </div>
+    <div class="prof" id="profLine" hidden></div>
     <div class="job" id="jobLine" hidden></div>
   </div>
 
@@ -895,6 +935,17 @@
   </div>
 </aside>
 
+<aside class="drawer plan" id="planDrawer">
+  <h3><span data-i18n="ui.plan.title">Yük planlayıcı</span> <button id="closePlan" title="✕">✕</button></h3>
+  <div class="hint" data-i18n-html="ui.hint.plan"></div>
+  <div class="pin">
+    <label><span data-i18n="ui.plan.km">Mesafe</span><div class="pfield"><input type="number" id="planKm" min="0" step="1" inputmode="numeric" placeholder="1250" autocomplete="off"><em>km</em></div></label>
+    <label><span data-i18n="ui.plan.hours">Teslim süresi</span><div class="pfield"><input type="number" id="planHours" min="0" step="0.5" inputmode="decimal" placeholder="28" autocomplete="off"><em data-i18n="ui.plan.hours_unit">sa</em></div></label>
+  </div>
+  <div class="psrc" id="planSrc"></div>
+  <div id="planOut" class="hlist"></div>
+</aside>
+
 <aside class="drawer hist" id="histDrawer">
   <h3><span data-i18n="ui.hist.title">Takograf geçmişi</span> <button id="closeHist" title="✕">✕</button></h3>
   <div class="hint" data-i18n="ui.hist.hint"></div>
@@ -956,6 +1007,8 @@
     bed: SVG(`<path d="M3 19V7"/><path d="M3 12.5h18V19"/><path d="M3 16h18"/><path d="M7 12.5V10a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 10v2.5"/><path d="M21 19v-2" opacity=".6"/>`),
     road: SVG(`<path d="M8.5 3.5L4.5 20.5M15.5 3.5l4 17"/><path d="M12 4.5v2.5M12 10.5v3M12 17v3.5"/>`),
     clock: SVG(`<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>`),
+    user: SVG(`<circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5c1.3-3.4 3.8-5 7-5s5.7 1.6 7 5"/>`),
+    route: SVG(`<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.3 17H13a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h4.7"/>`),
     calendar: SVG(`<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3M13 14h3" opacity=".6"/>`),
     yard: SVG(`<path d="M2.5 7.5h10v8h-10z"/><path d="M12.5 10.5h3.6l2.9 3v2h-6.5z"/><circle cx="6" cy="17.6" r="1.7"/><circle cx="15.5" cy="17.6" r="1.7"/><path d="M17 5h4.5m0 0l-1.8-1.8M21.5 5l-1.8 1.8"/>`),
     doc: SVG(`<path d="M7 3h7.5L19 7.5V21H7z"/><path d="M14.5 3v4.5H19"/><path d="M10 12h6M10 15.5h6M10 19h3.5"/>`),
@@ -1073,12 +1126,27 @@
     $("connText").textContent = st.conn.text;
     $("connSub").textContent = st.mode === "auto" && st.conn.state !== "off" ? T("conn.speed", { kmh: st.speed.toFixed(0) }) : (st.mode === "auto" ? T("conn.manual_hint") : "");
     {
+      const p = st.profile;
+      $("profLine").hidden = !(p && p.name && st.mode === "auto");
+      if (p && p.name) {
+        const lv = p.level != null ? `<span class="lv">${T("ui.level", { n: p.level })}</span>` : "";
+        $("profLine").innerHTML = `<i class="ic">${ICONS.user}</i><b>${esc(p.name)}</b>${lv ? `<span>·</span>${lv}` : ""}${p.company ? `<span>·</span><span class="co">${esc(p.company)}</span>` : ""}`;
+        $("profLine").title = p.active ? T("ui.profile_active") : "";
+      }
+    }
+    {
       const j = st.job;
       $("jobLine").hidden = !j;
       if (j) {
         let rem = "";
         if (j.remaining != null) rem = j.remaining >= 0 ? ` · ${T("job.due")} <b>${hm(j.remaining)}</b>` : ` · <span class="late">${T("job.late", { d: hm(-j.remaining) })}</span>`;
-        $("jobLine").innerHTML = `<i class="ic">${ICONS.yard}</i><span>${esc(j.src)} → ${esc(j.dst)}${j.cargo ? ` · ${esc(j.cargo)}` : ""}${rem}</span>`;
+        let eta = "";
+        const pl = st.plan;
+        if (pl && pl.available && pl.src === "route" && pl.now && pl.now.margin != null) {
+          const m = pl.now.margin, cls = m < 0 ? "bad" : m < 30 ? "warn" : "ok";
+          eta = ` · <span class="eta ${cls}">${T("plan.eta_short", { t: fmtAbs(pl.eta_local).split(" ").pop(), m: (m >= 0 ? "+" : "−") + hm(Math.abs(m)) })}</span>`;
+        }
+        $("jobLine").innerHTML = `<i class="ic">${ICONS.yard}</i><span>${esc(j.src)} → ${esc(j.dst)}${j.cargo ? ` · ${esc(j.cargo)}` : ""}${rem}${eta}</span>`;
         $("jobLine").title = `${j.cargo ? j.cargo + " · " : ""}${j.km ? j.km + " km" : ""}`;
       }
     }
@@ -1337,9 +1405,54 @@
     $("histList").innerHTML = out.join("") || `<div class="hempty">${T("ui.hist.none")}</div>`;
   }
   let histTimer = null;
-  function openHist() { closeDrawer(); document.body.classList.add("hist-open"); renderHist(); clearInterval(histTimer); histTimer = setInterval(renderHist, 5000); }
+  function openHist() { closeDrawer(); if (typeof closePlan === "function") closePlan(); document.body.classList.add("hist-open"); renderHist(); clearInterval(histTimer); histTimer = setInterval(renderHist, 5000); }
   function closeHist() { document.body.classList.remove("hist-open"); clearInterval(histTimer); histTimer = null; }
   $("quickHist").addEventListener("click", openHist);
+
+  // ---- yük planlayıcı ----
+  let planTimer = null, planBusy = false;
+  function planCard(p, title, cur, deadline) {
+    const steps = [`<span>${T("plan.drive", { d: hm(p.drive) })}</span>`];
+    if (p.breaks) steps.push(`<span>${T("plan.breaks", { n: p.breaks })}</span>`);
+    if (p.rests) steps.push(`<span>${T("plan.rests", { n: p.rests })}</span>`);
+    if (p.wrests) steps.push(`<span>${T("plan.wrests", { n: p.wrests })}</span>`);
+    let verdict = "";
+    if (p.margin != null) {
+      const m = p.margin, cls = m < 0 ? "bad" : m < 30 ? "warn" : "ok";
+      verdict = `<span class="verdict ${cls}">${m < 0 ? T("plan.late", { d: hm(-m) }) : T("plan.fits", { d: hm(m) })}</span>`;
+    }
+    const eta = cur && cur.eta_local != null ? `<small>${T("plan.eta", { t: fmtAbs(cur.eta_local) })}</small>` : "";
+    return `<div class="pcard${cur ? " now" : ""}"><div class="hd"><b>${title}</b>${verdict}</div><div class="big2">${hm(p.total)}${eta}</div><div class="steps">${steps.join("")}</div></div>`;
+  }
+  async function renderPlan() {
+    if (!api || planBusy) return;
+    planBusy = true;
+    let r = null;
+    try {
+      const km = parseFloat($("planKm").value), hrs = parseFloat($("planHours").value);
+      r = await api.plan(isFinite(km) && km > 0 ? km : null, isFinite(hrs) && hrs > 0 ? hrs : null);
+    } catch (e) { r = null; }
+    planBusy = false;
+    if (!r) return;
+    const spd = r.learned ? T("plan.speed_learned", { v: r.avg_kmh }) : T("plan.speed_default", { v: r.avg_kmh });
+    if (!r.available) {
+      $("planSrc").innerHTML = `<i class="ic">${ICONS.route}</i>${T("plan.src_none")}`;
+      $("planOut").innerHTML = `<div class="pnote">${T("plan.empty")}<br>${spd}</div>`;
+      return;
+    }
+    const src = r.src === "route" ? T("plan.src_route", { d: hm(r.drive) }) : T("plan.src_manual", { d: hm(r.drive) });
+    $("planSrc").innerHTML = `<i class="ic">${ICONS.route}</i>${src}${r.deadline != null ? ` · ${T("plan.deadline", { d: hm(r.deadline) })}` : ""}`;
+    const out = [planCard(r.now, T("plan.now"), r, r.deadline)];
+    if (r.rest_first) out.push(planCard(r.rest_first, T("plan.rest_first"), null, r.deadline));
+    out.push(`<div class="pnote">${spd}${r.deadline == null ? "<br>" + T("plan.no_deadline") : ""}</div>`);
+    $("planOut").innerHTML = out.join("");
+  }
+  function openPlan() { closeDrawer(); closeHist(); document.body.classList.add("plan-open"); renderPlan(); clearInterval(planTimer); planTimer = setInterval(renderPlan, 3000); }
+  function closePlan() { document.body.classList.remove("plan-open"); clearInterval(planTimer); planTimer = null; }
+  $("quickPlan").addEventListener("click", openPlan);
+  $("closePlan").addEventListener("click", closePlan);
+  $("scrim").addEventListener("click", closePlan);
+  ["planKm", "planHours"].forEach(id => $(id).addEventListener("input", () => { clearTimeout(planTimer._t); planTimer._t = setTimeout(renderPlan, 250); }));
   $("closeHist").addEventListener("click", closeHist);
   $("scrim").addEventListener("click", closeHist);
   $("tzMinus").addEventListener("click", () => call("tz_adjust", ((last && last.tz && last.tz.adjust) || 0) - 60));
@@ -1509,12 +1622,13 @@
   $("reset").addEventListener("click", () => resetUi(true));
   $("resetNo").addEventListener("click", () => resetUi(false));
   $("resetYes").addEventListener("click", () => { resetUi(false); call("reset"); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !hkCapturing) { closeAllDD(); closeDrawer(); closeHist(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !hkCapturing) { closeAllDD(); closeDrawer(); closeHist(); closePlan(); } });
 
   // ---- ilk açılış: dil seçimi + rehber turu ----
   let onboardShown = false, tourOn = false, tourI = -1;
   function openDrawer(page) {
     closeHist();
+    if (typeof closePlan === "function") closePlan();
     document.body.classList.add("open");
     if (page) {
       document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.dataset.page === page));
@@ -1666,6 +1780,8 @@
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
         full_rest: m.status !== "DRIVING" ? { available: true, busy: false, minutes: 661, label: "Tam dinlenme (11:00)" } : { available: false },
+        profile: { name: "Onur Balcı", company: "Anka Lojistik", level: 12, xp: 18501, key: "1:x", active: true },
+        plan: { available: true, src: "route", drive: 250, deadline: 400, avg_kmh: 70, learned: false, eta_local: m.abs + 295, now: { total: 295, drive: 250, breaks: 1, rests: 0, wrests: 0, margin: 105 } },
         red_rest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 541, label: "Kısa dinlenme (9:00)", n: 1, max: 3 } : { available: false },
         wrest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 2701, label: "Haftalık dinlenme (45:00)" } : { available: false },
         weekly: m.weekly ? { on: true, drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
@@ -1686,7 +1802,9 @@
       set_mode: async v => { m.mode = v; return view(); }, set_manual_clock: async (d, h, mi) => { m.abs = d * 1440 + h * 60 + mi; return view(); },
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
-      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_weekly_rules: async f => { m.weekly = f; return view(); }, set_auto_ext: async () => view(), set_auto_red: async () => view(), red_rest: async () => view(), weekly_rest: async () => view(), set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
+      set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, set_weekly_rules: async f => { m.weekly = f; return view(); }, set_auto_ext: async () => view(), set_auto_red: async () => view(), red_rest: async () => view(),
+      plan: async (km, hrs) => { const drive = km ? km / 70 * 60 : 250; const dl = hrs ? hrs * 60 : (km ? null : 400); const sim = (rf) => { let t = rf ? 660 : 0, need = drive, block = 270 - m.drive_block, daily = 540 - m.drive_daily, b = 0, r = rf ? 1 : 0; if (rf) { block = 270; daily = 540; } while (need > 0) { const lim = Math.min(block, daily); if (lim <= 0) { if (daily <= 0) { t += 660; r++; block = 270; daily = 540; } else { t += 45; b++; block = 270; } continue; } const d = Math.min(need, lim); need -= d; t += d; block -= d; daily -= d; } return { total: t, drive, breaks: b, rests: r, wrests: 0, margin: dl == null ? null : dl - t }; };
+        const now = sim(false); const o = { available: true, src: km ? "manual" : "route", drive, deadline: dl, avg_kmh: 70, learned: false, eta_local: m.abs + now.total, now }; if (now.rests || (now.margin != null && now.margin < 0)) o.rest_first = sim(true); return o; }, weekly_rest: async () => view(), set_custom: async (w, a) => { m.cwin = w; m.caccent = a; return view(); },
       set_custom_bg: async d => { m.cbgdata = d; m.cbg = true; m.cbgrev = (m.cbgrev || 1) + 1; return { ok: true }; }, clear_custom_bg: async () => { m.cbg = false; m.cbgdata = ""; m.cbgrev = (m.cbgrev || 1) + 1; return view(); }, get_custom_bg: async () => m.cbgdata || "", open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
       set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, full_rest: async () => view(),
       get_history: async () => ({ weeks: m.weekly ? [{ start: 15 * 1440, drive: 2058, days: 4, violations: 1, wrest: null, ext_used: 1, red_used: 0, ago: 0, limit: 3360 }, { start: 8 * 1440, drive: 3190, days: 6, violations: 0, wrest: "regular", ext_used: 0, red_used: 1, ago: 1, limit: 3360 }] : [], today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },

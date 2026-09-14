@@ -70,6 +70,11 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   eine spätere Pause von ≥ 30 min erneuert den Block (EU-Regel). Abschaltbar.
 - **Geteilte Tagesruhezeit (3 + 9)** mit einer Tagesablauf-Leiste, die jeden abgeschlossenen Block,
   den aktuellen und den Plan zeigt; eine einteilige 11-h-Ruhezeit funktioniert weiterhin. Kann auf einteilig festgelegt werden.
+- **Auftragsplaner**: Entfernung und Lieferzeit aus dem Angebot eintragen — die App simuliert Pausen und Tages-/Wochenruhezeiten
+  mit deinen aktuellen Kontingenten und liefert Gesamtzeit, Ankunft und Puffer (**reicht / reicht nicht**); bei angenommenem
+  Auftrag kommen Routenzeit und Lieferfenster aus dem Spiel, das Ergebnis steht live in der Auftragszeile. Der Durchschnitt wird vom Kilometerzähler gelernt.
+- **Spielprofil**: das aktive Profil wird erkannt (Name · Level · Firma in der oberen Karte); Zähler, Verlauf und Ereignisse werden
+  **pro Profil** geführt — beim Profilwechsel im Spiel wechselt die App die Zähler (Ordner `profiles\`).
 - **Wochenregeln** (optional, Einstellungen → Regeln; Standard: einfacher Modus): **56 h** pro Woche / **90 h** in zwei
   Wochen (Spiel-Kalenderwoche), Tageslenkzeit zweimal pro Woche auf **10 h** verlängert, Tagesruhezeit dreimal pro Woche
   auf **9 h** verkürzt, **Tagesspanne** (Ruhezeit muss innerhalb von 13/15 h beginnen; im Hauptfeld als „Tagesende“),
