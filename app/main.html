@@ -365,8 +365,15 @@
   .tour-x { background: none; border: 0; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; padding: 2px 4px; }
   .tour-x:hover { color: var(--gold); }
   .tour-card h4 { margin: 0; font-family: var(--serif); font-style: var(--italic); color: var(--gold); font-size: 19px; }
-  .tour-card p { margin: 0; color: var(--text); font-size: 13.5px; line-height: 1.5; }
-  .tour-card p b { color: var(--gold); font-weight: 600; }
+  .tour-card p, .tour-card .tbody { margin: 0; color: var(--text); font-size: 13.5px; line-height: 1.5; }
+  .tour-card p b, .tour-card .tbody b { color: var(--gold); font-weight: 600; }
+  /* rehber ve ipuçlarındaki maddeler */
+  .tour-card .tbody ul, .tour-card .tbody ol, .hint ul, .hint ol { margin: 6px 0 0; padding-left: 1.3em; display: grid; gap: 4px; }
+  .tour-card .tbody ul:first-child, .tour-card .tbody ol:first-child, .hint ul:first-child, .hint ol:first-child { margin-top: 0; }
+  .tour-card .tbody li, .hint li { padding-left: 2px; }
+  .tour-card .tbody li::marker, .hint li::marker { color: var(--gold); font-weight: 600; }
+  .hint ul, .hint ol { gap: 3px; margin-top: 4px; }
+  .hint b { color: var(--muted); font-weight: 600; }
   .tour-dots { display: flex; gap: 4px; flex-wrap: wrap; }
   .tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
   .tour-dots i.on { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
@@ -626,7 +633,7 @@
       <div class="row">
         <button class="sm" id="tzMinus" data-i18n="ui.tz.minus">−1 sa</button><button class="sm" id="tzPlus" data-i18n="ui.tz.plus">+1 sa</button><button class="sm" id="tzZero" data-i18n="ui.tz.reset">Sıfırla</button>
       </div>
-      <div class="hint" data-i18n="ui.hint.tz"></div>
+      <div class="hint" data-i18n-html="ui.hint.tz"></div>
     </div>
   </div>
 
@@ -643,7 +650,7 @@
       <h4><i class="ic" data-ic="cup"></i><span data-i18n="ui.sec.split_break">Bölünmüş mola (15 + 30)</span></h4>
       <label class="check"><input type="checkbox" id="splitBreak"> <span data-i18n="ui.split_break"></span></label>
       <div class="kv" id="part1bText" hidden></div>
-      <div class="hint" data-i18n="ui.hint.split_break"></div>
+      <div class="hint" data-i18n-html="ui.hint.split_break"></div>
     </div>
 
     <div class="sec auto-only">
@@ -654,7 +661,7 @@
 
     <div class="sec auto-only">
       <h4><i class="ic" data-ic="nojob"></i><span data-i18n="ui.sec.offjob">Görev dışı</span></h4>
-      <div class="hint" data-i18n="ui.hint.offjob"></div>
+      <div class="hint" data-i18n-html="ui.hint.offjob"></div>
       <label class="check"><input type="checkbox" id="offjobRest"> <span data-i18n="ui.offjob_rest">Görev dışındayken dinlenme yine sayılsın</span></label>
     </div>
 
@@ -699,7 +706,7 @@
       <h4><i class="ic" data-ic="bell"></i><span data-i18n="ui.sec.sounds">Sesli uyarı</span></h4>
       <label class="check"><input type="checkbox" id="sounds"> <span id="soundsText"></span></label>
       <div class="row"><button class="sm" id="soundTest" data-i18n="ui.sound_test">Sesi dene</button></div>
-      <div class="hint" data-i18n="ui.hint.sounds"></div>
+      <div class="hint" data-i18n-html="ui.hint.sounds"></div>
     </div>
 
     <div class="sec">
@@ -712,7 +719,7 @@
       <div class="row"><button class="sm primary" id="miniOpen"><i class="ic" data-ic="strip"></i><span data-i18n="ui.mini_open">Mini şeride geç</span></button></div>
       <div class="row range"><label for="miniOpacity" data-i18n="ui.mini_opacity">Arka plan yoğunluğu</label><input type="range" id="miniOpacity" min="30" max="100" step="5"><b id="miniOpacityVal">70%</b></div>
       <div class="mini-preview" id="miniPreview" hidden><iframe id="miniPreviewFrame" title="" tabindex="-1"></iframe></div>
-      <div class="hint" data-i18n="ui.hint.mini"></div>
+      <div class="hint" data-i18n-html="ui.hint.mini"></div>
     </div>
 
     <div class="sec">
@@ -766,7 +773,7 @@
   <div class="tour-card glass ornate" id="tourCard">
     <div class="tour-head"><span id="tourN"></span><button class="tour-x" id="tourSkip"></button></div>
     <h4 id="tourTitle"></h4>
-    <p id="tourBody"></p>
+    <div class="tbody" id="tourBody"></div>
     <div class="tour-dots" id="tourDots"></div>
     <div class="tour-nav"><button class="sm" id="tourPrev"></button><button class="sm primary" id="tourNext"></button></div>
   </div>
@@ -1012,7 +1019,7 @@
       const en = !!(st.split && st.split.enabled);
       $("splitOn").classList.toggle("on", en);
       $("splitOff").classList.toggle("on", !en);
-      $("splitHint").textContent = (en ? T("ui.hint.split_on") : T("ui.hint.split_off")) + (st.split_locked ? T("ui.hint.split_locked") : "");
+      $("splitHint").innerHTML = (en ? T("ui.hint.split_on") : T("ui.hint.split_off")) + (st.split_locked ? `<div>${T("ui.hint.split_locked")}</div>` : "");
       $("splitOff").disabled = !!st.split_locked;
       $("splitOff").title = st.split_locked ? T("ui.split.locked_title") : "";
       $("offjobRest").checked = !!st.offjob_rest;
