@@ -40,6 +40,24 @@ Jeśli okno w ogóle się nie otwiera, zainstaluj darmowy
 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) od Microsoftu — jest już częścią
 Windows 11 i każdego aktualnego Windows 10, więc rzadko jest to potrzebne.
 
+## Zalecany sposób użycia — ważne
+
+Aby w pełni wykorzystać OpenTacho, wyłącz mechanikę zmęczenia gry i pomijaj odpoczynek przez aplikację:
+
+1. **Wyłącz symulację zmęczenia w grze** — ETS2/ATS: *Opcje → Rozgrywka → Symulacja zmęczenia* (odznacz).
+   Zegar zmęczenia gry nie ma nic wspólnego z regułą UE: pozostawiony włączony może zmusić cię do snu, gdy
+   tachograf wciąż pokazuje czas jazdy — albo pozwolić jechać dalej, gdy tachograf mówi „stop”.
+2. **Nie korzystaj ze snu w grze** (parkingi, „śpij” w hotelu). To zwykłe przeskoki czasu, które aplikacja musi
+   dopiero zinterpretować: wstrzymuje je na 30 s, by odróżnić załadunek od odpoczynku, a o długości snu decyduje
+   gra — często nie jest to 11 h potrzebnych na odpoczynek dzienny, więc odpoczynek pozostaje niepełny.
+3. **Pomijaj przerwy i odpoczynki z aplikacji** — gdy czas jazdy się skończy, zatrzymaj ciężarówkę i naciśnij
+   ⏩ **Pomiń** (przerwa 45 min / odpoczynek 11 h) lub **Pełny odpoczynek**. Aplikacja przesuwa zegar gry
+   dokładnie o wymagany czas poleceniem `g_set_time` i natychmiast, co do minuty, zapisuje go w licznikach.
+   Wymaga to włączonej konsoli gry (`config.cfg`: `g_console "1"`, `g_developer "1"`).
+
+Efekt: jedna spójna oś czasu — jazda, przerwy, odpoczynki dzienne i historia tachografu dokładnie
+odpowiadają temu, co naprawdę zrobiłeś.
+
 ## Funkcje
 
 - **Na żywo z gry** – zegar, prędkość, model ciężarówki, aktywne zlecenie (trasa, ładunek, czas do dostawy).
@@ -113,6 +131,11 @@ znaczenia; American Truck Simulator używa tej samej wtyczki.
 Windows nie potrafi rysować nakładek nad grą w trybie *pełnoekranowym wyłącznym*. Ustaw tryb
 wyświetlania gry na *okno* lub *pełny ekran bez ramki* (ETS2: Opcje → Grafika → Pełny ekran wył.) —
 pasek pojawi się na górze, a gra będzie widoczna przez jego półprzezroczyste tło.
+
+**Czy zostawić włączoną symulację zmęczenia w grze?**
+Nie. Wyłącz ją (*Opcje → Rozgrywka*) i pomijaj przerwy oraz odpoczynki przyciskami ⏩ Pomiń / Pełny
+odpoczynek w aplikacji zamiast spać w grze — zobacz *Zalecany sposób użycia* powyżej. Zegar zmęczenia gry nie
+trzyma się reguły UE, a sen w grze rzadko trwa 11 h potrzebnych na odpoczynek dzienny.
 
 **Czym różni się od aplikacji typu ELD?**
 To lekka, otwartoźródłowa (MIT) alternatywa: jeden zestaw zasad, bez konta, działa offline,

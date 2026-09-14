@@ -666,6 +666,11 @@
 
   <!-- ===== OYUN ===== -->
   <div class="page" data-page="oyun" hidden>
+    <div class="sec">
+      <h4><i class="ic" data-ic="bed"></i><span data-i18n="ui.sec.setup">Önerilen oyun ayarı</span></h4>
+      <div class="hint" data-i18n-html="ui.hint.setup_html"></div>
+    </div>
+
     <div class="sec auto-only">
       <h4><i class="ic" data-ic="skip"></i><span data-i18n="ui.sec.skip">Atla butonu</span></h4>
       <div class="hint" data-i18n-html="ui.hint.skip_html"></div>
@@ -1188,6 +1193,7 @@
   // adımlar: hedef seçici (yoksa ortada), öncesinde yapılacak iş
   const TOUR = [
     { k: "welcome" },
+    { k: "setup" },
     { k: "top", t: ".top" },
     { k: "hero", t: "#hero" },
     { k: "bars", t: ".bars" },

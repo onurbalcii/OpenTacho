@@ -40,6 +40,27 @@ Die Schaltfläche bleibt gesperrt, bis beides aktiv ist.
 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) — sie ist in Windows 11 und in jedem
 aktuellen Windows 10 bereits enthalten, daher ist das selten nötig.
 
+## Empfohlene Nutzung — wichtig
+
+Damit OpenTacho sein volles Potenzial ausspielt, nimm die Müdigkeitsmechanik des Spiels aus dem Spiel und
+überspringe Ruhezeiten über die App:
+
+1. **Müdigkeitssimulation im Spiel ausschalten** — ETS2/ATS: *Optionen → Gameplay → Müdigkeitssimulation*
+   (Haken entfernen). Die Müdigkeitsuhr des Spiels hat nichts mit der EU-Regel zu tun: bleibt sie an, kann dich
+   das Spiel zum Schlafen zwingen, obwohl der Tachograph noch Lenkzeit anzeigt — oder dich weiterfahren lassen,
+   wenn der Tachograph Stopp sagt.
+2. **Die Schlaffunktion des Spiels nicht nutzen** (Rastplätze, „Schlafen“ im Hotel). Das sind generische
+   Zeitsprünge, die die App erst deuten muss: sie hält sie 30 s zurück, um Beladen von Ruhen zu unterscheiden,
+   und das Spiel bestimmt die Schlafdauer — oft nicht die 11 h, die eine Tagesruhezeit braucht, die Ruhezeit
+   bleibt also unvollständig.
+3. **Pausen und Ruhezeiten über die App überspringen** — ist die Lenkzeit aufgebraucht, Lkw anhalten und
+   ⏩ **Überspringen** (45-Minuten-Pause / 11 h Ruhezeit) oder **Volle Ruhezeit** drücken. Die App stellt die
+   Spieluhr per `g_set_time` um genau die nötige Zeit vor und schreibt sie sofort, auf die Minute, in die Zähler.
+   Dafür muss die Spielkonsole aktiv sein (`config.cfg`: `g_console "1"`, `g_developer "1"`).
+
+Ergebnis: eine einzige, stimmige Zeitlinie — Lenkzeit, Pausen, Tagesruhezeiten und der Tachographen-Verlauf
+entsprechen genau dem, was du tatsächlich gemacht hast.
+
 ## Funktionen
 
 - **Live aus dem Spiel** – Uhr, Geschwindigkeit, Lkw-Modell, aktiver Auftrag (Route, Fracht, Zeit bis zur Lieferung).
@@ -113,6 +134,11 @@ also keine Rolle; American Truck Simulator nutzt dasselbe Plugin.
 Windows kann über ein Spiel im *exklusiven Vollbild* kein Overlay zeichnen. Stelle den Anzeigemodus
 des Spiels auf *Fenster* oder *randloses Vollbild* (ETS2: Optionen → Grafik → Vollbild aus) — dann
 liegt die Leiste oben, und das Spiel scheint durch ihren transparenten Hintergrund.
+
+**Soll die Müdigkeitssimulation des Spiels an bleiben?**
+Nein. Ausschalten (*Optionen → Gameplay*) und Pausen/Ruhezeiten mit ⏩ Überspringen / Volle Ruhezeit der App
+statt mit Schlafen im Spiel überspringen — siehe *Empfohlene Nutzung* oben. Die Müdigkeitsuhr des Spiels folgt
+nicht der EU-Regel, und der Schlaf im Spiel dauert selten die 11 h einer Tagesruhezeit.
 
 **Was unterscheidet es von ELD-artigen Lenkzeit-Apps?**
 Es ist eine leichte Open-Source-Alternative (MIT): ein Regelsatz, kein Konto, offline, ein

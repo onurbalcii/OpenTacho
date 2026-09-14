@@ -39,6 +39,25 @@ Pencere hiç açılmıyorsa Microsoft'un ücretsiz
 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) paketini kur — Windows 11'de ve
 güncel Windows 10'da zaten vardır, bu yüzden nadiren gerekir.
 
+## Önerilen kullanım — önemli
+
+OpenTacho'dan en iyi verimi almak için oyunun kendi yorgunluk mekaniğini devreden çıkar ve dinlenmeleri
+uygulama üzerinden atla:
+
+1. **Oyun içi yorgunluk simülasyonunu kapat** — ETS2/ATS: *Seçenekler → Oynanış → Yorgunluk simülasyonu*
+   (işareti kaldır). Oyunun yorgunluk saatinin AB kuralıyla ilgisi yok: açık kalırsa takograf daha sürüş hakkın
+   var derken oyun seni uyumaya zorlayabilir, ya da takograf dur derken oyun sürdürtebilir.
+2. **Oyunun uyku mekaniğini kullanma** (dinlenme alanları, oteldeki "uyu" seçeneği). Bunlar uygulamanın
+   yorumlamak zorunda kaldığı genel zaman atlamalarıdır: yükleme mi dinlenme mi diye 30 sn bekler, ne kadar
+   uyuduğuna da oyun karar verir — çoğu zaman günlük dinlenmenin istediği 11 saat tutmaz, dinlenme eksik kalır.
+3. **Molayı ve dinlenmeyi uygulamadan atla** — sürüş hakkın bitince aracı durdur, ⏩ **Atla** (45 dk mola /
+   11 sa dinlenme) ya da **Tam dinlenme** düğmesine bas. Uygulama `g_set_time` ile oyun saatini tam gereken
+   kadar ileri alır ve süreyi anında, dakikası dakikasına sayaçlara yazar. Bunun için oyun konsolu açık olmalı
+   (`config.cfg`: `g_console "1"`, `g_developer "1"`).
+
+Sonuç: tek ve tutarlı bir zaman çizelgesi — sürüş süresi, molalar, günlük dinlenmeler ve takograf geçmişi
+gerçekten yaptığınla birebir örtüşür.
+
 ## Özellikler
 
 - **Oyundan canlı** – saat, hız, kamyon modeli, aktif iş (rota, yük, teslime kalan süre).
@@ -112,6 +131,11 @@ American Truck Simulator da aynı eklentiyi kullanır.
 Windows, *özel tam ekran* (exclusive fullscreen) modundaki bir oyunun üstüne hiçbir şey çizemez.
 Oyunun görüntü modunu *pencereli* ya da *kenarlıksız tam ekran* yap (ETS2: Seçenekler → Grafik →
 Tam ekran kapalı); şerit üstte görünür, saydam arka planından oyun seçilir.
+
+**Oyunun yorgunluk simülasyonunu açık mı bırakmalıyım?**
+Hayır. Kapat (*Seçenekler → Oynanış*) ve oyunda uyumak yerine molayı/dinlenmeyi uygulamanın ⏩ Atla /
+Tam dinlenme düğmeleriyle atla — yukarıdaki *Önerilen kullanım* bölümüne bak. Oyunun yorgunluk saati AB
+kuralına uymaz, oyun içi uyku da günlük dinlenmenin istediği 11 saati nadiren tutar.
 
 **ELD tarzı / çalışma-süresi uygulamalarından farkı ne?**
 Hafif ve açık kaynak (MIT) bir alternatif: tek kural seti, hesap yok, çevrimdışı çalışır, tek

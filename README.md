@@ -40,6 +40,25 @@ If the window does not open at all, install Microsoft's free
 [WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/) — it is already part of
 Windows 11 and of any up-to-date Windows 10, so this is rarely needed.
 
+## Recommended setup — important
+
+To get the most out of OpenTacho, take the game's own fatigue mechanic out of the loop and skip rest
+through the app instead:
+
+1. **Turn off the in-game fatigue simulation** — ETS2/ATS: *Options → Gameplay → Fatigue simulation*
+   (untick). The game's fatigue clock has nothing to do with the EU rule: left on, it can force you to sleep
+   while the tachograph still shows driving time left — or let you drive on when the tachograph says stop.
+2. **Don't use the game's sleep** (rest areas, the hotel "sleep" action). Those are generic time skips the
+   app has to interpret: it holds them for 30 s to tell loading from resting, and the game decides how long
+   you slept — often not the 11 h a daily rest needs, so the rest stays incomplete.
+3. **Skip breaks and rests from the app** — when your driving time is up, stop the truck and press
+   ⏩ **Skip** (45-min break / 11 h rest) or **Full rest**. The app advances the game clock by exactly the
+   required amount with `g_set_time` and credits it to the counters instantly, to the minute. This needs the
+   game console (`config.cfg`: `g_console "1"`, `g_developer "1"`).
+
+Result: one consistent timeline — driving time, breaks, daily rests and the tachograph history match what you
+actually did.
+
 ## Features
 
 - **Live from the game** – clock, speed, truck model, active job (route, cargo, time to deliver).
@@ -114,6 +133,11 @@ American Truck Simulator uses the same plugin.
 Windows cannot draw any overlay over a game in *exclusive fullscreen*. Set the game's display
 mode to *windowed* or *borderless fullscreen* (ETS2: Options → Graphics → Fullscreen off) and the
 strip appears on top, with the game visible through its translucent background.
+
+**Should I keep the game's fatigue simulation on?**
+No. Turn it off (*Options → Gameplay*) and skip breaks and rests with the app's ⏩ Skip / Full rest buttons
+instead of sleeping in the game — see *Recommended setup* above. The game's fatigue clock does not follow the
+EU rule, and in-game sleep rarely lasts the 11 h a daily rest needs.
 
 **How is it different from ELD-style / hours-of-service apps?**
 It is a lightweight, open-source (MIT) alternative: one rule set, no account, works offline,
