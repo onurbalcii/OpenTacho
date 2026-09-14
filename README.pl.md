@@ -55,7 +55,11 @@ Windows 11 i każdego aktualnego Windows 10, więc rzadko jest to potrzebne.
 - **Automatyka manewrów**: włącza się na początku zlecenia i w pobliżu strefy dostawy, wyłącza powyżej 40 km/h.
 - **Lokalne strefy czasowe**: HUD pokazuje czas lokalny kraju; aplikacja odczytuje strefę z
   najnowszego zapisu, aby oba zegary się zgadzały.
-- **⏩ Pomiń**: wysyła `g_set_time` do konsoli gry, aby przewinąć przerwę lub odpoczynek.
+- **⏩ Pomiń**: wysyła `g_set_time` do konsoli gry, aby przewinąć przerwę lub odpoczynek. Gdy ciężarówka stoi,
+  pojawia się też przycisk **Pełny odpoczynek**: pomija cały 11-godzinny odpoczynek dzienny za jednym razem (nowe zlecenie z wyzerowanymi licznikami).
+- **Historia tachografu**: lista otwierana przyciskiem pod kołem zębatym — jazda i odpoczynek dzień po dniu,
+  odcinki (godzina, czas trwania) i naruszenia (przekroczony blok 4,5 h / 9 h dziennie, z godziną i wielkością przekroczenia), jak wydruk z prawdziwego tachografu.
+  Przycisk obok przełącza na mini pasek bez otwierania ustawień.
 - **Alerty dźwiękowe**: krótkie powiadomienie 15 min przed końcem jazdy/odpoczynku, dwa razy przy naruszeniu,
   raz po ukończeniu przerwy/odpoczynku (można wyciszyć; zamień pliki `.wav`, aby zmienić dźwięk).
 - **Mini pasek**: globalny skrót (domyślnie `Ctrl + Num 0`, do zmiany) zamienia okno na mały,

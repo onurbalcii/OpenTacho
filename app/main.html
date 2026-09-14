@@ -392,6 +392,43 @@
   .app { height: calc(100% - var(--tb)); }
   .scrim { top: var(--tb); }
   .drawer { top: var(--tb); }
+  /* dişlinin altındaki hızlı düğmeler */
+  .topbtns { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+  .quick { display: flex; gap: 6px; }
+  .qb { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--gold);
+        display: grid; place-items: center; cursor: pointer; padding: 0; font-size: 13px; transition: .2s; }
+  .qb:hover { background: var(--gold); color: #1b1f2a; box-shadow: 0 0 12px rgba(253,202,79,.35); }
+  html[data-theme="light"] .qb:hover { color: #fff; }
+  /* tam dinlenme: küçük atlama düğmesi */
+  .hero .skip.mini-skip { min-height: 42px; padding: 6px 14px 6px 8px; margin-top: 10px; }
+  .hero .skip.mini-skip .ring { width: 28px; height: 28px; font-size: 15px; }
+  .hero .skip.mini-skip .tx b { font-size: 13px; letter-spacing: .3px; }
+  .hero .skip.mini-skip .tx small { font-size: 10.5px; }
+  /* takograf geçmişi */
+  body.open .drawer.hist { transform: translateX(102%); }
+  body.hist-open .scrim { opacity: 1; pointer-events: auto; }
+  body.hist-open .drawer.hist { transform: none; }
+  .hlist { display: flex; flex-direction: column; gap: 10px; }
+  .hday { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: rgba(255,255,255,.035); display: grid; gap: 7px; }
+  .hday.today { border-color: var(--gold-line); }
+  .hday .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hday .hd b { font-family: var(--serif); font-style: var(--italic); color: var(--gold); font-size: 14.5px; }
+  .hday .hd b small { font-family: var(--sans); font-style: normal; color: var(--dim); font-size: 11px; font-weight: 400; }
+  .hday .hd span { color: var(--dim); font-size: 11.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hstats { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+  .hstats span { display: inline-flex; align-items: center; gap: 5px; }
+  .hstats .ic { font-size: 14px; color: var(--gold); }
+  .hstats b { color: var(--text); font-family: var(--display); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .hstats .bad, .hstats .bad b, .hstats .bad .ic { color: var(--bad); }
+  .hstats .ok, .hstats .ok .ic { color: var(--sky); }
+  .hseg { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hseg span { padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line-soft); background: var(--input-bg); white-space: nowrap; }
+  .hseg span.drive { border-color: var(--gold-line); }
+  .hseg span.rest { border-color: rgba(124,192,239,.45); }
+  .hviol { display: grid; gap: 3px; font-size: 12px; color: var(--bad); }
+  .hviol div { display: flex; gap: 8px; align-items: center; }
+  .hviol b { font-family: var(--display); font-variant-numeric: tabular-nums; }
+  .hempty { color: var(--dim); font-size: 12.5px; text-align: center; padding: 20px 6px; }
   /* kenar tutamaçları: Windows çerçevesi olmadığı için boyutlandırma buradan (sürükle → SetWindowPos) */
   .rz { position: fixed; z-index: 70; }
   .rz.n { top: 0; left: 10px; right: 10px; height: 4px; cursor: ns-resize; }
@@ -498,7 +535,13 @@
       <div class="conn-text"><b id="connText" data-i18n="ui.starting">Başlatılıyor…</b><small id="connSub"></small></div>
     </div>
     <div class="clock"><b id="clockTime">--:--</b><small id="clockDay" data-i18n="clock.game">oyun saati</small></div>
-    <div class="gear glass ornate" id="gear" data-i18n-title="ui.settings"><i class="ic" data-ic="gear"></i></div>
+    <div class="topbtns">
+      <div class="gear glass ornate" id="gear" data-i18n-title="ui.settings"><i class="ic" data-ic="gear"></i></div>
+      <div class="quick">
+        <button class="qb" id="quickMini" data-i18n-title="ui.mini_open"><i class="ic" data-ic="strip"></i></button>
+        <button class="qb" id="quickHist" data-i18n-title="ui.hist.title"><i class="ic" data-ic="history"></i></button>
+      </div>
+    </div>
     <div class="job" id="jobLine" hidden></div>
   </div>
 
@@ -513,6 +556,7 @@
     <div class="big-sub" id="bigSub"></div>
     <div class="flags" id="flags" hidden></div>
     <button class="skip btn glass ornate" id="skip" hidden><span class="ring"><i class="ic" data-ic="skip"></i></span><span class="tx" id="skipTx"></span></button>
+    <button class="skip mini-skip btn glass ornate" id="fullRest" hidden><span class="ring"><i class="ic" data-ic="bed"></i></span><span class="tx" id="fullRestTx"></span></button>
   </div>
 
   <div class="bars glass ornate">
@@ -694,6 +738,12 @@
   </div>
 </aside>
 
+<aside class="drawer hist" id="histDrawer">
+  <h3><span data-i18n="ui.hist.title">Takograf geçmişi</span> <button id="closeHist" title="✕">✕</button></h3>
+  <div class="hint" data-i18n="ui.hist.hint"></div>
+  <div id="histList" class="hlist"></div>
+</aside>
+
 <!-- ilk açılış: dil seçimi -->
 <div class="langpick" id="langPick" hidden>
   <div class="lp-card glass ornate curls">
@@ -760,6 +810,7 @@
     pause: SVG(`<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M10 9v6M14 9v6"/>`),
     bell: SVG(`<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M12 3.5v1.5"/>`),
     strip: SVG(`<rect x="2.5" y="8.5" width="19" height="7" rx="3.5"/><path d="M6.5 12h5M15 12h2.5"/>`),
+    history: SVG(`<path d="M4.2 12a7.8 7.8 0 1 0 2.3-5.5"/><path d="M4 4.2v4.4h4.4"/><path d="M12 8.2v4.2l2.7 1.6"/>`),
     help: SVG(`<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>`),
     flourish: SVG(`<path d="M2 14c6-9 14-9 26-3" opacity=".85"/><path d="M6 17c5-5 11-6 20-3" opacity=".5"/>`, "0 0 32 24"),
   };
@@ -897,6 +948,17 @@
         : `<b>${sk.label}</b><small>${T("skip.sub", { d: hm(sk.minutes) })}</small>`;
     }
 
+    {
+      const fr = st.full_rest || {};
+      $("fullRest").hidden = !fr.available;
+      if (fr.available) {
+        $("fullRest").disabled = !!fr.busy || !!fr.blocked;
+        $("fullRestTx").innerHTML = fr.busy ? `<b>${fr.label}</b><small>${T("skip.sending")}</small>`
+          : fr.blocked ? `<b>${fr.label}</b><small>⚠ ${fr.blocked}</small>`
+          : `<b>${fr.label}</b><small>${T("fullrest.sub", { d: hm(fr.minutes) })}</small>`;
+      }
+    }
+
     // çubuklar
     const L = st.limits;
     const pct = (v, max) => Math.max(0, Math.min(100, v / max * 100)) + "%";
@@ -1013,6 +1075,40 @@
   $("splitOff").addEventListener("click", () => call("set_split_rest", false));
   $("clearPart1").addEventListener("click", () => call("clear_part1"));
   $("skip").addEventListener("click", () => call("skip_rest"));
+  $("fullRest").addEventListener("click", () => call("full_rest"));
+  $("quickMini").addEventListener("click", () => call("toggle_mini"));
+
+  // ---- takograf geçmişi ----
+  const fmtAbs = a => { if (a == null) return "--:--"; const wd = Array.isArray(S.weekdays) ? S.weekdays : ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]; a = Math.round(a);
+    return `${wd[((Math.floor(a / 1440) % 7) + 7) % 7]} ${String(Math.floor(((a % 1440) + 1440) % 1440 / 60)).padStart(2, "0")}:${String(((a % 60) + 60) % 60).padStart(2, "0")}`; };
+  const segName = x => x.t === "drive" ? T("ui.seq.drive") : ({ break: T("ui.seq.break"), break1: T("ui.seq.break1"), part1: T("ui.seq.part1"), part2: T("ui.seq.part2"), daily: T("ui.seq.daily"), short: T("ui.hist.seg.short") }[x.k] || T("ui.bar.rest"));
+  function dayCard(d, title, today) {
+    const viols = d.violations || [];
+    const range = d.start != null ? `${fmtAbs(d.start)} → ${fmtAbs(d.end)}` : (d.saved || "");
+    const stats = `<span><i class="ic">${ICONS.wheel}</i>${T("ui.hist.drive")} <b>${hm(d.drive)}</b></span>` +
+                  `<span><i class="ic">${ICONS.bed}</i>${T("ui.hist.rest")} <b>${hm(d.rest)}</b></span>` +
+                  (viols.length ? `<span class="bad"><i class="ic">${ICONS.bell}</i><b>${viols.length}</b> ${T("ui.hist.viol")}</span>` : `<span class="ok"><i class="ic">${ICONS.check}</i>${T("ui.hist.ok")}</span>`);
+    const segs = (d.segments || []).map(x => `<span class="${x.t}">${x.a != null ? fmtAbs(x.a).split(" ").pop() + " " : ""}${segName(x)} ${hm(x.m)}</span>`).join("");
+    const vl = viols.map(v => `<div><b>${v.t != null ? fmtAbs(v.t) : ""}</b>${T("ui.hist.kind." + v.kind)} <b>+${hm(v.over)}</b></div>`).join("");
+    const note = today ? ` <small>${T("ui.hist.ongoing")}</small>` : d.reason === "reset" ? ` <small>${T("ui.hist.reset_note")}</small>` : "";
+    return `<div class="hday${today ? " today" : ""}"><div class="hd"><b>${title}${note}</b><span>${range}</span></div><div class="hstats">${stats}</div>` +
+           (segs ? `<div class="hseg">${segs}</div>` : "") + (vl ? `<div class="hviol">${vl}</div>` : "") + `</div>`;
+  }
+  async function renderHist() {
+    if (!api) return;
+    let h; try { h = await api.get_history(); } catch (e) { return; }
+    const out = [];
+    const td = h.today || {};
+    if (td.drive > 0 || (td.segments || []).length) out.push(dayCard(td, T("ui.hist.today"), true));
+    (h.days || []).forEach((d, i) => out.push(dayCard(d, T("ui.hist.day", { n: (h.days.length - i) }), false)));
+    $("histList").innerHTML = out.join("") || `<div class="hempty">${T("ui.hist.none")}</div>`;
+  }
+  let histTimer = null;
+  function openHist() { closeDrawer(); document.body.classList.add("hist-open"); renderHist(); clearInterval(histTimer); histTimer = setInterval(renderHist, 5000); }
+  function closeHist() { document.body.classList.remove("hist-open"); clearInterval(histTimer); histTimer = null; }
+  $("quickHist").addEventListener("click", openHist);
+  $("closeHist").addEventListener("click", closeHist);
+  $("scrim").addEventListener("click", closeHist);
   $("tzMinus").addEventListener("click", () => call("tz_adjust", ((last && last.tz && last.tz.adjust) || 0) - 60));
   $("tzPlus").addEventListener("click", () => call("tz_adjust", ((last && last.tz && last.tz.adjust) || 0) + 60));
   $("tzZero").addEventListener("click", () => call("tz_adjust", 0));
@@ -1062,7 +1158,7 @@
   $("reset").addEventListener("click", () => resetUi(true));
   $("resetNo").addEventListener("click", () => resetUi(false));
   $("resetYes").addEventListener("click", () => { resetUi(false); call("reset"); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !hkCapturing) { closeAllDD(); closeDrawer(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !hkCapturing) { closeAllDD(); closeDrawer(); closeHist(); } });
 
   // ---- ilk açılış: dil seçimi + rehber turu ----
   let onboardShown = false, tourOn = false, tourI = -1;
@@ -1099,6 +1195,7 @@
     { k: "skip", t: () => ($("skip").hidden ? "#hero" : "#skip") },
     { k: "log", t: ".log" },
     { k: "gear", t: "#gear", pre: () => closeDrawer() },
+    { k: "quick", t: ".quick", pre: () => closeDrawer() },
     { k: "tab_clock", t: '.tab[data-page="saat"]', pre: () => openDrawer("saat") },
     { k: "tab_rules", t: '.tab[data-page="kural"]', pre: () => openDrawer("kural") },
     { k: "tab_game", t: '.tab[data-page="oyun"]', pre: () => openDrawer("oyun") },
@@ -1193,7 +1290,7 @@
   setTimeout(() => {
     if (api) return;
     const L = { block: 270, daily: 540, break: 45, rest: 660 };
-    const m = { mode: "auto", status: "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
+    const m = { mode: "auto", status: (new URLSearchParams(location.search).get("status")) || "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
                 log: [{ t: "05:52", m: "Oyuna bağlanıldı" }, { t: "05:53", m: "Sürüş başladı" }] };
     let strings = {};
     const view = () => {
@@ -1212,6 +1309,7 @@
         lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }], yard_max: 40,
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
+        full_rest: m.status !== "DRIVING" ? { available: true, busy: false, minutes: 661, label: "Tam dinlenme (11:00)" } : { available: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
         split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7,
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
@@ -1229,7 +1327,9 @@
       set_rate: async r => { m.rate = r; return view(); }, jump: async j => { for (let i = 0; i < j; i++) tickMock(); return view(); },
       set_on_top: async f => { m.on_top = f; return view(); }, reset: async () => { m.drive_block = m.drive_daily = m.rest = 0; m.credited = false; return view(); },
       set_lang: async c => { m.lang = c; return view(); }, set_theme: async t => { m.theme = t; return view(); }, open_feedback: async () => view(), set_onboarded: async f => { m.onboarded = f; return view(); },
-      set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, toggle_mini: async () => view(), set_hotkey: async () => view(),
+      set_split_break: async () => view(), set_sounds: async () => view(), test_sound: async () => view(), set_mini_opacity: async () => view(), win: async () => view(), win_resize: async () => true, full_rest: async () => view(),
+      get_history: async () => ({ today: { drive: m.drive_block, rest: m.rest, rests: 0, start: m.abs - m.drive_block, end: m.abs, segments: [{ t: "drive", m: m.drive_block, a: m.abs - m.drive_block }], violations: [] },
+        days: [{ drive: 512, rest: 705, rests: 2, start: 400, end: 2100, saved: "2026-09-13 21:10", reason: "daily", segments: [{ t: "drive", m: 268, a: 400 }, { t: "rest", m: 45, k: "break", a: 668 }, { t: "drive", m: 244, a: 713 }, { t: "rest", m: 660, k: "daily", a: 957 }], violations: [{ t: 680, kind: "block", over: 12 }] }] }), toggle_mini: async () => view(), set_hotkey: async () => view(),
       set_auto_break: async () => view(), set_offjob_rest: async () => view(), set_split_rest: async () => view(), clear_part1: async () => view(), tz_adjust: async () => view(), set_time_frame: async () => view(), skip_rest: async () => { for (let i = 0; i < 46 - m.rest; i++) tickMock(); return view(); },
     };
     start();

@@ -55,7 +55,11 @@ aktuellen Windows 10 bereits enthalten, daher ist das selten nötig.
 - **Rangier-Automatik**: schaltet sich beim Auftragsbeginn und nahe dem Lieferbereich ein, über 40 km/h aus.
 - **Lokale Zeitzonen**: das HUD zeigt die Ortszeit des Landes; die App liest die Zone aus dem
   neuesten Spielstand, damit beide Uhren übereinstimmen.
-- **⏩ Überspringen**: sendet `g_set_time` an die Spielkonsole, um eine Pause oder Ruhezeit vorzuspulen.
+- **⏩ Überspringen**: sendet `g_set_time` an die Spielkonsole, um eine Pause oder Ruhezeit vorzuspulen. Steht der Lkw,
+  erscheint zusätzlich **Volle Ruhezeit**: überspringt die komplette 11-h-Tagesruhezeit auf einmal (neuer Auftrag mit frischen Zählern).
+- **Tachographen-Verlauf**: eine Liste über den Knopf unter dem Zahnrad — Fahr- und Ruhezeiten pro Tag,
+  Abschnitte (Uhrzeit, Dauer) und Verstöße (4,5-h-Block / 9 h Tagesfahrzeit überschritten, mit Uhrzeit und Überschreitung), wie ein echter Tachographenausdruck.
+  Der Knopf daneben wechselt ohne Umweg über die Einstellungen zur Mini-Leiste.
 - **Tonwarnungen**: ein kurzer Ton 15 min vor Ende der Fahr-/Ruhezeit, zweimal bei einem Verstoß,
   einmal beim Abschluss einer Pause/Ruhezeit (abschaltbar; `.wav`-Dateien austauschen, um ihn zu ändern).
 - **Mini-Leiste**: ein globaler Hotkey (Standard `Strg + Num 0`, änderbar) tauscht das Fenster gegen eine

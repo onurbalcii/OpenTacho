@@ -185,7 +185,9 @@ DEFAULT_STATE = {
     "split_rest": True,        # bölünmüş günlük dinlenmeye (3+9) izin ver; kapalıysa hep tek parça 11 sa
     "rest_part1": 0,           # bölünmüş dinlenmenin tamamlanmış 1. kısmı (dk, 0 = yok)
     "rest_daily_done": False,  # bu dinlenme süresi içinde günlük dinlenme tamamlandı mı
-    "day_segments": [],        # günün akışı: [{"t": "drive"|"rest", "m": dk, "k": rest türü}] (akış kutucukları için)
+    "day_segments": [],        # günün akışı: [{"t": "drive"|"rest", "m": dk, "k": rest türü, "a": başlangıç (yerel dk)}]
+    "day_violations": [],      # bugünkü ihlaller: [{"t": yerel dk, "kind": "block"|"daily", "over": aşım dk, "open": bool}]
+    "days": [],                # arşiv: günlük dinlenme tamamlanınca (ya da sıfırlamada) kapanan günler (takograf geçmişi)
     "last_abs": None,          # en son görülen oyun saati (dk)
     "last_move_abs": None,
     "manual_abs": 8 * 60,      # manuel saat (dk, float)
@@ -813,7 +815,7 @@ class Tacho:
 
     # ---- kalıcılık ----
     def _load(self):
-        st = dict(DEFAULT_STATE)
+        st = json.loads(json.dumps(DEFAULT_STATE))   # listeler paylaşılmasın
         st["log"] = []
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -936,7 +938,8 @@ class Tacho:
         if segs and segs[-1]["t"] == t and not segs[-1].get("closed"):
             segs[-1]["m"] += d
         else:
-            segs.append({"t": t, "m": d})
+            a = self.local_abs()
+            segs.append({"t": t, "m": d, "a": (a - d) if a is not None else None})
 
     def add_rest(self, d):
         s = self.s
@@ -956,8 +959,10 @@ class Tacho:
             else:
                 self.log(L("log.break_done"))
             s["break_part1"] = 0
+            self._close_violation()
             self._sound("done")
         if not s["rest_daily_done"] and after >= need:
+            self._archive_day("daily")
             s["drive_block"] = 0
             s["drive_daily"] = 0
             s["break_credited"] = False
@@ -971,6 +976,64 @@ class Tacho:
             s["day_segments"] = []   # yeni gün: akış sıfırdan
             self._sound("done")
         self.dirty = True
+
+    # ---- ihlal kaydı ve takograf geçmişi ----
+    def _track_violation(self):
+        """Sürüş hakkı eksiye düşünce ihlal açar, sürdükçe aşımı günceller."""
+        s = self.s
+        rem = self.remaining()
+        v = s["day_violations"]
+        if rem >= 0:
+            return
+        kind = "daily" if (DRIVE_DAILY - s["drive_daily"]) < (DRIVE_BLOCK - s["drive_block"]) else "block"
+        if v and v[-1].get("open") and v[-1]["kind"] == kind:
+            v[-1]["over"] = max(v[-1]["over"], -rem)
+        else:
+            self._close_violation()
+            v.append({"t": self.local_abs(), "kind": kind, "over": -rem, "open": True})
+
+    def _close_violation(self):
+        v = self.s["day_violations"]
+        if v and v[-1].get("open"):
+            v[-1]["open"] = False
+
+    def day_summary(self, segs=None, viols=None):
+        """Bir günün özeti: toplam sürüş / dinlenme, dinlenme sayısı, aralık, ihlaller."""
+        segs = self.s["day_segments"] if segs is None else segs
+        viols = self.s["day_violations"] if viols is None else viols
+        drive = sum(x["m"] for x in segs if x["t"] == "drive")
+        rest = sum(x["m"] for x in segs if x["t"] == "rest")
+        starts = [x["a"] for x in segs if x.get("a") is not None]
+        start = min(starts) if starts else None
+        end = None
+        if segs:
+            last = segs[-1]
+            end = (last["a"] + last["m"]) if last.get("a") is not None else None
+        return {"drive": drive, "rest": rest, "rests": sum(1 for x in segs if x["t"] == "rest"),
+                "start": start, "end": end, "segments": segs,
+                "violations": [{"t": x["t"], "kind": x["kind"], "over": x["over"]} for x in viols]}
+
+    def _archive_day(self, reason):
+        """Biten günü geçmişe yazar (sürüş yoksa yazmaz)."""
+        s = self.s
+        self._close_violation()
+        summ = self.day_summary()
+        if summ["drive"] <= 0 and not summ["violations"]:
+            s["day_violations"] = []
+            return
+        rec = dict(summ)
+        rec["reason"] = reason
+        rec["saved"] = time.strftime("%Y-%m-%d %H:%M")
+        rec["segments"] = [{"t": x["t"], "m": x["m"], "k": x.get("k"), "a": x.get("a")} for x in summ["segments"]]
+        if reason == "daily" and rec["segments"] and rec["segments"][-1]["t"] == "rest" and not rec["segments"][-1]["k"]:
+            rec["segments"][-1]["k"] = "part2" if self.split_active() else "daily"
+        s["days"] = (s.get("days") or []) + [rec]
+        s["days"] = s["days"][-90:]
+        s["day_violations"] = []
+        self.dirty = True
+
+    def history(self):
+        return {"today": self.day_summary(), "days": list(reversed(self.s.get("days") or []))}
 
     def _close_rest_segment(self, kind):
         """Sürüş yeniden başlarken biten dinlenme segmentini sınıflandırır."""
@@ -1012,6 +1075,7 @@ class Tacho:
             s["rest_daily_done"] = False
             s["rest_credited"] = False
             self._seg_add("drive", d)
+            self._track_violation()
         elif st == "OFF_DUTY":
             self.add_rest(d)
         # ON_DUTY / YARD_MOVE: sürüş sayılmaz, dinlenme de ilerlemez (ama sıfırlanmaz)
@@ -1019,7 +1083,7 @@ class Tacho:
 
     # ---- tik ----
     PROV_KEYS = ("status", "drive_block", "drive_daily", "rest", "break_credited", "rest_part1", "rest_daily_done", "day_segments",
-                 "break_part1", "rest_credited")
+                 "break_part1", "rest_credited", "day_violations")
 
     HIST_KEYS = PROV_KEYS + ("prov", "last_move_abs")
 
@@ -1075,7 +1139,8 @@ class Tacho:
             return
         abs_t, sn = found
         for k in self.HIST_KEYS:
-            self.s[k] = copy.deepcopy(sn[k])
+            if k in sn or k in DEFAULT_STATE:   # eski sürüm kayıtlarında yeni alanlar olmayabilir
+                self.s[k] = copy.deepcopy(sn[k] if k in sn else DEFAULT_STATE[k])
         self.auto_yard = None
         self.pending_jump = None
         self.hist = [(a, x) for (a, x) in self.hist if a <= now]
@@ -1086,7 +1151,7 @@ class Tacho:
     def _restore(self, snap):
         import copy
         for k in self.PROV_KEYS:
-            self.s[k] = copy.deepcopy(snap[k])
+            self.s[k] = copy.deepcopy(snap[k] if k in snap else DEFAULT_STATE[k])
         self.dirty = True
 
     def _job_started(self):
@@ -1334,38 +1399,69 @@ class Tacho:
         need = target - s["rest"]
         if need <= 0:
             return {"available": False}
-        blocked = None
-        if self.paused:
-            blocked = L("skip.blocked_paused")
-        elif self.saves.console_ok is False:
-            blocked = L("skip.blocked_console")
-        elif s["set_time_frame"] == "local" and self.saves.zones_enabled and self.game != 2:
-            # komut HUD saatini aldığı için dilim farkı güncel olmalı; yoksa 23 saat ileri fırlayabilir
-            if self.saves.tz is None:
-                blocked = L("skip.blocked_tz")
-            elif self.saves.save_time is not None and self.tel_abs - self.saves.save_time > SAVE_FRESH_MIN:
-                blocked = L("skip.blocked_stale")
         return {
             "available": True,
             "busy": self.skip is not None,
-            "blocked": blocked,
+            "blocked": self.skip_info_blockers(),
             "minutes": need + SKIP_MARGIN,
             "label": L("skip.break") if target in (BREAK_MIN, BREAK_PART2) else (L("skip.part2") if self.split_active() else L("skip.daily")),
         }
+
+    def skip_info_blockers(self):
+        """Atla / tam dinlenme için ortak engeller (duraklatılmış, konsol kapalı, dilim farkı belirsiz)."""
+        s = self.s
+        if self.paused:
+            return L("skip.blocked_paused")
+        if self.saves.console_ok is False:
+            return L("skip.blocked_console")
+        if s["set_time_frame"] == "local" and self.saves.zones_enabled and self.game != 2:
+            # komut HUD saatini aldığı için dilim farkı güncel olmalı; yoksa 23 saat ileri fırlayabilir
+            if self.saves.tz is None:
+                return L("skip.blocked_tz")
+            if self.saves.save_time is not None and self.tel_abs - self.saves.save_time > SAVE_FRESH_MIN:
+                return L("skip.blocked_stale")
+        return None
+
+    def full_rest_info(self):
+        """Araç dururken ana paneldeki 'tam dinlenme' düğmesi: günlük dinlenmeyi (11 sa / 2. kısım 9 sa) tek seferde atlar."""
+        s = self.s
+        if s["mode"] != "auto" or not self.connected or self.speed > MOVE_KMH or s["rest_daily_done"]:
+            return {"available": False}   # durum DRIVING kalsa da (kısa duruş) araç duruyorsa gösterilir
+            return {"available": False}
+        if self.offjob and not s["offjob_rest"]:
+            return {"available": False}
+        need = self.daily_need() - s["rest"]
+        if need <= 0:
+            return {"available": False}
+        return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(), "minutes": need + SKIP_MARGIN,
+                "label": L("fullrest.part2", d=hm(self.daily_need())) if self.split_active() else L("fullrest.label", d=hm(self.daily_need()))}
+
+    def act_full_rest(self):
+        with self.lock:
+            info = self.full_rest_info()
+            if not info["available"] or info["busy"] or info["blocked"]:
+                return
+            if self.s["status"] != "OFF_DUTY":
+                self.act_set_status_locked("OFF_DUTY")
+            self._start_skip(info["minutes"])
+        threading.Thread(target=self._skip_worker, daemon=True).start()
+
+    def _start_skip(self, need):
+        """g_set_time komutunu hazırlar ve atlama işini başlatır (kilit tutulmuş olmalı)."""
+        base_now = self.tel_abs
+        frame_now = base_now if self.s["set_time_frame"] == "base" else base_now + self.tz_offset()
+        target = frame_now + need
+        cmd = f"g_set_time {(target % 1440) // 60} {target % 60}"
+        self.skip = {"cmd": cmd, "need": need, "start_abs": base_now, "t0": time.monotonic()}
+        self.skip_at = time.monotonic()
+        self.log(L("log.skip_sending", d=hm(need), cmd=cmd))
 
     def act_skip_rest(self):
         with self.lock:
             info = self.skip_info()
             if not info["available"] or info["busy"] or info["blocked"]:
                 return
-            need = info["minutes"]
-            base_now = self.tel_abs
-            frame_now = base_now if self.s["set_time_frame"] == "base" else base_now + self.tz_offset()
-            target = frame_now + need
-            cmd = f"g_set_time {(target % 1440) // 60} {target % 60}"
-            self.skip = {"cmd": cmd, "need": need, "start_abs": base_now, "t0": time.monotonic()}
-            self.skip_at = time.monotonic()
-            self.log(L("log.skip_sending", d=hm(need), cmd=cmd))
+            self._start_skip(info["minutes"])
         threading.Thread(target=self._skip_worker, daemon=True).start()
 
     def _skip_worker(self):
@@ -1818,6 +1914,7 @@ class Tacho:
             "auto_break": s["auto_break"],
             "auto_break_cfg": {"remaining": AUTO_BREAK_REMAINING, "stopped": AUTO_BREAK_STOPPED},
             "skip": self.skip_info(),
+            "full_rest": self.full_rest_info(),
             "tz": {"source": tz_src, "adjust": s["tz_adjust"], "offset": off, "error": self.saves.error,
                    "frame": s["set_time_frame"], "base": ETS2_BASE_TZ, "zones_enabled": self.saves.zones_enabled,
                    "console": self.saves.console_ok,
@@ -1829,21 +1926,25 @@ class Tacho:
     # ---- JS'den çağrılan işlemler ----
     def act_set_status(self, status):
         with self.lock:
-            s = self.s
-            cur = s["status"]
-            self.auto_yard = None
-            if status == "OFF_DUTY":
-                if cur == "OFF_DUTY":
-                    self.no_auto_break = True
-                    self.set_status("ON_DUTY")
-                else:
-                    self.set_status("OFF_DUTY")
-            elif status == "YARD_MOVE":
-                self.set_status("ON_DUTY" if cur == "YARD_MOVE" else "YARD_MOVE")
-            elif status in STATUSES:
-                if cur == "OFF_DUTY":
-                    self.no_auto_break = True
-                self.set_status(status)
+            self.act_set_status_locked(status)
+
+    def act_set_status_locked(self, status):
+        """act_set_status'ın kilit tutan çağıranlar için sürümü."""
+        s = self.s
+        cur = s["status"]
+        self.auto_yard = None
+        if status == "OFF_DUTY":
+            if cur == "OFF_DUTY":
+                self.no_auto_break = True
+                self.set_status("ON_DUTY")
+            else:
+                self.set_status("OFF_DUTY")
+        elif status == "YARD_MOVE":
+            self.set_status("ON_DUTY" if cur == "YARD_MOVE" else "YARD_MOVE")
+        elif status in STATUSES:
+            if cur == "OFF_DUTY":
+                self.no_auto_break = True
+            self.set_status(status)
 
     def act_set_mode(self, mode):
         with self.lock:
@@ -1958,6 +2059,7 @@ class Tacho:
     def act_reset(self):
         with self.lock:
             s = self.s
+            self._archive_day("reset")
             s["drive_block"] = 0
             s["drive_daily"] = 0
             s["rest"] = 0
@@ -2091,6 +2193,14 @@ class Api:
     def skip_rest(self):
         self._t.act_skip_rest()
         return self.get_state()
+
+    def full_rest(self):
+        self._t.act_full_rest()
+        return self.get_state()
+
+    def get_history(self):
+        with self._t.lock:
+            return self._t.history()
 
     def reset(self):
         self._t.act_reset()

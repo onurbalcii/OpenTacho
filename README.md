@@ -56,7 +56,11 @@ Windows 11 and of any up-to-date Windows 10, so this is rarely needed.
   40 km/h.
 - **Local time zones**: the HUD shows the country's local time; the app reads the zone from
   the newest save file so both clocks match.
-- **⏩ Skip**: sends `g_set_time` to the game console to fast-forward a break or rest.
+- **⏩ Skip**: sends `g_set_time` to the game console to fast-forward a break or rest. While the truck is
+  stopped a **Full rest** button appears too: skips the whole 11 h daily rest in one go (start a new job with fresh counters).
+- **Tachograph history**: a list opened from the button under the gear — driving and rest totals per day,
+  segments (time, duration) and violations (4.5 h block / 9 h daily exceeded, with time and overrun), like a real tachograph printout.
+  The button next to it switches to the mini strip without opening settings.
 - **Sound alerts**: a short notification 15 min before driving/rest ends, twice at a
   violation, once when a break/rest completes (can be muted; swap the `.wav` files to change it).
 - **Mini strip**: a global hotkey (default `Ctrl + Num 0`, changeable) swaps the window for a
