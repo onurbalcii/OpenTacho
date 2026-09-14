@@ -45,6 +45,8 @@ else:
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
 HIST_FILE = os.path.join(DATA_DIR, "history.json")
 PROFILES_DIR = os.path.join(DATA_DIR, "profiles")       # profil başına sayaçlar: <oyun>_<profil id>.json (+ .hist.json)
+EXPORT_DIR = os.path.join(DATA_DIR, "exports")          # CSV / takograf çıktısı (txt)
+JOBS_MAX = 200
 # ETS2/ATS seviye tablosu (def/economy_data.sii level_xp[]: bir sonraki seviye için gereken XP; tablo bitince son değer tekrar eder)
 LEVEL_XP = [200, 500, 700, 900, 1000, 1100, 1300, 1600, 1700, 2100, 2300, 2600, 2700, 2900, 3000, 3100, 3400, 3700, 4000, 4300,
             4600, 4700, 4900, 5200, 5700, 5900, 6000, 6200, 6600, 6800]
@@ -254,6 +256,8 @@ DEFAULT_STATE = {
     "last_wrest_end": None,    # son haftalık dinlenmenin bittiği yerel dk (sonraki en geç +6 gün)
     "wrest_kind": None,        # süren dinlenme haftalık dinlenme eşiğini geçtiyse "reduced" | "regular"
     "days": [],                # arşiv: günlük dinlenme tamamlanınca (ya da sıfırlamada) kapanan günler (takograf geçmişi)
+    "jobs": [],                # iş kayıtları: [{"src","dst","cargo","km","income","t0","t1","drive","rest","breaks","viol","fines","outcome","revenue",...}]
+    "cur_job": None,           # süren işin kaydı (bitince jobs'a taşınır)
     "last_abs": None,          # en son görülen oyun saati (dk)
     "last_move_abs": None,
     "manual_abs": 8 * 60,      # manuel saat (dk, float)
@@ -335,6 +339,15 @@ class Telemetry:
     OFF_ROUTE_DIST = 1060  # truck_f.routeDistance (m); rota yoksa 0
     OFF_ODOMETER = 1056    # truck_f.truckOdometer (km)
     OFF_PARK_BRAKE = 1566  # truck_b.parkBrake (5. bölge: isCargoLoaded@1564, specialJob@1565, sonra truck_b)
+    OFF_DLV_DAMAGE = 1456  # gameplay_f.jobDeliveredCargoDamage (0..1)
+    OFF_DLV_KM = 1460      # gameplay_f.jobDeliveredDistanceKm
+    OFF_JOB_INCOME = 4000  # config_ull.jobIncome (kabul edilen işin ücreti)
+    OFF_PENALTY = 4200     # gameplay_ll.jobCancelledPenalty
+    OFF_REVENUE = 4208     # gameplay_ll.jobDeliveredRevenue
+    OFF_FINE = 4216        # gameplay_ll.fineAmount (oyunun kestiği ceza)
+    OFF_EV_CANCELLED = 4302  # special_b.jobCancelled (her olayda tersine döner)
+    OFF_EV_DELIVERED = 4303  # special_b.jobDelivered
+    OFF_EV_FINED = 4304      # special_b.fined
     OFF_ENGINE = 1576      # truck_b.engineEnabled
     OFF_ROUTE_TIME = 1064  # truck_f.routeTime (sn, oyun saati); rota yoksa 0
     OFF_JOB_START = 444    # gameplay_ui.jobStartingTime (oyun dk)
@@ -406,6 +419,15 @@ class Telemetry:
             "odometer_km": struct.unpack_from("<f", buf, self.OFF_ODOMETER)[0],
             "park_brake": bool(buf[self.OFF_PARK_BRAKE]),
             "engine": bool(buf[self.OFF_ENGINE]),
+            "job_income": struct.unpack_from("<Q", buf, self.OFF_JOB_INCOME)[0],
+            "job_penalty": struct.unpack_from("<q", buf, self.OFF_PENALTY)[0],
+            "job_revenue": struct.unpack_from("<q", buf, self.OFF_REVENUE)[0],
+            "fine_amount": struct.unpack_from("<q", buf, self.OFF_FINE)[0],
+            "dlv_km": struct.unpack_from("<f", buf, self.OFF_DLV_KM)[0],
+            "dlv_damage": struct.unpack_from("<f", buf, self.OFF_DLV_DAMAGE)[0],
+            "ev_delivered": bool(buf[self.OFF_EV_DELIVERED]),
+            "ev_cancelled": bool(buf[self.OFF_EV_CANCELLED]),
+            "ev_fined": bool(buf[self.OFF_EV_FINED]),
             "ferry": bool(buf[self.OFF_FERRY]),
             "train": bool(buf[self.OFF_TRAIN]),
             "active": bool(buf[self.OFF_SDK_ACTIVE]),
@@ -1006,6 +1028,8 @@ class Tacho:
         self.odo_prev = None       # ortalama hız için son odometre (km)
         self.park_brake = False    # telemetri: el freni
         self.engine = False        # telemetri: motor çalışıyor
+        self.prev_ev = None        # iş olayı bayrakları (delivered/cancelled/fined: tersine dönen bool)
+        self.tel_last = {}         # son okunan telemetri (tutarlar için)
         self.voice_seq = 0         # sesli anons: her yeni cümlede artar (sayfa değişince okur)
         self.voice_text = ""
         self.bg_rev = 1            # özel arka plan görseli değişince artar (sayfa yeniden çeker)
@@ -1248,6 +1272,7 @@ class Tacho:
                 self.log(L("log.break_done"))
             s["break_part1"] = 0
             self._close_violation(("block",))
+            self._job_count("breaks")
             self._sound("done")
             self._voice("break_done")
         if not s["rest_daily_done"] and after >= need:
@@ -1326,6 +1351,7 @@ class Tacho:
                 x["over"] = max(x["over"], over)
                 return
         v.append({"t": self.local_abs(), "kind": kind, "over": over, "open": True})
+        self._job_count("viol")
 
     def _close_violation(self, kinds=None):
         for x in self.s["day_violations"]:
@@ -1405,8 +1431,9 @@ class Tacho:
             cur = self.week_start_of(local) if local is not None else None
             for ws in sorted(by_week, reverse=True):   # haftalık kurallar kapalıyken de: ceza olan haftalar
                 fine_weeks.append({"start": ws, "ago": None if cur is None else (cur - ws) // WEEK_MIN, "fines": by_week[ws], "paid": int(fp.get(str(ws), 0))})
+        jv = self.jobs_view()
         return {"today": today, "days": days, "weeks": weeks, "fines_on": bool(self.s.get("fines")), "fine_weeks": fine_weeks,
-                "pay_ready": bool(self.saves._dec and self.saves.save_file)}
+                "pay_ready": bool(self.saves._dec and self.saves.save_file), "jobs": jv["jobs"], "cur_job": jv["current"]}
 
     def week_summaries(self):
         """Takvim haftası başına özet (en yeni önce): sürüş, gün sayısı, ihlal sayısı, haftalık dinlenme, uzatma/kısa dinlenme sayıları."""
@@ -1482,6 +1509,7 @@ class Tacho:
             s["rest_credited"] = False
             s["wrest_kind"] = None
             self._seg_add("drive", d)
+            self._job_count("drive", d)
             if self.weekly_on():
                 self._roll_week()
                 if s["last_wrest_end"] is None:
@@ -1497,6 +1525,7 @@ class Tacho:
                 pass   # sıkı mod: motor açık ya da el freni çekili değil → dakika dinlenmeye yazılmaz (görevde gibi)
             else:
                 self.add_rest(d)
+                self._job_count("rest", d)
         # ON_DUTY / YARD_MOVE: sürüş sayılmaz, dinlenme de ilerlemez (ama sıfırlanmaz)
         self.dirty = True
 
@@ -1769,9 +1798,207 @@ class Tacho:
         if s["status"] in ("ON_DUTY", "DRIVING"):
             self.set_status("YARD_MOVE", L("log.job_started_yard"))
             self.auto_yard = "pickup"
+        self._job_open()
 
     def _job_ended(self):
         self.auto_yard = None
+        self._job_close()
+
+    # ---- iş kayıtları (takograf çıktısı / CSV için) ----
+    def _job_open(self):
+        j = self.job or {}
+        tel = self.tel_last or {}
+        self.s["cur_job"] = {"src": j.get("src", ""), "dst": j.get("dst", ""), "cargo": j.get("cargo", ""), "km": int(j.get("km") or 0),
+                             "income": int(tel.get("job_income") or 0), "due": int(j.get("delivery") or 0) or None,
+                             "t0": self.local_abs(), "abs0": self.tel_abs, "drive": 0, "rest": 0, "breaks": 0, "viol": 0, "ferry": 0, "fines": [],
+                             "outcome": None}
+        self.dirty = True
+
+    def _job_refresh(self):
+        """İş sürerken boş kalan alanları (teslim saati, rota, ücret) telemetriden tamamlar."""
+        cj = self.s.get("cur_job")
+        j = self.job or {}
+        if cj is None or not j:
+            return
+        for k, src in (("src", "src"), ("dst", "dst"), ("cargo", "cargo")):
+            if not cj.get(k) and j.get(src):
+                cj[k] = j[src]
+        if not cj.get("km") and j.get("km"):
+            cj["km"] = int(j["km"])
+        if not cj.get("due") and j.get("delivery"):
+            cj["due"] = int(j["delivery"])
+        if not cj.get("income") and (self.tel_last or {}).get("job_income"):
+            cj["income"] = int(self.tel_last["job_income"])
+
+    def _job_count(self, key, n=1):
+        cj = self.s.get("cur_job")
+        if cj is not None:
+            cj[key] = cj.get(key, 0) + n
+
+    def _job_close(self):
+        s = self.s
+        cj = s.get("cur_job")
+        if not cj:
+            return
+        cj["t1"] = self.local_abs()
+        cj["abs1"] = self.tel_abs
+        if cj.get("abs0") is not None and self.tel_abs is not None:
+            cj["dur"] = max(0, self.tel_abs - cj["abs0"])
+        if cj.get("due") and self.tel_abs is not None and cj.get("outcome") == "delivered":
+            cj["late"] = self.tel_abs - cj["due"]
+        if not cj.get("outcome"):
+            cj["outcome"] = "ended"
+        cj["saved"] = time.strftime("%Y-%m-%d %H:%M")
+        jobs = s.setdefault("jobs", [])
+        jobs.append(cj)
+        del jobs[:-JOBS_MAX]
+        s["cur_job"] = None
+        self.dirty = True
+        if cj["outcome"] == "delivered":
+            self.log(L("log.job_delivered", dst=cj.get("dst", ""), rev=cj.get("revenue", 0), d=hm(cj.get("drive", 0))))
+        elif cj["outcome"] == "cancelled":
+            self.log(L("log.job_cancelled", pen=cj.get("penalty", 0)))
+
+    def _job_event(self, kind, tel):
+        s = self.s
+        cj = s.get("cur_job")
+        if kind == "fined":
+            amount = int(tel.get("fine_amount") or 0)
+            self.log(L("log.game_fine", a=amount))
+            if cj is not None:
+                cj.setdefault("fines", []).append(amount)
+                self.dirty = True
+            return
+        data = ({"outcome": "delivered", "revenue": int(tel.get("job_revenue") or 0), "km_real": int(round(tel.get("dlv_km") or 0)),
+                 "damage": round(float(tel.get("dlv_damage") or 0.0) * 100, 1)} if kind == "delivered"
+                else {"outcome": "cancelled", "penalty": int(tel.get("job_penalty") or 0)})
+        if cj is not None:
+            cj.update(data)
+        elif s.get("jobs") and s["jobs"][-1].get("outcome") == "ended" and self.tel_abs is not None and s["jobs"][-1].get("abs1") is not None \
+                and self.tel_abs - s["jobs"][-1]["abs1"] <= 30:
+            last = s["jobs"][-1]
+            last.update(data)   # olay iş bitiminden hemen sonra geldi
+            if kind == "delivered" and last.get("due"):
+                last["late"] = last["abs1"] - last["due"]
+            self.log(L("log.job_delivered", dst=last.get("dst", ""), rev=last.get("revenue", 0), d=hm(last.get("drive", 0))) if kind == "delivered"
+                     else L("log.job_cancelled", pen=last.get("penalty", 0)))
+        self.dirty = True
+
+    def jobs_view(self):
+        jobs = list(reversed(self.s.get("jobs") or []))[:40]
+        cj = self.s.get("cur_job")
+        return {"current": cj, "jobs": jobs}
+
+    # ---- dışa aktarma ----
+    def act_export(self, kind):
+        """CSV (günler + işler) ya da DTCO tarzı txt çıktı; exports/ klasörüne yazar ve klasörü açar."""
+        import csv
+        try:
+            os.makedirs(EXPORT_DIR, exist_ok=True)
+            with self.lock:
+                h = self.history()
+                jobs = self.jobs_view()["jobs"]
+                p = self.saves.profile
+                who = re.sub(r"[^0-9A-Za-z_-]+", "_", (p["name"] if p else "profile"))[:32] or "profile"
+                stamp = time.strftime("%Y%m%d_%H%M")
+            files = []
+            recs = ([dict(h["today"], _label=L("ui.hist.today"))] if (h["today"]["drive"] > 0 or h["today"]["segments"]) else []) + \
+                   [dict(d, _label=L("ui.hist.day", n=len(h["days"]) - i)) for i, d in enumerate(h["days"])]
+            if kind == "csv":
+                f1 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}_days.csv")
+                with open(f1, "w", encoding="utf-8-sig", newline="") as f:
+                    w = csv.writer(f, delimiter=";")
+                    w.writerow(["day", "start", "end", "driving_min", "rest_min", "rests", "violations", "violation_details", "fines_eur", "saved"])
+                    for r in recs:
+                        vd = " | ".join(f"{self._fmt_abs(v.get('t'))} {v.get('kind')} +{v.get('over', 0)}min {v.get('sev', '')}" for v in r.get("violations") or [])
+                        w.writerow([r["_label"], self._fmt_abs(r.get("start")), self._fmt_abs(r.get("end")), r.get("drive", 0), r.get("rest", 0), r.get("rests", 0),
+                                    len(r.get("violations") or []), vd, r.get("fines") or 0, r.get("saved", "")])
+                files.append(f1)
+                f2 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}_jobs.csv")
+                with open(f2, "w", encoding="utf-8-sig", newline="") as f:
+                    w = csv.writer(f, delimiter=";")
+                    w.writerow(["from", "to", "cargo", "planned_km", "driven_km", "start", "end", "duration_min", "driving_min", "rest_min", "breaks", "ferries",
+                                "violations", "outcome", "late_min", "income_eur", "revenue_eur", "penalty_eur", "damage_pct", "game_fines_eur", "saved"])
+                    for j in jobs:
+                        w.writerow([j.get("src", ""), j.get("dst", ""), j.get("cargo", ""), j.get("km", 0), j.get("km_real", ""), self._fmt_abs(j.get("t0")), self._fmt_abs(j.get("t1")),
+                                    j.get("dur", ""), j.get("drive", 0), j.get("rest", 0), j.get("breaks", 0), j.get("ferry", 0), j.get("viol", 0), j.get("outcome", ""),
+                                    j.get("late", ""), j.get("income", 0), j.get("revenue", ""), j.get("penalty", ""), j.get("damage", ""), sum(j.get("fines") or []), j.get("saved", "")])
+                files.append(f2)
+            else:
+                f1 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}.txt")
+                with open(f1, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(self._printout(recs, jobs, p, h))
+                files.append(f1)
+            try:
+                os.startfile(EXPORT_DIR)
+            except Exception:
+                pass
+            with self.lock:
+                self.log(L("log.exported", n=len(files)))
+            return {"ok": True, "files": [os.path.basename(x) for x in files], "dir": EXPORT_DIR}
+        except Exception as e:
+            log_error("dışa aktarma: %r" % e)
+            return {"ok": False, "err": repr(e)}
+
+    def _fmt_abs(self, a):
+        if a is None:
+            return ""
+        a = int(a)
+        return f"{WEEKDAY(a // 1440)} {(a % 1440) // 60:02d}:{a % 60:02d}"
+
+    def _printout(self, recs, jobs, prof, h):
+        """DTCO '24 sa sürücü' çıktısı benzeri düz metin."""
+        W = 44
+        line = "-" * W
+        out = [line, L("export.title").center(W), line]
+        out.append(f"{L('export.driver')}: {prof['name'] if prof else '-'}")
+        if prof and prof.get("company"):
+            out.append(f"{L('export.company')}: {prof['company']}")
+        if prof and prof.get("level") is not None:
+            out.append(f"{L('export.level')}: {prof['level']}")
+        out.append(f"{L('export.printed')}: {time.strftime('%Y-%m-%d %H:%M')}")
+        out.append(line)
+        names = {"drive": L("ui.seq.drive"), "break": L("ui.seq.break"), "break1": L("ui.seq.break1"), "part1": L("ui.seq.part1"), "part2": L("ui.seq.part2"),
+                 "daily": L("ui.seq.daily"), "short": L("ui.hist.seg.short")}
+        for r in recs:
+            out.append("")
+            out.append(f"== {r['_label']}  {self._fmt_abs(r.get('start'))} -> {self._fmt_abs(r.get('end'))}")
+            for x in r.get("segments") or []:
+                nm = names["drive"] if x["t"] == "drive" else names.get(x.get("k") or "", L("ui.bar.rest"))
+                a = x.get("a")
+                end = None if a is None else a + x["m"]
+                out.append(f"  {self._fmt_abs(a)[-5:] if a is not None else '--:--'} - {self._fmt_abs(end)[-5:] if end is not None else '--:--'}  {nm:<22} {hm(x['m']):>6}")
+            out.append(f"  {L('ui.hist.drive')}: {hm(r.get('drive', 0))}   {L('ui.hist.rest')}: {hm(r.get('rest', 0))}")
+            vl = r.get("violations") or []
+            if vl:
+                out.append(f"  ! {len(vl)} {L('ui.hist.viol')}:")
+                for v in vl:
+                    sev = L("ui.sev." + v["sev"]) if v.get("sev") else ""
+                    fine = f"  ~{v['fine']} EUR" if v.get("fine") else ""
+                    out.append(f"    {self._fmt_abs(v.get('t'))}  {L('ui.hist.kind.' + v['kind'])}  +{hm(v.get('over', 0))}  {sev}{fine}")
+            else:
+                out.append(f"  {L('ui.hist.ok')}")
+        if jobs:
+            out.append("")
+            out.append(line)
+            out.append(L("export.jobs").center(W))
+            out.append(line)
+            for j in jobs:
+                oc = L("ui.hist.job." + (j.get("outcome") if j.get("outcome") in ("delivered", "cancelled") else "ended"))
+                out.append(f"{self._fmt_abs(j.get('t0'))}  {j.get('src', '')} -> {j.get('dst', '')}  {j.get('cargo', '')}  {j.get('km', 0)} km")
+                extra = []
+                if j.get("outcome") == "delivered":
+                    extra.append(f"{L('export.revenue')} {j.get('revenue', 0)} EUR")
+                    if j.get("late") is not None:
+                        extra.append(L("ui.hist.job.late", d=hm(j["late"])) if j["late"] > 0 else L("ui.hist.job.on_time"))
+                elif j.get("outcome") == "cancelled":
+                    extra.append(f"{L('export.penalty')} {j.get('penalty', 0)} EUR")
+                if j.get("fines"):
+                    extra.append(L("ui.hist.job.game_fines", a=sum(j["fines"])))
+                out.append(f"    {oc} · {L('ui.hist.drive')} {hm(j.get('drive', 0))} · {L('ui.hist.job.breaks', n=j.get('breaks', 0))} · {j.get('viol', 0)} {L('ui.hist.viol')}" + (" · " + " · ".join(extra) if extra else ""))
+        out.append("")
+        out.append(line)
+        return "\n".join(out) + "\n"
 
     def _resolve_pending_jump(self):
         """Büyük zaman atlaması: iş olayıyla çakışıyorsa yükleme/boşaltma (sayılmaz), değilse dinlenme."""
@@ -1816,6 +2043,7 @@ class Tacho:
             self.route_s = tel.get("route_s", 0.0)
             self.park_brake = bool(tel.get("park_brake"))
             self.engine = bool(tel.get("engine"))
+            self.tel_last = tel
         self.connected = self.tel_ok and tel["time_abs"] > 0
         if not self.connected:
             return
@@ -1832,7 +2060,10 @@ class Tacho:
             s["last_move_abs"] = now
             self.prev_job_on, self.prev_job_start, self.prev_loaded = job_on, job_start, loaded
             self.prev_ferry, self.prev_train = ferry, train
+            self.prev_ev = (bool(tel.get("ev_delivered")), bool(tel.get("ev_cancelled")), bool(tel.get("ev_fined")))
             self.log(L("log.connected"))
+            if job_on and not s.get("cur_job"):
+                self._job_open()   # uygulama iş sürerken açıldı
             return
 
         # --- iş olayları (yükleme atlaması ve otomatik iç hareket için) ---
@@ -1852,9 +2083,22 @@ class Tacho:
         if self.prev_ferry is not None and ferry != self.prev_ferry:
             self.travel_event_at = mono
             self.log(L("log.ferry"))
+            self._job_count("ferry")
         if self.prev_train is not None and train != self.prev_train:
             self.travel_event_at = mono
             self.log(L("log.train"))
+            self._job_count("ferry")
+        ev = (bool(tel.get("ev_delivered")), bool(tel.get("ev_cancelled")), bool(tel.get("ev_fined")))
+        if self.prev_ev is not None and ev != self.prev_ev:
+            if ev[0] != self.prev_ev[0]:
+                self._job_event("delivered", tel)
+            if ev[1] != self.prev_ev[1]:
+                self._job_event("cancelled", tel)
+            if ev[2] != self.prev_ev[2]:
+                self._job_event("fined", tel)
+        self.prev_ev = ev
+        if job_on:
+            self._job_refresh()
         self.prev_job_on, self.prev_job_start, self.prev_loaded = job_on, job_start, loaded
         self.prev_ferry, self.prev_train = ferry, train
 
@@ -3185,6 +3429,9 @@ class Api:
 
     def pay_fine(self, week_start):
         return self._t.act_pay_fine(week_start)
+
+    def export(self, kind):
+        return self._t.act_export(kind)
 
     def set_weekly_rules(self, flag):
         self._t.act_set_weekly_rules(flag)

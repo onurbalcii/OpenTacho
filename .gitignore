@@ -5,6 +5,8 @@ history.json
 history.json.tmp
 error.log
 custom_bg.img
+profiles/
+exports/
 *.lnk
 
 # derleme çıktıları (sürümler GitHub Releases'a yüklenir)

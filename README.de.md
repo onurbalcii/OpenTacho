@@ -96,6 +96,10 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
 - **Tachographen-Verlauf**: eine Liste über den Knopf unter dem Zahnrad — Fahr- und Ruhezeiten pro Tag,
   Abschnitte (Uhrzeit, Dauer) und Verstöße (4,5-h-Block / 9 h Tagesfahrzeit überschritten, mit Uhrzeit und Überschreitung), wie ein echter Tachographenausdruck.
   Der Knopf daneben wechselt ohne Umweg über die Einstellungen zur Mini-Leiste.
+- **Auftragsprotokoll und Export**: jede Ladung wird aus den Telemetrie-Ereignissen erfasst — Route, Fracht, km,
+  Fahr-/Pausen-/Verstoßzähler, Einnahme und Verspätung bei Lieferung, Abbruchstrafe, Bußgelder des Spiels. Unten im
+  Verlaufs-Panel gelistet; **Tachographenausdruck** (txt, wie ein DTCO-24-h-Ausdruck) und **CSV** (Tage + Aufträge)
+  schreiben alles in den Ordner `exports` neben der Exe.
 - **Tonwarnungen**: ein kurzer Ton 15 min vor Ende der Fahr-/Ruhezeit, zweimal bei einem Verstoß,
   einmal beim Abschluss einer Pause/Ruhezeit (abschaltbar; `.wav`-Dateien austauschen, um ihn zu ändern).
 - **Mini-Leiste**: ein globaler Hotkey (Standard `Strg + Num 0`, änderbar) tauscht das Fenster gegen eine

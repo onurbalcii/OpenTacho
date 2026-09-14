@@ -94,6 +94,10 @@ actually did.
 - **Tachograph history**: a list opened from the button under the gear — driving and rest totals per day,
   segments (time, duration) and violations (4.5 h block / 9 h daily exceeded, with time and overrun), like a real tachograph printout.
   The button next to it switches to the mini strip without opening settings.
+- **Job records and export**: every load is recorded from telemetry events — route, cargo, km, driving / break /
+  violation counts, delivery revenue and lateness, cancel penalty, in-game fines. Listed at the bottom of the history
+  panel; the **Tachograph printout** (txt, like a DTCO 24 h printout) and **CSV** (days + jobs) buttons write everything
+  to the `exports` folder next to the exe.
 - **Sound alerts**: a short notification 15 min before driving/rest ends, twice at a
   violation, once when a break/rest completes (can be muted; swap the `.wav` files to change it).
 - **Mini strip**: a global hotkey (default `Ctrl + Num 0`, changeable) swaps the window for a

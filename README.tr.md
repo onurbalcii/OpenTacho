@@ -92,6 +92,10 @@ gerçekten yaptığınla birebir örtüşür.
 - **Takograf geçmişi**: dişlinin altındaki düğmeyle açılan liste — gün gün sürüş ve dinlenme toplamları,
   segmentler (saat, süre) ve ihlaller (4,5 sa blok / 9 sa günlük aşımı, saat ve aşım süresiyle), gerçek takograf çıktısı gibi.
   Yanındaki düğme ayarlara girmeden mini şeride geçer.
+- **İş kayıtları ve dışa aktarma**: her yük telemetri olaylarından kaydedilir — rota, yük, km, sürüş / mola / ihlal
+  sayıları, teslimat geliri ve gecikme, iptal cezası, oyunun kestiği cezalar. Geçmiş panelinin altında listelenir;
+  **Takograf çıktısı** (txt, DTCO 24 sa çıktısı gibi) ve **CSV** (günler + işler) düğmeleri her şeyi exe'nin yanındaki
+  `exports` klasörüne yazar.
 - **Sesli uyarı**: sürüş/dinlenme bitimine 15 dk kala kısa bir bildirim sesi, ihlalde iki kez,
   mola/dinlenme tamamlanınca bir kez (kapatılabilir; `.wav` dosyalarını değiştirerek özelleştirilebilir).
 - **Mini şerit**: global kısayol (varsayılan `Ctrl + Num 0`, değiştirilebilir) pencereyi oyunun

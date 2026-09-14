@@ -92,6 +92,10 @@ odpowiadają temu, co naprawdę zrobiłeś.
 - **Historia tachografu**: lista otwierana przyciskiem pod kołem zębatym — jazda i odpoczynek dzień po dniu,
   odcinki (godzina, czas trwania) i naruszenia (przekroczony blok 4,5 h / 9 h dziennie, z godziną i wielkością przekroczenia), jak wydruk z prawdziwego tachografu.
   Przycisk obok przełącza na mini pasek bez otwierania ustawień.
+- **Rejestr zleceń i eksport**: każdy ładunek jest zapisywany ze zdarzeń telemetrii — trasa, ładunek, km, liczniki
+  jazdy / przerw / naruszeń, przychód i spóźnienie przy dostawie, kara za anulowanie, mandaty z gry. Lista na dole panelu
+  historii; przyciski **Wydruk tachografu** (txt, jak 24-godzinny wydruk DTCO) i **CSV** (dni + zlecenia) zapisują
+  wszystko do folderu `exports` obok exe.
 - **Alerty dźwiękowe**: krótkie powiadomienie 15 min przed końcem jazdy/odpoczynku, dwa razy przy naruszeniu,
   raz po ukończeniu przerwy/odpoczynku (można wyciszyć; zamień pliki `.wav`, aby zmienić dźwięk).
 - **Mini pasek**: globalny skrót (domyślnie `Ctrl + Num 0`, do zmiany) zamienia okno na mały,
