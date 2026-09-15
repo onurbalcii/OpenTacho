@@ -375,6 +375,13 @@
   .seg button.on { background: var(--gold-soft); color: var(--gold); font-weight: 600; border-color: var(--gold-line); }
   .seg button:disabled { opacity: .4; cursor: not-allowed; }
   .seg.three { grid-template-columns: 1fr 1fr 1fr; }
+  html[lang] .drawer .seg.three button { display: grid; gap: 1px; padding: 6px 4px; line-height: 1.15; white-space: normal; font-size: 12.5px; }
+  .seg.three button b { font-weight: 600; font-size: 12.5px; }
+  .seg.three button.on b { font-weight: 700; }
+  .seg.three button small { font-size: 10.5px; opacity: .7; letter-spacing: .2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sm.busy { pointer-events: none; opacity: .75; display: inline-flex; align-items: center; gap: 7px; }
+  .sm.busy .spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--gold-line); border-top-color: var(--gold); animation: spin .8s linear infinite; flex: none; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .row label { color: var(--muted); font-size: 13px; }
   .row.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -565,7 +572,8 @@
   .pkin input[type="number"]::-webkit-inner-spin-button { opacity: .6; }
   /* dişlinin altındaki hızlı düğmeler */
   .topbtns { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
-  .quick { display: flex; gap: 6px; }
+  .quick { display: grid; grid-template-columns: 24px 24px; gap: 5px 6px; justify-items: center; }
+  .quick .qb.wide { grid-column: 1 / -1; }
   .qb { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--gold);
         display: grid; place-items: center; cursor: pointer; padding: 0; font-size: 13px; transition: .2s; }
   .qb:hover { background: var(--gold); color: #1b1f2a; box-shadow: 0 0 12px rgba(253,202,79,.35); }
@@ -724,9 +732,9 @@
     <div class="topbtns">
       <div class="gear glass ornate" id="gear" data-i18n-title="ui.settings"><i class="ic" data-ic="gear"></i></div>
       <div class="quick">
-        <button class="qb" id="quickMini" data-i18n-title="ui.mini_open"><i class="ic" data-ic="strip"></i></button>
         <button class="qb" id="quickHist" data-i18n-title="ui.hist.title"><i class="ic" data-ic="history"></i></button>
         <button class="qb" id="quickPlan" data-i18n-title="ui.plan.title"><i class="ic" data-ic="route"></i></button>
+        <button class="qb wide" id="quickMini" data-i18n-title="ui.mini_open"><i class="ic" data-ic="strip"></i></button>
       </div>
     </div>
     <div class="prof" id="profLine" hidden></div>
@@ -829,7 +837,7 @@
   <div class="page" data-page="kural" hidden>
     <div class="sec">
       <h4><i class="ic" data-ic="route"></i><span data-i18n="ui.ruleset">Kural seti</span></h4>
-      <div class="seg three" id="rulesetSeg"><button data-rs="auto" data-i18n="ui.ruleset.opt_auto">Oyuna göre</button><button data-rs="eu" data-i18n="ui.ruleset.opt_eu">AB (561/2006)</button><button data-rs="us" data-i18n="ui.ruleset.opt_us">ABD (FMCSA)</button></div>
+      <div class="seg three" id="rulesetSeg"><button data-rs="auto"><b data-i18n="ui.ruleset.opt_auto">Oyuna göre</b><small>ETS2 · ATS</small></button><button data-rs="eu"><b data-i18n="ui.ruleset.opt_eu">AB</b><small>561/2006</small></button><button data-rs="us"><b data-i18n="ui.ruleset.opt_us">ABD</b><small>FMCSA HOS</small></button></div>
       <div class="kv" id="rulesetInfo"></div>
       <div class="hint" data-i18n-html="ui.hint.ruleset"></div>
     </div>
@@ -1003,7 +1011,7 @@
     <div class="sec">
       <h4><i class="ic" data-ic="download"></i><span data-i18n="ui.sec.update">Güncellemeler</span></h4>
       <div class="kv" id="updInfo"></div>
-      <div class="row"><button class="sm" id="updCheck" data-i18n="ui.update.check">Şimdi denetle</button><button class="sm primary" id="updGet" hidden><i class="ic" data-ic="download"></i><span id="updGetT"></span></button><button class="sm" id="updNotes" data-i18n="ui.update.notes" hidden>Sürüm notları</button></div>
+      <div class="row"><button class="sm" id="updCheck"><span class="spin" hidden></span><span data-i18n="ui.update.check">Şimdi denetle</span></button><button class="sm primary" id="updGet" hidden><i class="ic" data-ic="download"></i><span id="updGetT"></span></button><button class="sm" id="updNotes" data-i18n="ui.update.notes" hidden>Sürüm notları</button></div>
       <label class="check"><input type="checkbox" id="updAuto"> <span data-i18n="ui.update.auto">Açılışta güncellemeleri denetle</span></label>
       <div class="hint" data-i18n-html="ui.hint.update"></div>
     </div>
@@ -1369,8 +1377,7 @@
       else if (u.state === "ok") info = u.newer ? T("ui.update.newer", { v: u.latest, c: u.version }) : T("ui.update.current", { v: u.version });
       else if (u.state === "error") info = T("ui.update.error", { v: u.version, e: u.error || "?" });
       else info = T("ui.update.idle", { v: u.version });
-      if ($("updInfo").innerHTML !== info) $("updInfo").innerHTML = info;
-      $("updCheck").disabled = u.state === "busy";
+      if (!$("updCheck").classList.contains("busy") && $("updInfo").innerHTML !== info) $("updInfo").innerHTML = info;
       $("updGet").hidden = !u.newer; $("updNotes").hidden = !u.newer;
       if (u.newer) $("updGetT").textContent = T("ui.update.get", { v: u.latest });
       if (document.activeElement !== $("updAuto")) $("updAuto").checked = !!u.check;
@@ -1836,7 +1843,14 @@
   ["pointerup", "blur", "touchend", "keyup"].forEach(ev => $("miniScale").addEventListener(ev, hidePreviewSoon));
   $("miniScale").addEventListener("input", () => { $("miniScaleVal").textContent = $("miniScale").value + "%"; showPreview(); pushPreviewScale(); });
   $("miniScale").addEventListener("change", () => { call("set_mini_scale", $("miniScale").value); hidePreviewSoon(); });
-  $("updCheck").addEventListener("click", () => call("check_update"));
+  $("updCheck").addEventListener("click", async () => {
+    const b = $("updCheck"); if (b.classList.contains("busy")) return;
+    b.classList.add("busy"); b.firstElementChild.hidden = false; $("updInfo").innerHTML = T("ui.update.checking");
+    const t0 = Date.now();
+    try { await call("check_update"); } finally {
+      setTimeout(() => { b.classList.remove("busy"); b.firstElementChild.hidden = true; if (last) render(last); }, Math.max(0, 700 - (Date.now() - t0)));   // en az kısa bir an dönsün
+    }
+  });
   $("updGet").addEventListener("click", () => call("open_update", false));
   $("updNotes").addEventListener("click", () => call("open_update", true));
   $("updAuto").addEventListener("change", () => call("set_update_check", $("updAuto").checked));
@@ -2045,7 +2059,7 @@
     api = {
       get_strings: async () => { try { const r = await fetch(`../lang/${m.lang}.json`); strings = await r.json(); if (m.rules === "us") for (const k of Object.keys(strings)) if (k.endsWith(".us")) strings[k.slice(0, -3)] = strings[k]; } catch (e) {} return strings; },
       set_ruleset: async v => { m.ruleset = v; m.rules = v === "auto" ? "eu" : v; return view(); },
-      set_mini_scale: async v => { m.scale = +v; return view(); }, check_update: async () => view(), open_update: async () => view(), set_update_check: async () => view(),
+      set_mini_scale: async v => { m.scale = +v; return view(); }, check_update: async () => { await new Promise(r => setTimeout(r, 1200)); return view(); }, open_update: async () => view(), set_update_check: async () => view(),
       set_update_seen: async v => { m.upd = Object.assign({}, m.upd || { state: "ok", latest: "2.2.0", newer: true, version: "2.1.0", check: true }, { seen: v }); return view(); },
       get_state: async () => { tickMock(); return view(); },
       set_status: async s => { if (s === "OFF_DUTY") m.status = m.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"; else if (s === "YARD_MOVE") m.status = m.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"; else m.status = s; return view(); },
