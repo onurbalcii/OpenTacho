@@ -94,7 +94,7 @@ gerçekten yaptığınla birebir örtüşür.
   Yanındaki düğme ayarlara girmeden mini şeride geçer.
 - **İş kayıtları ve dışa aktarma**: her yük telemetri olaylarından kaydedilir — rota, yük, km, sürüş / mola / ihlal
   sayıları, teslimat geliri ve gecikme, iptal cezası, oyunun kestiği cezalar. Geçmiş panelinin altında listelenir;
-  **Takograf çıktısı** (txt, DTCO 24 sa çıktısı gibi) ve **CSV** (günler + işler) düğmeleri her şeyi exe'nin yanındaki
+  **Takograf çıktısı** (tasarımlı PDF + txt, DTCO 24 sa çıktısı gibi: gün zaman çizgisi, segmentler, ihlaller, işler) ve **CSV** (günler + işler) düğmeleri her şeyi exe'nin yanındaki
   `exports` klasörüne yazar.
 - **Sesli uyarı**: sürüş/dinlenme bitimine 15 dk kala kısa bir bildirim sesi, ihlalde iki kez,
   mola/dinlenme tamamlanınca bir kez (kapatılabilir; `.wav` dosyalarını değiştirerek özelleştirilebilir).

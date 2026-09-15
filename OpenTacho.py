@@ -312,6 +312,281 @@ def hm_signed(minutes):
     return ("+" if minutes >= 0 else "-") + hm(abs(minutes))
 
 
+# ---------------- PDF takograf çıktısı (reportlab; yoksa yalnızca txt) ----------------
+_PDF_FONTS = None
+
+
+def _pdf_fonts():
+    """Windows'un kendi TTF'leri (Türkçe/Kiril için); yoksa Helvetica."""
+    global _PDF_FONTS
+    if _PDF_FONTS:
+        return _PDF_FONTS
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    fdir = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts")
+    for reg, bold in (("segoeui.ttf", "segoeuib.ttf"), ("arial.ttf", "arialbd.ttf"), ("DejaVuSans.ttf", "DejaVuSans-Bold.ttf")):
+        try:
+            pdfmetrics.registerFont(TTFont("OT", os.path.join(fdir, reg)))
+            pdfmetrics.registerFont(TTFont("OT-B", os.path.join(fdir, bold)))
+            pdfmetrics.registerFontFamily("OT", normal="OT", bold="OT-B", italic="OT", boldItalic="OT-B")
+            _PDF_FONTS = ("OT", "OT-B")
+            return _PDF_FONTS
+        except Exception:
+            continue
+    _PDF_FONTS = ("Helvetica", "Helvetica-Bold")
+    return _PDF_FONTS
+
+
+def pdf_printout(path, recs, jobs, prof, fines_on, fmt_abs):
+    """DTCO tarzı sürücü çıktısının PDF hali (reportlab). recs: gün kayıtları (_label ile), jobs: en yeni önce."""
+    from xml.sax.saxutils import escape
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT
+    from reportlab.platypus import (BaseDocTemplate, PageTemplate, Frame, Paragraph, Spacer, Table, TableStyle, Flowable,
+                                    KeepTogether, NextPageTemplate)
+    F, FB = _pdf_fonts()
+    NAVY, GOLD, GOLDD = colors.HexColor("#151b2b"), colors.HexColor("#d3a94c"), colors.HexColor("#8f6f25")
+    INK, MUTED, LINE, SOFT = colors.HexColor("#1f2430"), colors.HexColor("#6b7280"), colors.HexColor("#e2e5eb"), colors.HexColor("#f4f5f8")
+    BLUE, BLUEL, BLUES = colors.HexColor("#3b7fc4"), colors.HexColor("#9cc3e6"), colors.HexColor("#e8f1fa")
+    RED, REDS, AMBER, GREEN = colors.HexColor("#cf3d3d"), colors.HexColor("#fdeeee"), colors.HexColor("#d4841a"), colors.HexColor("#2c9563")
+    W, H = A4
+    M = 14 * mm
+    CW = W - 2 * M
+    HEAD_H = 34 * mm
+
+    st = ParagraphStyle("b", fontName=F, fontSize=8.5, leading=11, textColor=INK)
+    st_sm = ParagraphStyle("sm", parent=st, fontSize=7.2, leading=9, textColor=MUTED)
+    st_r = ParagraphStyle("r", parent=st, alignment=TA_RIGHT)
+    st_h = ParagraphStyle("h", parent=st, fontName=FB, fontSize=11.5, leading=14, textColor=NAVY)
+    st_sec = ParagraphStyle("sec", parent=st, fontName=FB, fontSize=8, leading=10, textColor=GOLDD)
+    st_cap = ParagraphStyle("cap", parent=st, fontSize=6.6, leading=8, textColor=MUTED)
+    st_big = ParagraphStyle("big", parent=st, fontName=FB, fontSize=14, leading=17, textColor=NAVY)
+    st_th = ParagraphStyle("th", parent=st, fontName=FB, fontSize=7, leading=9, textColor=colors.white)
+    st_thr = ParagraphStyle("thr", parent=st_th, alignment=TA_RIGHT)
+    st_tc = ParagraphStyle("tc", parent=st, fontSize=8, leading=10)
+    st_tcr = ParagraphStyle("tcr", parent=st_tc, alignment=TA_RIGHT)
+    st_bad = ParagraphStyle("bad", parent=st_tc, textColor=RED)
+    st_badb = ParagraphStyle("badb", parent=st_bad, fontName=FB)
+    st_ok = ParagraphStyle("ok", parent=st_tc, textColor=GREEN)
+
+    def P(txt, style=st):
+        return Paragraph(txt, style)
+
+    def esc(x):
+        return escape(str(x if x is not None else ""))
+
+    name = (prof or {}).get("name") or "-"
+    company = (prof or {}).get("company") or ""
+    level = (prof or {}).get("level")
+    printed = time.strftime("%Y-%m-%d %H:%M")
+    logo = os.path.join(APP_DIR, "app", "assets", "logo_print.jpg")
+
+    def head_first(c, doc):
+        c.saveState()
+        c.setFillColor(NAVY); c.rect(0, H - HEAD_H, W, HEAD_H, stroke=0, fill=1)
+        c.setFillColor(GOLD); c.rect(0, H - HEAD_H - 1.2 * mm, W, 1.2 * mm, stroke=0, fill=1)
+        try:
+            lw = 30 * mm; lh = lw * 530 / 720
+            c.drawImage(logo, M, H - HEAD_H + (HEAD_H - lh) / 2, lw, lh, preserveAspectRatio=True, mask=None)
+            tx = M + lw + 6 * mm
+        except Exception:
+            tx = M
+        c.setFillColor(GOLD); c.setFont(FB, 21); c.drawString(tx, H - 15 * mm, "OpenTacho")
+        c.setFillColor(colors.HexColor("#c7cbd6")); c.setFont(F, 8.2)
+        c.drawString(tx, H - 20.5 * mm, L("export.title").replace("OPENTACHO · ", "").replace("OPENTACHO - ", ""))
+        c.setFont(F, 7); c.setFillColor(colors.HexColor("#8b90a0"))
+        c.drawString(tx, H - 25 * mm, "github.com/onurbalcii/OpenTacho")
+        # sağ: sürücü
+        rx = W - M
+        c.setFillColor(colors.white); c.setFont(FB, 12.5); c.drawRightString(rx, H - 13 * mm, name)
+        c.setFont(F, 8); c.setFillColor(colors.HexColor("#c7cbd6"))
+        y = H - 18 * mm
+        if company:
+            c.drawRightString(rx, y, f"{L('export.company')}: {company}"); y -= 4.2 * mm
+        if level is not None:
+            c.drawRightString(rx, y, f"{L('export.level')}: {level}"); y -= 4.2 * mm
+        c.setFillColor(colors.HexColor("#8b90a0")); c.setFont(F, 7.2)
+        c.drawRightString(rx, y, f"{L('export.printed')}: {printed}")
+        c.restoreState()
+        foot(c, doc)
+
+    def head_later(c, doc):
+        c.saveState()
+        c.setFillColor(NAVY); c.rect(0, H - 10 * mm, W, 10 * mm, stroke=0, fill=1)
+        c.setFillColor(GOLD); c.setFont(FB, 9); c.drawString(M, H - 6.5 * mm, "OpenTacho")
+        c.setFillColor(colors.HexColor("#c7cbd6")); c.setFont(F, 7.5)
+        c.drawString(M + 22 * mm, H - 6.5 * mm, L("export.title").replace("OPENTACHO · ", "").replace("OPENTACHO - ", ""))
+        c.drawRightString(W - M, H - 6.5 * mm, name)
+        c.restoreState()
+        foot(c, doc)
+
+    def foot(c, doc):
+        c.saveState()
+        c.setStrokeColor(LINE); c.setLineWidth(0.5); c.line(M, 11 * mm, W - M, 11 * mm)
+        c.setFont(F, 6.8); c.setFillColor(MUTED)
+        c.drawString(M, 7.5 * mm, f"OpenTacho · {L('export.printed')}: {printed}")
+        c.drawRightString(W - M, 7.5 * mm, L("export.page", n=doc.page))
+        c.restoreState()
+
+    class Timeline(Flowable):
+        """Günün zaman çizgisi: sürüş altın, dinlenme mavi; saat çentikleri; ihlal işaretleri."""
+        def __init__(self, rec):
+            Flowable.__init__(self)
+            self.rec = rec; self.width = CW; self.height = 12.5 * mm
+
+        def wrap(self, aw, ah):
+            return self.width, self.height
+
+        def draw(self):
+            c = self.canv; r = self.rec
+            t0, t1 = r.get("start"), r.get("end")
+            if t0 is None or t1 is None or t1 <= t0:
+                return
+            span = float(t1 - t0)
+            y, hgt = 4.6 * mm, 4.4 * mm
+            c.setFillColor(LINE); c.roundRect(0, y, self.width, hgt, 1 * mm, stroke=0, fill=1)
+            for x in r.get("segments") or []:
+                a = x.get("a")
+                if a is None:
+                    continue
+                xs = (a - t0) / span * self.width; w = x["m"] / span * self.width
+                col = GOLD if x["t"] == "drive" else (BLUEL if x.get("k") == "short" else BLUE)
+                c.setFillColor(col); c.rect(xs, y, max(w, 0.5), hgt, stroke=0, fill=1)
+            step = 60 if span <= 10 * 60 else 120 if span <= 26 * 60 else 240 if span <= 60 * 60 else 720
+            c.setFont(F, 5.8); c.setStrokeColor(LINE); c.setLineWidth(0.4)
+            t = ((int(t0) + step - 1) // step) * step
+            while t <= t1:
+                xs = (t - t0) / span * self.width
+                c.line(xs, y - 0.9 * mm, xs, y)
+                c.setFillColor(MUTED)
+                lab = f"{(t % 1440) // 60:02d}:00" if t % 1440 else f"{WEEKDAY(t // 1440)} 00:00"
+                if t % 1440 == 0:
+                    c.setFillColor(INK)
+                c.drawCentredString(xs, y - 3.3 * mm, lab)
+                t += step
+            for v in r.get("violations") or []:
+                if v.get("t") is None:
+                    continue
+                xs = min(max((v["t"] - t0) / span * self.width, 1.2 * mm), self.width - 1.2 * mm)
+                p = c.beginPath(); p.moveTo(xs - 1.3 * mm, y + hgt + 2.8 * mm); p.lineTo(xs + 1.3 * mm, y + hgt + 2.8 * mm); p.lineTo(xs, y + hgt + 0.7 * mm); p.close()
+                c.setFillColor(RED); c.drawPath(p, stroke=0, fill=1)
+
+    def seg_name(x):
+        if x["t"] == "drive":
+            return L("ui.seq.drive")
+        return {"break": L("ui.seq.break"), "break1": L("ui.seq.break1"), "part1": L("ui.seq.part1"), "part2": L("ui.seq.part2"),
+                "daily": L("ui.seq.daily"), "short": L("ui.hist.seg.short")}.get(x.get("k") or "", L("ui.bar.rest"))
+
+    def sec_title(txt):
+        t = Table([[P(txt.upper(), st_sec)]], colWidths=[CW])
+        t.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.8, GOLD), ("BOTTOMPADDING", (0, 0), (-1, -1), 2), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
+        return t
+
+    story = [NextPageTemplate("later")]
+    # --- özet kutuları ---
+    tot_drive = sum(r.get("drive", 0) for r in recs); tot_rest = sum(r.get("rest", 0) for r in recs)
+    n_viol = sum(len(r.get("violations") or []) for r in recs); tot_fines = sum(r.get("fines") or 0 for r in recs)
+    boxes = [(L("ui.hist.days"), str(len(recs))), (L("ui.hist.drive"), hm(tot_drive)), (L("ui.hist.rest"), hm(tot_rest)),
+             (L("ui.hist.viol"), str(n_viol)), (L("ui.hist.jobs"), str(len(jobs)))]
+    if fines_on:
+        boxes.append((L("ui.hist.fines"), f"≈ {tot_fines} €"))
+    cells = [[P(esc(a).upper(), st_cap), P(esc(b), st_big)] for a, b in boxes]
+    row = [[Table([[c[0]], [c[1]]], colWidths=[CW / len(cells) - 3 * mm], style=[("LEFTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]) for c in cells]]
+    t = Table(row, colWidths=[CW / len(cells)] * len(cells))
+    t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), SOFT), ("LINEAFTER", (0, 0), (-2, -1), 3, colors.white),
+                           ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 7), ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                           ("VALIGN", (0, 0), (-1, -1), "MIDDLE")]))
+    story += [t, Spacer(1, 6 * mm)]
+
+    # --- günler ---
+    story.append(sec_title(L("ui.hist.days")))
+    story.append(Spacer(1, 2.5 * mm))
+    if not recs:
+        story += [P(L("export.none"), st_sm), Spacer(1, 4 * mm)]
+    for r in recs:
+        block = []
+        vl = r.get("violations") or []
+        rng = f"{fmt_abs(r.get('start'))} → {fmt_abs(r.get('end'))}" if r.get("start") is not None else esc(r.get("saved", ""))
+        right = f"{L('ui.hist.drive')} <b>{hm(r.get('drive', 0))}</b> · {L('ui.hist.rest')} <b>{hm(r.get('rest', 0))}</b>"
+        right += f" · <font color='#cf3d3d'><b>{len(vl)}</b> {esc(L('ui.hist.viol'))}</font>" if vl else f" · <font color='#2c9563'>{esc(L('ui.hist.ok'))}</font>"
+        if r.get("fines"):
+            right += f" · {esc(L('ui.hist.fines'))} <b>≈ {r['fines']} €</b>"
+        hdr = Table([[P(f"<b>{esc(r['_label'])}</b> <font color='#6b7280'>{esc(rng)}</font>", st_h), P(right, st_r)]], colWidths=[CW * 0.5, CW * 0.5])
+        hdr.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 1), ("VALIGN", (0, 0), (-1, -1), "BOTTOM")]))
+        block.append(hdr)
+        block.append(Timeline(r))
+        segs = r.get("segments") or []
+        if segs:
+            rows = [[P(L("export.time"), st_th), P(L("export.type"), st_th), P(L("export.duration"), st_thr)]]
+            for x in segs:
+                a = x.get("a"); e = None if a is None else a + x["m"]
+                tm = f"{fmt_abs(a)} – {fmt_abs(e)[-5:]}" if a is not None else "–"
+                dot = "#d3a94c" if x["t"] == "drive" else ("#9cc3e6" if x.get("k") == "short" else "#3b7fc4")
+                rows.append([P(esc(tm), st_tc), P(f"<font color='{dot}'>■</font>&nbsp; {esc(seg_name(x))}", st_tc), P(hm(x["m"]), st_tcr)])
+            tb = Table(rows, colWidths=[CW * 0.34, CW * 0.46, CW * 0.20], repeatRows=1)
+            tb.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), NAVY), ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SOFT]),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 2.2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2), ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                                    ("LINEBELOW", (0, -1), (-1, -1), 0.4, LINE)]))
+            block.append(tb)
+        if vl:
+            rows = []
+            for v in vl:
+                sev = L("ui.sev." + v["sev"]) if v.get("sev") else ""
+                fine = f"≈ {v['fine']} €" if v.get("fine") else ""
+                rows.append([P("▲", st_badb), P(esc(fmt_abs(v.get("t"))), st_bad), P(esc(L("ui.hist.kind." + v["kind"])), st_bad),
+                             P(f"<b>+{hm(v.get('over', 0))}</b>", st_bad), P(esc(sev).upper(), ParagraphStyle("sv", parent=st_bad, fontSize=6.5)), P(esc(fine), ParagraphStyle("fn", parent=st_bad, alignment=TA_RIGHT))])
+            tv = Table(rows, colWidths=[CW * 0.04, CW * 0.14, CW * 0.44, CW * 0.12, CW * 0.14, CW * 0.12])
+            tv.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), REDS), ("TOPPADDING", (0, 0), (-1, -1), 2.2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2),
+                                    ("LEFTPADDING", (0, 0), (-1, -1), 5), ("LINEBELOW", (0, 0), (-1, -1), 0.4, colors.white)]))
+            block += [Spacer(1, 1.2 * mm), tv]
+        block.append(Spacer(1, 5 * mm))
+        story.append(KeepTogether(block[:2]))
+        story += block[2:]
+
+    # --- işler ---
+    story.append(sec_title(L("ui.hist.jobs")))
+    story.append(Spacer(1, 2.5 * mm))
+    if not jobs:
+        story.append(P(L("export.none"), st_sm))
+    else:
+        rows = [[P(L("export.date"), st_th), P(L("export.route"), st_th), P(L("export.cargo"), st_th), P("km", st_thr), P(L("ui.hist.drive"), st_thr),
+                 P(L("ui.seq.break"), st_thr), P(L("ui.hist.viol"), st_thr), P(L("export.outcome"), st_th), P(L("export.money"), st_thr), P(L("export.late_col"), st_th)]]
+        for j in jobs:
+            oc = j.get("outcome") if j.get("outcome") in ("delivered", "cancelled") else "ended"
+            oc_style = st_ok if oc == "delivered" else st_bad if oc == "cancelled" else st_tc
+            money = ""
+            if oc == "delivered":
+                money = f"<font color='#2c9563'><b>{j.get('revenue', 0):,}</b> €</font>".replace(",", " ")
+            elif oc == "cancelled" and j.get("penalty"):
+                money = f"<font color='#cf3d3d'>−{j['penalty']:,} €</font>".replace(",", " ")
+            if j.get("fines"):
+                money += f"<br/><font color='#d4841a' size='6.5'>{esc(L('ui.hist.job.game_fines', a=sum(j['fines'])))}</font>"
+            late = ""
+            if oc == "delivered" and j.get("late") is not None:
+                late = f"<font color='#cf3d3d'>{esc(L('ui.hist.job.late', d=hm(j['late'])))}</font>" if j["late"] > 0 else f"<font color='#2c9563'>{esc(L('ui.hist.job.on_time'))}</font>"
+            km = f"{j.get('km_real') or j.get('km') or ''}"
+            rows.append([P(esc(fmt_abs(j.get("t0"))), st_tc), P(f"<b>{esc(j.get('src', ''))}</b> → <b>{esc(j.get('dst', ''))}</b>", st_tc), P(esc(j.get("cargo", "")), st_tc),
+                         P(km, st_tcr), P(hm(j.get("drive", 0)), st_tcr), P(str(j.get("breaks", 0)), st_tcr),
+                         P(str(j.get("viol", 0)), ParagraphStyle("v", parent=st_tcr, textColor=RED if j.get("viol") else INK)),
+                         P(esc(L("ui.hist.job." + oc)), oc_style), P(money, st_tcr), P(late, st_tc)])
+        tj = Table(rows, colWidths=[CW * 0.11, CW * 0.18, CW * 0.12, CW * 0.06, CW * 0.07, CW * 0.06, CW * 0.06, CW * 0.12, CW * 0.12, CW * 0.10], repeatRows=1)
+        tj.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), NAVY), ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SOFT]),
+                                ("TOPPADDING", (0, 0), (-1, -1), 2.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.6), ("LEFTPADDING", (0, 0), (-1, -1), 4), ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LINEBELOW", (0, -1), (-1, -1), 0.4, LINE)]))
+        story.append(tj)
+
+    doc = BaseDocTemplate(path, pagesize=A4, leftMargin=M, rightMargin=M, topMargin=M, bottomMargin=16 * mm,
+                          title=f"OpenTacho – {name}", author="OpenTacho")
+    first = PageTemplate("first", [Frame(M, 16 * mm, CW, H - HEAD_H - 16 * mm - 8 * mm, id="f1", leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)], onPage=head_first)
+    later = PageTemplate("later", [Frame(M, 16 * mm, CW, H - 10 * mm - 16 * mm - 6 * mm, id="f2", leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)], onPage=head_later)
+    doc.addPageTemplates([first, later])
+    doc.build(story)
+    return True
+
+
 # ---------------- Telemetri (scs-telemetry.dll paylaşımlı bellek) ----------------
 class Telemetry:
     NAME = "Local\\SCSTelemetry"
@@ -1929,6 +2204,13 @@ class Tacho:
                 with open(f1, "w", encoding="utf-8", newline="\n") as f:
                     f.write(self._printout(recs, jobs, p, h))
                 files.append(f1)
+                f2 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}.pdf")
+                try:
+                    pdf_printout(f2, recs, jobs, p or {"name": "American Truck Simulator" if self.game == 2 else "Euro Truck Simulator 2"},
+                                 bool(self.s.get("fines")), self._fmt_abs)
+                    files.insert(0, f2)
+                except Exception as e:   # reportlab yoksa / yazılamadıysa txt yeter
+                    log_error("pdf çıktısı: %r" % e)
             try:
                 os.startfile(EXPORT_DIR)
             except Exception:

@@ -96,7 +96,7 @@ actually did.
   The button next to it switches to the mini strip without opening settings.
 - **Job records and export**: every load is recorded from telemetry events — route, cargo, km, driving / break /
   violation counts, delivery revenue and lateness, cancel penalty, in-game fines. Listed at the bottom of the history
-  panel; the **Tachograph printout** (txt, like a DTCO 24 h printout) and **CSV** (days + jobs) buttons write everything
+  panel; the **Tachograph printout** (designed PDF + txt, like a DTCO 24 h printout: day timeline, segments, violations, jobs) and **CSV** (days + jobs) buttons write everything
   to the `exports` folder next to the exe.
 - **Sound alerts**: a short notification 15 min before driving/rest ends, twice at a
   violation, once when a break/rest completes (can be muted; swap the `.wav` files to change it).

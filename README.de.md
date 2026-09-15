@@ -98,7 +98,7 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   Der Knopf daneben wechselt ohne Umweg über die Einstellungen zur Mini-Leiste.
 - **Auftragsprotokoll und Export**: jede Ladung wird aus den Telemetrie-Ereignissen erfasst — Route, Fracht, km,
   Fahr-/Pausen-/Verstoßzähler, Einnahme und Verspätung bei Lieferung, Abbruchstrafe, Bußgelder des Spiels. Unten im
-  Verlaufs-Panel gelistet; **Tachographenausdruck** (txt, wie ein DTCO-24-h-Ausdruck) und **CSV** (Tage + Aufträge)
+  Verlaufs-Panel gelistet; **Tachographenausdruck** (gestaltetes PDF + txt, wie ein DTCO-24-h-Ausdruck: Tageszeitleiste, Abschnitte, Verstöße, Aufträge) und **CSV** (Tage + Aufträge)
   schreiben alles in den Ordner `exports` neben der Exe.
 - **Tonwarnungen**: ein kurzer Ton 15 min vor Ende der Fahr-/Ruhezeit, zweimal bei einem Verstoß,
   einmal beim Abschluss einer Pause/Ruhezeit (abschaltbar; `.wav`-Dateien austauschen, um ihn zu ändern).
