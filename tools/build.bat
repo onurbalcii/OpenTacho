@@ -1,6 +1,6 @@
 @echo off
 rem OpenTacho.exe + tasinabilir klasor uretir:  dist\OpenTacho\  (ve dist\OpenTacho-win64.zip)
-rem Gerekli: pip install pyinstaller pywebview reportlab
+rem Gerekli: pip install pyinstaller pywebview reportlab qrcode
 setlocal
 cd /d "%~dp0\.."
 
@@ -11,7 +11,8 @@ python -m PyInstaller --noconfirm --clean --windowed --name OpenTacho ^
   --add-binary "lib\SII_Decrypt.dll;lib" ^
   --collect-all webview ^
   --collect-all reportlab ^
-  --exclude-module numpy --exclude-module tkinter ^
+  --collect-submodules qrcode ^
+  --exclude-module numpy --exclude-module tkinter --exclude-module lxml ^
   --exclude-module PIL._avif --exclude-module PIL.AvifImagePlugin --exclude-module PIL._webp --exclude-module PIL.WebPImagePlugin ^
   --exclude-module PIL._imagingcms --exclude-module PIL.ImageCms --exclude-module PIL._imagingtk --exclude-module PIL.ImageTk --exclude-module PIL.ImageQt ^
   OpenTacho.py

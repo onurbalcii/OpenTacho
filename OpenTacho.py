@@ -16,10 +16,14 @@ Atla: oyunun konsoluna "g_set_time SS DD" komutu gönderilir (konsol açık olma
 import ctypes
 import ctypes.wintypes as wt
 import glob
+import hmac
+import http.server
 import json
 import os
 import re
+import secrets
 import shutil
+import socket
 import struct
 import sys
 import tempfile
@@ -90,6 +94,7 @@ ERR_FILE = os.path.join(DATA_DIR, "error.log")
 UI_DIR = os.path.join(APP_DIR, "app")              # pencerelerin yüklediği her şey (html + assets)
 UI_FILE = os.path.join(UI_DIR, "main.html")
 OVERLAY_FILE = os.path.join(UI_DIR, "mini.html")
+MOBILE_FILE = os.path.join(UI_DIR, "mobile.html")     # LAN ikinci ekran (telefon/tablet tarayıcısı)
 ASSET_DIR = os.path.join(UI_DIR, "assets")
 SOUND_DIR = os.path.join(ASSET_DIR, "sounds")
 ICON_FILE = os.path.join(ASSET_DIR, "logo.ico")
@@ -98,12 +103,16 @@ SII_DLL = os.path.join(APP_DIR, "lib", "SII_Decrypt.dll")
 if not os.path.exists(SII_DLL) and os.path.exists(os.path.join(DATA_DIR, "SII_Decrypt.dll")):
     SII_DLL = os.path.join(DATA_DIR, "SII_Decrypt.dll")
 APP_NAME = "OpenTacho"
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 WINDOW_TITLE = APP_NAME
 UPDATE_API = "https://api.github.com/repos/onurbalcii/OpenTacho/releases/latest"   # sürüm denetimi (yalnızca son sürüm bilgisi okunur)
 RELEASES_URL = "https://github.com/onurbalcii/OpenTacho/releases"
 MINI_W, MINI_H = 574, 76          # mini şerit penceresi (px, %100 ölçekte)
 MINI_SCALE_MIN, MINI_SCALE_MAX = 70, 160   # mini şerit ölçeği (%)
+LAN_PORT = 17650                    # LAN ikinci ekran sunucusu (yalnızca ayar açıkken dinler)
+LAN_ACTIONS = ("set_status", "skip_rest", "full_rest", "weekly_rest", "red_rest")   # telefondan izin verilen eylemler
+LAN_ASSETS = {"logo.png": ("image/png", "logo.png"), "warn.wav": ("audio/wav", "sounds/warn.wav"),
+              "alert.wav": ("audio/wav", "sounds/alert.wav"), "done.wav": ("audio/wav", "sounds/done.wav")}
 DEFAULT_LANG = "tr"
 DEFAULT_THEME = "vangogh"
 # Geri bildirim formu, dile göre (bilinmeyen dil -> "en"). Kendi çatalında kendi form bağlantılarını yaz.
@@ -323,6 +332,7 @@ DEFAULT_STATE = {
     "mini_scale": 100,         # mini şerit ölçeği (%): sayfa zoom + pencere boyutu birlikte
     "update_check": True,      # açılışta GitHub'dan son sürümü denetle
     "update_seen": None,       # "Daha sonra" denilen sürüm: o sürüm için açılış uyarısı tekrar çıkmaz
+    "lan": {"on": False, "control": True, "port": LAN_PORT, "key": None, "ip": None},   # LAN ikinci ekran: paylaşım, telefondan kontrol, erişim anahtarı
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -393,6 +403,275 @@ class UpdateCheck:
             except Exception:
                 pass
         return info
+
+
+def lan_ips():
+    """Bu bilgisayarın yerel ağ IPv4 adresleri (öncelik: dışarı çıkan arayüz, 192.168.x, 10.x)."""
+    ips = set()
+    primary = None
+    try:
+        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+            ips.add(ip)
+    except Exception:
+        pass
+    try:
+        so = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        so.connect(("10.255.255.255", 1))   # UDP: paket gitmez, yalnızca yönlendirme arayüzü seçilir
+        primary = so.getsockname()[0]
+        so.close()
+        ips.add(primary)
+    except Exception:
+        pass
+    ips = [ip for ip in ips if not (ip.startswith("127.") or ip.startswith("169.254.") or ip.startswith("0."))]
+    return sorted(ips, key=lambda ip: (ip != primary, not ip.startswith("192.168."), not ip.startswith("10."), ip))
+
+
+def qr_svg(text):
+    """QR kodu satır içi SVG olarak (qrcode kütüphanesi; yoksa None)."""
+    try:
+        import qrcode
+        import qrcode.image.svg as qsvg
+        img = qrcode.make(text, image_factory=qsvg.SvgPathImage, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
+        return img.to_string(encoding="unicode")
+    except Exception as e:
+        log_error("QR üretilemedi: %r" % e)
+        return None
+
+
+class _LanHandler(http.server.BaseHTTPRequestHandler):
+    """Telefon/tablet için küçük HTTP arayüzü. Her istek erişim anahtarı ister; yalnızca beyaz listedeki eylemler."""
+    server_version = "OpenTacho"
+    sys_version = ""
+    protocol_version = "HTTP/1.1"
+    _HOST_RE = re.compile(r"^(\d{1,3}(\.\d{1,3}){3}|localhost)(:\d{1,5})?$")
+
+    def log_message(self, *a):
+        pass
+
+    def _send(self, code, body, ctype="application/json; charset=utf-8"):
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+                                                    "img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'")
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+
+    def _reject(self, code, err):
+        self._send(code, json.dumps({"ok": False, "err": err}))
+
+    def _host_ok(self):
+        # DNS rebinding'e karşı: yalnızca sayısal IP (ya da localhost) Host başlığı kabul edilir
+        return bool(self._HOST_RE.match((self.headers.get("Host") or "").strip()))
+
+    def _auth(self, q):
+        lan = self.server.lan
+        key = (q.get("k") or [""])[0] or (self.headers.get("X-Key") or "")
+        if lan.check_key(key):
+            return True
+        lan.bad_hits += 1
+        return False
+
+    def do_HEAD(self):
+        self.do_GET()
+
+    def do_GET(self):
+        from urllib.parse import urlparse, parse_qs
+        lan = self.server.lan
+        if not self._host_ok():
+            return self._reject(400, "host")
+        u = urlparse(self.path)
+        q = parse_qs(u.query)
+        path = u.path
+        if path == "/":
+            if not self._auth(q):
+                return self._send(403, lan.forbidden_html(), "text/html; charset=utf-8")
+            try:
+                with open(MOBILE_FILE, "rb") as f:
+                    return self._send(200, f.read(), "text/html; charset=utf-8")
+            except Exception:
+                return self._reject(500, "page")
+        if not self._auth(q):
+            return self._reject(403, "key")
+        lan.touch(self.client_address[0])
+        if path.startswith("/assets/"):
+            name = path[len("/assets/"):]
+            if name not in LAN_ASSETS:
+                return self._reject(404, "asset")
+            ctype, rel = LAN_ASSETS[name]
+            try:
+                with open(os.path.join(ASSET_DIR, rel), "rb") as f:
+                    return self._send(200, f.read(), ctype)
+            except Exception:
+                return self._reject(404, "asset")
+        t = lan.tacho
+        try:
+            if path == "/state":
+                with t.lock:
+                    body = t.mobile_view()
+            elif path == "/strings":
+                body = L.strings()
+            elif path == "/history":
+                with t.lock:
+                    body = t.history()
+            elif path == "/plan":
+                def num(k):
+                    try:
+                        v = float((q.get(k) or [""])[0])
+                        return v if 0 < v < 100000 else None
+                    except ValueError:
+                        return None
+                with t.lock:
+                    body = t.plan_view(num("km"), num("hours"), num("ferry"))
+            elif path == "/manifest.webmanifest":
+                body = {"name": "OpenTacho", "short_name": "OpenTacho", "start_url": "/?k=" + lan.key(), "display": "standalone",
+                        "background_color": "#0b1230", "theme_color": "#0b1230", "icons": [{"src": "/assets/logo.png?k=" + lan.key(), "sizes": "any", "type": "image/png"}]}
+                return self._send(200, json.dumps(body), "application/manifest+json")
+            else:
+                return self._reject(404, "path")
+            return self._send(200, json.dumps(body, ensure_ascii=False))
+        except Exception as e:
+            log_error("LAN isteği: %r" % e)
+            return self._reject(500, "internal")
+
+    def do_POST(self):
+        from urllib.parse import urlparse, parse_qs
+        lan = self.server.lan
+        if not self._host_ok():
+            return self._reject(400, "host")
+        u = urlparse(self.path)
+        if u.path != "/act":
+            return self._reject(404, "path")
+        if not self._auth(parse_qs(u.query)):
+            return self._reject(403, "key")
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            n = -1
+        if n < 0 or n > 4096:
+            return self._reject(413, "size")
+        try:
+            data = json.loads(self.rfile.read(n).decode("utf-8") or "{}")
+        except Exception:
+            return self._reject(400, "json")
+        fn = data.get("fn") if isinstance(data, dict) else None
+        if fn not in LAN_ACTIONS:
+            return self._reject(400, "fn")
+        t = lan.tacho
+        if not t.s["lan"].get("control", True):
+            return self._reject(403, "control")
+        lan.touch(self.client_address[0])
+        try:
+            if fn == "set_status":
+                st = data.get("arg")
+                if st not in ("ON_DUTY", "OFF_DUTY", "YARD_MOVE"):
+                    return self._reject(400, "arg")
+                t.act_set_status(st)
+            else:
+                getattr(t, "act_" + fn)()
+            with t.lock:
+                body = t.mobile_view()
+            return self._send(200, json.dumps(body, ensure_ascii=False))
+        except Exception as e:
+            log_error("LAN eylemi: %r" % e)
+            return self._reject(500, "internal")
+
+
+class LanServer:
+    """Yerel ağ ikinci ekran sunucusu: yalnızca ayar açıkken dinler; her istek 16 karakterlik rastgele anahtar ister."""
+
+    def __init__(self, tacho):
+        self.tacho = tacho
+        self.httpd = None
+        self.thread = None
+        self.error = None
+        self.clients = {}       # ip → son görülme (time.time())
+        self.bad_hits = 0
+        self._qr = (None, None)
+        self._ips = ([], 0.0)
+
+    def key(self):
+        return str(self.tacho.s["lan"].get("key") or "")
+
+    def check_key(self, k):
+        key = self.key()
+        return bool(key) and hmac.compare_digest(str(k or ""), key)
+
+    def touch(self, ip):
+        self.clients[ip] = time.time()
+
+    def client_count(self):
+        now = time.time()
+        return sum(1 for ts in self.clients.values() if now - ts < 6)
+
+    def running(self):
+        return self.httpd is not None
+
+    def start(self, port):
+        from http.server import ThreadingHTTPServer
+        if self.httpd is not None:
+            return True
+        try:
+            httpd = ThreadingHTTPServer(("0.0.0.0", int(port)), _LanHandler)
+            httpd.daemon_threads = True
+            httpd.lan = self
+            self.httpd = httpd
+            self.error = None
+            self.thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+            self.thread.start()
+            return True
+        except Exception as e:
+            self.error = str(e)[:120]
+            log_error("LAN sunucusu başlatılamadı: %r" % e)
+            self.httpd = None
+            return False
+
+    def stop(self):
+        httpd, self.httpd = self.httpd, None
+        if httpd is not None:
+            try:
+                httpd.shutdown()
+                httpd.server_close()
+            except Exception:
+                pass
+        self.clients = {}
+
+    def ips(self):
+        if time.time() - self._ips[1] > 15:
+            self._ips = (lan_ips(), time.time())
+        return self._ips[0]
+
+    def url(self):
+        s = self.tacho.s["lan"]
+        ips = self.ips()
+        ip = s.get("ip") if s.get("ip") in ips else (ips[0] if ips else None)
+        if not ip or not s.get("key"):
+            return None, ip
+        return f"http://{ip}:{int(s.get('port') or LAN_PORT)}/?k={s['key']}", ip
+
+    def qr(self, url):
+        if self._qr[0] != url:
+            self._qr = (url, qr_svg(url) if url else None)
+        return self._qr[1]
+
+    def forbidden_html(self):
+        return ("<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width'>"
+                "<body style='font-family:sans-serif;background:#0b1230;color:#f6efdc;padding:32px;text-align:center'><h2>OpenTacho</h2><p>"
+                + L("mob.forbidden") + "</p></body>")
+
+    def view(self):
+        s = self.tacho.s["lan"]
+        url, ip = self.url()
+        return {"on": bool(s.get("on")), "running": self.running(), "control": bool(s.get("control", True)), "port": int(s.get("port") or LAN_PORT),
+                "ip": ip, "ips": self.ips(), "url": url if s.get("on") else None, "qr": self.qr(url) if (s.get("on") and self.running()) else None,
+                "clients": self.client_count() if self.running() else 0, "error": self.error}
 
 
 def hm(minutes):
@@ -1407,6 +1686,9 @@ class Tacho:
         self.engine = False        # telemetri: motor çalışıyor
         self.prev_ev = None        # iş olayı bayrakları (delivered/cancelled/fined: tersine dönen bool)
         self.updates = UpdateCheck(on_found=self._update_found)
+        self.lan = LanServer(self)
+        self.alert_seq = 0         # her uyarı sesinde artar (mobil sayfa kendi sesini/titreşimini buna göre çalar)
+        self.alert_name = None
         self.tel_last = {}         # son okunan telemetri (tutarlar için)
         self.voice_seq = 0         # sesli anons: her yeni cümlede artar (sayfa değişince okur)
         self.voice_text = ""
@@ -1975,7 +2257,7 @@ class Tacho:
     SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
                     "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
                     "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice",
-                    "sound_volume", "voice_volume", "ruleset", "last_game", "mini_scale", "update_check", "update_seen")
+                    "sound_volume", "voice_volume", "ruleset", "last_game", "mini_scale", "update_check", "update_seen", "lan")
 
     @classmethod
     def counter_keys(cls):
@@ -3103,6 +3385,8 @@ class Tacho:
     # ---- sesli uyarılar ----
     def _sound(self, name):
         """assets/sounds/<name>.wav dosyasını (varsa) eşzamansız çalar."""
+        self.alert_seq += 1
+        self.alert_name = name
         if not self.s.get("sounds", True):
             return
         path = os.path.join(SOUND_DIR, name + ".wav")
@@ -3325,6 +3609,56 @@ class Tacho:
         except Exception as e:
             log_error("güncelleme bağlantısı açılamadı: %r" % e)
 
+    MOBILE_KEYS = ("mode", "status", "conn", "job", "clock", "drive_block", "drive_daily", "rest", "limits", "weekly", "rest_target", "break_part1",
+                   "split", "remaining", "next_req", "break_credited", "big", "seq_boxes", "flags", "moving", "offjob", "offjob_rest", "skip",
+                   "full_rest", "wrest", "red_rest", "plan", "profile", "rules", "lang", "theme", "custom", "version", "log", "paused")
+
+    def mobile_view(self):
+        """Telefon/tablet sayfasının ihtiyaç duyduğu alt küme (ayarlar, kısayollar, pencere konumu gönderilmez)."""
+        v = self.view()
+        out = {k: v.get(k) for k in self.MOBILE_KEYS}
+        if out.get("custom"):
+            out["custom"] = {"win": out["custom"].get("win"), "accent": out["custom"].get("accent")}
+        out["alert"] = {"seq": self.alert_seq, "name": self.alert_name}
+        out["voice_ev"] = v.get("voice_ev")
+        out["control"] = bool(self.s["lan"].get("control", True))
+        return out
+
+    def act_set_lan(self, on):
+        with self.lock:
+            lan = self.s["lan"]
+            lan["on"] = bool(on)
+            if on and not lan.get("key"):
+                lan["key"] = secrets.token_urlsafe(12)
+            self.dirty = True
+            port = int(lan.get("port") or LAN_PORT)
+        if on:
+            ok = self.lan.start(port)
+            with self.lock:
+                self.log(L("log.lan_on", port=port) if ok else L("log.lan_err", e=self.lan.error or "?"))
+        else:
+            self.lan.stop()
+            with self.lock:
+                self.log(L("log.lan_off"))
+
+    def act_set_lan_control(self, flag):
+        with self.lock:
+            self.s["lan"]["control"] = bool(flag)
+            self.dirty = True
+            self.log(L("log.lan_control_on" if flag else "log.lan_control_off"))
+
+    def act_lan_new_key(self):
+        with self.lock:
+            self.s["lan"]["key"] = secrets.token_urlsafe(12)
+            self.dirty = True
+            self.lan.clients = {}
+            self.log(L("log.lan_new_key"))
+
+    def act_set_lan_ip(self, ip):
+        with self.lock:
+            self.s["lan"]["ip"] = ip if ip in self.lan.ips() else None
+            self.dirty = True
+
     def act_set_mini_opacity(self, value):
         with self.lock:
             self.s["mini_opacity"] = max(0.3, min(1.0, float(value)))
@@ -3522,6 +3856,7 @@ class Tacho:
             "win_max": self.win_maxed,
             "mini_opacity": s["mini_opacity"],
             "mini_scale": int(s.get("mini_scale") or 100),
+            "lan": self.lan.view(),
             "version": APP_VERSION,
             "update": self.update_view(),
             "split": {"part1": s["rest_part1"] if split else 0, "need": need, "done": s["rest_daily_done"],
@@ -3984,6 +4319,22 @@ class Api:
         self._t.act_set_mini_scale(value)
         return self.get_state()
 
+    def set_lan(self, on):
+        self._t.act_set_lan(on)
+        return self.get_state()
+
+    def set_lan_control(self, flag):
+        self._t.act_set_lan_control(flag)
+        return self.get_state()
+
+    def lan_new_key(self):
+        self._t.act_lan_new_key()
+        return self.get_state()
+
+    def set_lan_ip(self, ip):
+        self._t.act_set_lan_ip(ip)
+        return self.get_state()
+
     def check_update(self):
         self._t.act_check_update()
         return self.get_state()
@@ -4065,6 +4416,8 @@ def main():
     tacho.hotkeys.start()
     if tacho.s.get("update_check", True):
         tacho.updates.start()   # arka planda; ağ yoksa sessiz
+    if tacho.s["lan"].get("on") and tacho.s["lan"].get("key"):
+        tacho.lan.start(int(tacho.s["lan"].get("port") or LAN_PORT))
 
     def remember(**vals):
         with tacho.lock:
@@ -4092,6 +4445,7 @@ def main():
                 tacho.mini_win.destroy()
             except Exception:
                 pass
+        tacho.lan.stop()
 
     def on_moved(x, y):
         if not tacho.win_maxed:

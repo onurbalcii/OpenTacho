@@ -115,6 +115,12 @@ actually did.
   follows the same colours).
 - **Languages**: English, Turkish, German, Russian, Polish, Brazilian Portuguese, Spanish, French, Italian,
   Czech — adding one is a single JSON file.
+- **Second screen on a phone or tablet** (Settings → App → *Use on a phone or tablet*, or the phone button under
+  the gear): switch on LAN sharing and scan the QR code — a device on the same Wi-Fi shows the tachograph in its
+  browser, no app needed: status, time left, bars, day flow, job with ETA, flags, events, plus history and planner
+  tabs. Break / Yard move / Skip / Full rest work from the phone (can be disabled); the page keeps the screen awake
+  and beeps/vibrates on alerts. The link carries a random key, nothing is exposed to the internet and nothing
+  listens while sharing is off. Windows Firewall asks once — allow it for private networks.
 - **Update check**: on start the app asks GitHub for the latest release (can be switched off) and shows a
   banner with a download button when a newer version exists; Settings → App shows the version, a manual check
   and the download link.
@@ -160,6 +166,11 @@ Yes. It only reads telemetry (clock, speed, job), so map and truck mods do not m
 American Truck Simulator uses the same plugin — in ATS the US FMCSA rules (8 h / 30 min / 11 h / 10 h,
 14 h window, 70 h / 8 days) apply automatically; Settings → Rules can force either rule set.
 
+**The phone cannot open the page / the QR code does not work.**
+Both devices must be on the same local network (same router or the phone's hotspot); guest networks with
+"AP isolation" block this. Allow OpenTacho in Windows Firewall for private networks (it asks on first use), and
+if the address shows the wrong network, pick another one under *Network address*. *New code* invalidates old links.
+
 **The mini strip does not show over the game.**
 Windows cannot draw any overlay over a game in *exclusive fullscreen*. Set the game's display
 mode to *windowed* or *borderless fullscreen* (ETS2: Options → Graphics → Fullscreen off) and the
@@ -184,7 +195,7 @@ reloads for you.
 ```
 OpenTacho.exe          the app (release build)            OpenTacho.py   the same app, run from source
 plugin/                scs-telemetry.dll → copy into the game's plugins folder
-app/                   window content: main.html, mini.html, assets/ (logo, background, sounds)
+app/                   window content: main.html, mini.html, mobile.html, assets/ (logo, background, sounds)
 lang/                  en, tr, de, ru, pl — one JSON file per language
 lib/                   SII_Decrypt.dll (time-zone feature)
 docs/screenshots/      the images used in these READMEs

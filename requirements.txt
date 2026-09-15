@@ -1,5 +1,6 @@
 pywebview>=5.0
 reportlab>=4.0
+qrcode>=7.4
 # yalnizca tools/ altindaki uretici betikler icin (istege bagli):
 # Pillow>=10
 # numpy>=1.26

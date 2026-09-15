@@ -112,6 +112,12 @@ gerçekten yaptığınla birebir örtüşür.
   vurgu rengi (RGB/HEX; yazı rengi kendiliğinden seçilir, mini şerit aynı renkleri kullanır).
 - **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe, Brezilya Portekizcesi, İspanyolca, Fransızca, İtalyanca,
   Çekçe — yeni dil tek JSON dosyası.
+- **Telefon / tablette ikinci ekran** (Ayarlar → Uygulama → *Mobil cihazda kullan* ya da dişlinin altındaki telefon
+  düğmesi): LAN paylaşımını açıp QR kodu okut — aynı Wi-Fi'deki cihaz takografı tarayıcısında gösterir, uygulama
+  gerekmez: durum, kalan süre, çubuklar, günün akışı, iş ve ETA, bayraklar, olaylar; geçmiş ve planlayıcı sekmeleri.
+  Mola / İç hareket / Atla / Tam dinlenme telefondan çalışır (kapatılabilir); sayfa ekranı uyanık tutar, uyarılarda
+  ses çalar ve titreşir. Adres rastgele bir anahtar taşır, internete hiçbir şey açılmaz, paylaşım kapalıyken hiçbir
+  şey dinlenmez. Windows güvenlik duvarı bir kez sorar — özel ağlar için izin ver.
 - **Sürüm denetimi**: açılışta GitHub'dan son sürüm sorulur (kapatılabilir); yeni sürüm varsa üstte indirme
   düğmeli bir şerit çıkar. Ayarlar → Uygulama'da sürüm numarası, elle denetim ve indirme bağlantısı.
 - **İlk açılış**: dil seçimi, ardından ekranı ve ayar sekmelerini adım adım anlatan kısa bir rehber turu
@@ -156,6 +162,11 @@ Evet. Yalnızca telemetri (saat, hız, iş) okuduğu için harita ve kamyon modl
 American Truck Simulator da aynı eklentiyi kullanır — ATS'de ABD FMCSA kuralı (8 sa / 30 dk / 11 sa / 10 sa,
 14 sa pencere, 70 sa / 8 gün) kendiliğinden devreye girer; Ayarlar → Kurallar'dan istenen set seçilebilir.
 
+**Telefon sayfayı açamıyor / QR kod çalışmıyor.**
+İki cihaz da aynı yerel ağda olmalı (aynı modem ya da telefonun hotspot'u); "AP isolation" açık misafir ağları
+bunu engeller. Windows güvenlik duvarında OpenTacho'ya özel ağlar için izin ver (ilk kullanımda sorar); adres
+yanlış ağı gösteriyorsa *Ağ adresi*'nden diğerini seç. *Yeni kod* eski bağlantıları geçersiz kılar.
+
 **Mini şerit oyunun üstünde görünmüyor.**
 Windows, *özel tam ekran* (exclusive fullscreen) modundaki bir oyunun üstüne hiçbir şey çizemez.
 Oyunun görüntü modunu *pencereli* ya da *kenarlıksız tam ekran* yap (ETS2: Seçenekler → Grafik →
@@ -180,7 +191,7 @@ yerinize halleder.
 ```
 OpenTacho.exe          uygulama (sürüm paketi)             OpenTacho.py   aynı uygulama, kaynaktan
 plugin/                scs-telemetry.dll → oyunun plugins klasörüne kopyalanır
-app/                   pencere içeriği: main.html, mini.html, assets/ (logo, arka plan, sesler)
+app/                   pencere içeriği: main.html, mini.html, mobile.html, assets/ (logo, arka plan, sesler)
 lang/                  tr, en, de, ru, pl — dil başına bir JSON dosyası
 lib/                   SII_Decrypt.dll (saat dilimi özelliği)
 docs/screenshots/      README'lerde kullanılan görüntüler

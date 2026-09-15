@@ -9,7 +9,11 @@ downloaded separately. Their licenses are reproduced here.
 | [scs-sdk-plugin](https://github.com/RenCloud/scs-sdk-plugin) v1.12.1, 64-bit `scs-telemetry.dll` | `plugin/` | RenCloud | MIT — `LICENSE-scs-sdk-plugin.txt` | Game plugin that exposes telemetry (game clock, speed, job info) via shared memory. The user copies it into the game's `bin/win_x64/plugins` folder. |
 | [SII_Decrypt](https://github.com/TheLazyTomcat/SII_Decrypt), 64-bit `SII_Decrypt.dll` (Lazarus release build from the repo's `bin` branch) | `lib/` | František Milt (TheLazyTomcat) | MPL-2.0 — `LICENSE-SII_Decrypt.txt`; source: the linked repository | Decrypting the game's save file to read the current time zone. Optional: without it only the time-zone display feature is disabled. |
 | [pywebview](https://github.com/r0x0r/pywebview) (+ pythonnet, WebView2 loader) | bundled in the `.exe` build | Roman Sirokov | BSD-3-Clause | Native window with the WebView2 engine. |
-| [Pillow](https://python-pillow.org/), [NumPy](https://numpy.org/) | not shipped | — | HPND / BSD-3-Clause | Only used by the optional asset generators in `tools/`. |
+| [Pillow](https://python-pillow.org/) | bundled in the `.exe` build | — | HPND | Image handling for the PDF printout (via reportlab) and the optional asset generators in `tools/`. |
+| [reportlab](https://www.reportlab.com/opensource/) | bundled in the `.exe` build | ReportLab | BSD-3-Clause | PDF tachograph printout. |
+| [qrcode](https://github.com/lincolnloop/python-qrcode) | bundled in the `.exe` build | Lincoln Loop | BSD-3-Clause | QR code for the phone/tablet second screen. |
+| [NoSleep.js](https://github.com/richtr/NoSleep.js) (only the tiny looping video, base64) | `app/mobile.html` | Rich Tibbett | MIT — `LICENSE-NoSleep.js.txt` | Keeps the phone screen awake while the second-screen page is open. |
+| [NumPy](https://numpy.org/) | not shipped | — | BSD-3-Clause | Only used by the optional asset generators in `tools/`. |
 
 SHA-256 of the bundled binaries (verify with `Get-FileHash <file>` in PowerShell):
 

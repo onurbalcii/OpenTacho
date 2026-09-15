@@ -112,6 +112,13 @@ odpowiadają temu, co naprawdę zrobiłeś.
   próbnik kolorów na canvasie dla koloru okna i akcentu (RGB/HEX; kolor tekstu dobierany automatycznie, mini pasek używa tych samych kolorów).
 - **Języki**: polski, angielski, turecki, niemiecki, rosyjski, portugalski (Brazylia), hiszpański, francuski, włoski,
   czeski — nowy język to jeden plik JSON.
+- **Drugi ekran na telefonie lub tablecie** (Ustawienia → Aplikacja → *Używaj na telefonie lub tablecie* albo
+  przycisk-telefon pod kołem zębatym): włącz udostępnianie w LAN i zeskanuj kod QR — urządzenie w tym samym Wi-Fi
+  pokazuje tachograf w przeglądarce, bez aplikacji: status, pozostały czas, paski, przebieg dnia, zlecenie z ETA,
+  znaczniki, zdarzenia oraz karty historii i planera. Przerwa / Manewry / Pomiń / Pełny odpoczynek działają z telefonu
+  (można wyłączyć); strona nie pozwala wygasić ekranu, przy ostrzeżeniach gra dźwięk i wibruje. Link zawiera losowy
+  klucz, nic nie jest wystawione do internetu, przy wyłączonym udostępnianiu nic nie nasłuchuje. Zapora Windows zapyta
+  raz — zezwól dla sieci prywatnych.
 - **Sprawdzanie aktualizacji**: przy starcie aplikacja pyta GitHub o najnowsze wydanie (można wyłączyć) i przy nowszej
   wersji pokazuje pasek z przyciskiem pobierania; Ustawienia → Aplikacja pokazują wersję, ręczne sprawdzenie i link.
 - **Pierwsze uruchomienie**: wybór języka, potem krótki samouczek po ekranie i kartach ustawień
@@ -156,6 +163,11 @@ Tak. Odczytuje tylko telemetrię (zegar, prędkość, zlecenie), więc mody map 
 znaczenia; American Truck Simulator używa tej samej wtyczki — w ATS automatycznie obowiązują reguły USA FMCSA
 (8 h / 30 min / 11 h / 10 h, okno 14 h, 70 h / 8 dni); w Ustawienia → Zasady można wymusić dowolny zestaw.
 
+**Telefon nie może otworzyć strony / kod QR nie działa.**
+Oba urządzenia muszą być w tej samej sieci lokalnej (ten sam router albo hotspot telefonu); sieci dla gości z
+izolacją klientów to blokują. Zezwól OpenTacho w zaporze Windows dla sieci prywatnych (pyta przy pierwszym użyciu);
+jeśli adres pokazuje niewłaściwą sieć, wybierz inną w polu *Adres sieciowy*. *Nowy kod* unieważnia stare linki.
+
 **Mini pasek nie pokazuje się nad grą.**
 Windows nie potrafi rysować nakładek nad grą w trybie *pełnoekranowym wyłącznym*. Ustaw tryb
 wyświetlania gry na *okno* lub *pełny ekran bez ramki* (ETS2: Opcje → Grafika → Pełny ekran wył.) —
@@ -179,7 +191,7 @@ jeden przenośny folder z `.exe`; promy, sen, strefy czasowe i wczytywanie zapis
 ```
 OpenTacho.exe          aplikacja (kompilacja wydania)      OpenTacho.py   ta sama aplikacja ze źródeł
 plugin/                scs-telemetry.dll → skopiuj do folderu plugins gry
-app/                   zawartość okna: main.html, mini.html, assets/ (logo, tło, dźwięki)
+app/                   zawartość okna: main.html, mini.html, mobile.html, assets/ (logo, tło, dźwięki)
 lang/                  en, tr, de, ru, pl — jeden plik JSON na język
 lib/                   SII_Decrypt.dll (funkcja stref czasowych)
 docs/screenshots/      obrazy użyte w tych README

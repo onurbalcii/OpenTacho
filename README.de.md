@@ -116,6 +116,13 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   ein Canvas-Farbwähler für Fenster- und Akzentfarbe (RGB/HEX; Textfarbe automatisch, die Mini-Leiste folgt denselben Farben).
 - **Sprachen**: Deutsch, Englisch, Türkisch, Russisch, Polnisch, brasilianisches Portugiesisch, Spanisch, Französisch,
   Italienisch, Tschechisch — eine neue Sprache ist eine einzige JSON-Datei.
+- **Zweitbildschirm auf Handy oder Tablet** (Einstellungen → App → *Auf Handy oder Tablet nutzen* oder der
+  Telefon-Knopf unter dem Zahnrad): LAN-Freigabe einschalten und den QR-Code scannen — ein Gerät im selben WLAN
+  zeigt den Tachographen im Browser, ohne App: Status, Restzeit, Balken, Tagesablauf, Auftrag mit ETA, Markierungen,
+  Ereignisse sowie Verlaufs- und Planer-Reiter. Pause / Rangieren / Überspringen / Volle Ruhezeit funktionieren vom
+  Handy (abschaltbar); die Seite hält den Bildschirm wach und piept/vibriert bei Warnungen. Der Link trägt einen
+  zufälligen Schlüssel, nichts ist im Internet erreichbar, bei ausgeschalteter Freigabe lauscht nichts. Die
+  Windows-Firewall fragt einmal — für private Netzwerke erlauben.
 - **Update-Prüfung**: beim Start fragt die App GitHub nach der neuesten Version (abschaltbar) und zeigt bei einer
   neueren Version ein Banner mit Download-Schaltfläche; Einstellungen → App zeigt Version, manuelle Prüfung und Download-Link.
 - **Erster Start**: Sprachauswahl, dann eine kurze Einführung in Bildschirm und Einstellungsreiter
@@ -160,6 +167,12 @@ Ja. Es liest nur Telemetrie (Uhr, Geschwindigkeit, Auftrag), Karten- und Lkw-Mod
 also keine Rolle; American Truck Simulator nutzt dasselbe Plugin — in ATS gilt automatisch das US-FMCSA-Regelwerk
 (8 h / 30 min / 11 h / 10 h, 14-h-Fenster, 70 h / 8 Tage); unter Einstellungen → Regeln lässt sich jedes Regelwerk erzwingen.
 
+**Das Handy kann die Seite nicht öffnen / der QR-Code funktioniert nicht.**
+Beide Geräte müssen im selben lokalen Netzwerk sein (gleicher Router oder Hotspot des Handys); Gastnetze mit
+„AP-Isolation“ blockieren das. OpenTacho in der Windows-Firewall für private Netzwerke erlauben (fragt beim
+ersten Mal); zeigt die Adresse das falsche Netz, unter *Netzwerkadresse* ein anderes wählen. *Neuer Code* macht
+alte Links ungültig.
+
 **Die Mini-Leiste erscheint nicht über dem Spiel.**
 Windows kann über ein Spiel im *exklusiven Vollbild* kein Overlay zeichnen. Stelle den Anzeigemodus
 des Spiels auf *Fenster* oder *randloses Vollbild* (ETS2: Optionen → Grafik → Vollbild aus) — dann
@@ -184,7 +197,7 @@ geladene Spielstände.
 ```
 OpenTacho.exe          die App (Release-Build)             OpenTacho.py   dieselbe App, aus dem Quellcode
 plugin/                scs-telemetry.dll → in den plugins-Ordner des Spiels kopieren
-app/                   Fensterinhalt: main.html, mini.html, assets/ (Logo, Hintergrund, Töne)
+app/                   Fensterinhalt: main.html, mini.html, mobile.html, assets/ (Logo, Hintergrund, Töne)
 lang/                  en, tr, de, ru, pl — eine JSON-Datei pro Sprache
 lib/                   SII_Decrypt.dll (Zeitzonen-Funktion)
 docs/screenshots/      die Bilder dieser READMEs
