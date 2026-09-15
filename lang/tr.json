@@ -554,5 +554,22 @@
   "ui.ruleset.nm_eu": "AB — 561/2006",
   "ui.ruleset.nm_us": "ABD — FMCSA HOS",
   "tour.welcome.b.us": "Kural tek: <b>8:00 sürüş → 0:30 mola → 3:00 sürüş → 10:00 dinlenme</b> (ABD · FMCSA).<ul><li>Her şey oyun saatiyle sayılır.</li><li>Oyun açıkken durumlar hızdan kendiliğinden belirlenir.</li><li>Bu kısa tur ekranı ve mantığı anlatır — ok tuşlarıyla da ilerleyebilirsin.</li></ul>",
-  "tour.bars.b.us": "<ul><li><b>Sürüş bloğu</b> — 30 dk mola gerekmeden 8:00.</li><li><b>Günlük sürüş</b> — 11:00; ortadaki çizgi 8:00.</li><li><b>Dinlenme</b> — hedef 0:30 mola ya da 10:00 günlük; çentik 30 dakikalık mola sınırı.</li></ul>"
+  "tour.bars.b.us": "<ul><li><b>Sürüş bloğu</b> — 30 dk mola gerekmeden 8:00.</li><li><b>Günlük sürüş</b> — 11:00; ortadaki çizgi 8:00.</li><li><b>Dinlenme</b> — hedef 0:30 mola ya da 10:00 günlük; çentik 30 dakikalık mola sınırı.</li></ul>",
+  "ui.mini_scale": "Boyut",
+  "ui.sec.update": "Güncellemeler",
+  "ui.update.check": "Şimdi denetle",
+  "ui.update.auto": "Açılışta güncellemeleri denetle",
+  "ui.update.current": "Sürüm {v} · güncel ✓",
+  "ui.update.newer": "Yeni sürüm <b>v{v}</b> hazır (sendeki: {c})",
+  "ui.update.get": "v{v} indir",
+  "ui.update.checking": "Denetleniyor…",
+  "ui.update.error": "Sürüm {v} · denetlenemedi ({e})",
+  "ui.update.idle": "Sürüm {v}",
+  "ui.update.later": "Daha sonra",
+  "ui.update.banner": "Yeni sürüm <b>v{v}</b> çıktı",
+  "ui.update.notes": "Sürüm notları",
+  "ui.hint.update": "<ul><li>Denetim GitHub'daki son sürüm bilgisini okur (api.github.com); başka hiçbir veri gönderilmez.</li><li>İndir düğmesi zip'i tarayıcıda indirir: çıkarıp mevcut klasörün üstüne yaz; ayarlar ve sayaçlar korunur.</li></ul>",
+  "log.update_found": "Yeni sürüm bulundu: v{v}",
+  "mini.full_na": "Tam dinlenme şu an kullanılamaz (araç dururken ve dinlenme tamamlanmamışken)",
+  "mini.week_na": "Haftalık dinlenme / yeniden başlatma şu an kullanılamaz"
 }

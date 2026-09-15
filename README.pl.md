@@ -75,7 +75,7 @@ odpowiadają temu, co naprawdę zrobiłeś.
   prowadzone **dla każdego profilu** — po zmianie profilu w grze aplikacja przełącza liczniki (folder `profiles\`).
 - **Tryb ścisły** (opcjonalny): przerwy i odpoczynki liczą się tylko przy **wyłączonym silniku + hamulcu postojowym**; główny panel pokazuje, dlaczego nic się nie liczy.
 - **Waga naruszeń**: każde naruszenie jest oznaczane według klas UE (drobne / poważne / bardzo poważne); opcjonalne **wirtualne mandaty** (€, w przybliżeniu); przycisk **Zapłać** przenosi je do gry — kopia najnowszego zapisu z mandatem odjętym od konta bankowego trafia do nowego slotu „OpenTacho: mandat zapłacony”, wczytywanego z menu Wczytaj.
-- **Komunikaty głosowe**: krótkie zdania głosem Windows offline („do końca czasu jazdy 15 minut”, „przerwa zakończona” …), w pięciu językach; osobne suwaki głośności dla sygnału i komunikatów.
+- **Komunikaty głosowe**: krótkie zdania głosem Windows offline („do końca czasu jazdy 15 minut”, „przerwa zakończona” …), w każdym języku aplikacji; osobne suwaki głośności dla sygnału i komunikatów.
 - **Zasady tygodniowe** (opcjonalne, Ustawienia → Zasady; domyślnie tryb prosty): **56 h** tygodniowo / **90 h** w dwóch
   tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
   w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),
@@ -104,12 +104,16 @@ odpowiadają temu, co naprawdę zrobiłeś.
 - **Alerty dźwiękowe**: krótkie powiadomienie 15 min przed końcem jazdy/odpoczynku, dwa razy przy naruszeniu,
   raz po ukończeniu przerwy/odpoczynku (można wyciszyć; zamień pliki `.wav`, aby zmienić dźwięk).
 - **Mini pasek**: globalny skrót (domyślnie `Ctrl + Num 0`, do zmiany) zamienia okno na mały,
-  zawsze widoczny wskaźnik nad grą — ikona statusu, pozostały czas, następny krok, trzy mini paski,
-  zegar gry, znaczniki, termin dostawy oraz przyciski Przerwa / Manewry / Pomiń — przeciągaj gdziekolwiek.
+  zawsze widoczny wskaźnik nad grą — ikona statusu, pozostały czas, następny krok, mini paski (blok · dzień ·
+  odpoczynek · tydzień/cykl), zegar gry, znaczniki, termin dostawy z werdyktem planera oraz przyciski Przerwa /
+  Manewry / Pomiń / Pełny odpoczynek / Odpoczynek tygodniowy — przeciągaj gdziekolwiek; przezroczystość i rozmiar (70–160 %) do ustawienia.
 - **Motywy**: Van Gogh (domyślny, algorytmicznie namalowane tło w stylu *Gwiaździstej nocy*
   ze szklanymi panelami), prosty ciemny, prosty jasny i **Własny**: własny obraz tła (JPG/PNG/WebP) plus
   próbnik kolorów na canvasie dla koloru okna i akcentu (RGB/HEX; kolor tekstu dobierany automatycznie, mini pasek używa tych samych kolorów).
-- **Języki**: polski, angielski, turecki, niemiecki, rosyjski — nowy język to jeden plik JSON.
+- **Języki**: polski, angielski, turecki, niemiecki, rosyjski, portugalski (Brazylia), hiszpański, francuski, włoski,
+  czeski — nowy język to jeden plik JSON.
+- **Sprawdzanie aktualizacji**: przy starcie aplikacja pyta GitHub o najnowsze wydanie (można wyłączyć) i przy nowszej
+  wersji pokazuje pasek z przyciskiem pobierania; Ustawienia → Aplikacja pokazują wersję, ręczne sprawdzenie i link.
 - **Pierwsze uruchomienie**: wybór języka, potem krótki samouczek po ekranie i kartach ustawień
   (w każdej chwili do ponownego uruchomienia z Ustawienia → Aplikacja).
 - Zapamiętuje położenie/rozmiar okna, opcję „zawsze na wierzchu”, dziennik zdarzeń, przycisk opinii.

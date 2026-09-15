@@ -554,5 +554,22 @@
   "ui.ruleset.nm_eu": "UE — 561/2006",
   "ui.ruleset.nm_us": "USA — FMCSA HOS",
   "tour.welcome.b.us": "Jedna zasada: <b>8:00 jazdy → 0:30 przerwy → 3:00 jazdy → 10:00 odpoczynku</b> (USA · FMCSA).<ul><li>Wszystko liczone w czasie gry.</li><li>Przy uruchomionej grze statusy są wykrywane automatycznie z prędkości.</li><li>Ten krótki samouczek objaśnia ekran i logikę — działają też klawisze strzałek.</li></ul>",
-  "tour.bars.b.us": "<ul><li><b>Blok jazdy</b> — 8:00 do 30-minutowej przerwy.</li><li><b>Jazda dzienna</b> — 11:00; środkowy znacznik to 8:00.</li><li><b>Odpoczynek</b> — cel 0:30 przerwy lub 10:00 dziennego; nacięcie to próg 30 minut.</li></ul>"
+  "tour.bars.b.us": "<ul><li><b>Blok jazdy</b> — 8:00 do 30-minutowej przerwy.</li><li><b>Jazda dzienna</b> — 11:00; środkowy znacznik to 8:00.</li><li><b>Odpoczynek</b> — cel 0:30 przerwy lub 10:00 dziennego; nacięcie to próg 30 minut.</li></ul>",
+  "ui.mini_scale": "Rozmiar",
+  "ui.sec.update": "Aktualizacje",
+  "ui.update.check": "Sprawdź teraz",
+  "ui.update.auto": "Sprawdzaj aktualizacje przy uruchomieniu",
+  "ui.update.current": "Wersja {v} · aktualna ✓",
+  "ui.update.newer": "Dostępna nowa wersja <b>v{v}</b> (masz {c})",
+  "ui.update.get": "Pobierz v{v}",
+  "ui.update.checking": "Sprawdzanie…",
+  "ui.update.error": "Wersja {v} · sprawdzanie nie powiodło się ({e})",
+  "ui.update.idle": "Wersja {v}",
+  "ui.update.later": "Później",
+  "ui.update.banner": "Wyszła nowa wersja <b>v{v}</b>",
+  "ui.update.notes": "Informacje o wydaniu",
+  "ui.hint.update": "<ul><li>Sprawdzanie odczytuje tylko informacje o najnowszym wydaniu z GitHub (api.github.com); nic więcej nie jest wysyłane.</li><li>Pobierz otwiera zip w przeglądarce: rozpakuj na istniejący folder; ustawienia i liczniki zostaną zachowane.</li></ul>",
+  "log.update_found": "Znaleziono nową wersję: v{v}",
+  "mini.full_na": "Pełny odpoczynek teraz niedostępny (pojazd musi stać, odpoczynek nieukończony)",
+  "mini.week_na": "Odpoczynek tygodniowy / restart teraz niedostępny"
 }

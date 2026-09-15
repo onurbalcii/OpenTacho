@@ -554,5 +554,22 @@
   "ui.ruleset.nm_eu": "EU — 561/2006",
   "ui.ruleset.nm_us": "USA — FMCSA HOS",
   "tour.welcome.b.us": "Eine Regel: <b>8:00 Fahren → 0:30 Pause → 3:00 Fahren → 10:00 Ruhezeit</b> (USA · FMCSA).<ul><li>Alles wird in Spielzeit gezählt.</li><li>Bei laufendem Spiel werden die Zustände automatisch aus der Geschwindigkeit erkannt.</li><li>Diese kurze Tour erklärt den Bildschirm und die Logik — die Pfeiltasten funktionieren auch.</li></ul>",
-  "tour.bars.b.us": "<ul><li><b>Fahrblock</b> — 8:00 bis zur 30-Minuten-Pause.</li><li><b>Tagesfahrzeit</b> — 11:00; die mittlere Marke ist 8:00.</li><li><b>Ruhezeit</b> — Ziel 0:30 Pause oder 10:00 Ruhezeit; die Kerbe ist die 30-Minuten-Schwelle.</li></ul>"
+  "tour.bars.b.us": "<ul><li><b>Fahrblock</b> — 8:00 bis zur 30-Minuten-Pause.</li><li><b>Tagesfahrzeit</b> — 11:00; die mittlere Marke ist 8:00.</li><li><b>Ruhezeit</b> — Ziel 0:30 Pause oder 10:00 Ruhezeit; die Kerbe ist die 30-Minuten-Schwelle.</li></ul>",
+  "ui.mini_scale": "Größe",
+  "ui.sec.update": "Updates",
+  "ui.update.check": "Jetzt prüfen",
+  "ui.update.auto": "Beim Start nach Updates suchen",
+  "ui.update.current": "Version {v} · aktuell ✓",
+  "ui.update.newer": "Neue Version <b>v{v}</b> verfügbar (du hast {c})",
+  "ui.update.get": "v{v} herunterladen",
+  "ui.update.checking": "Prüfe…",
+  "ui.update.error": "Version {v} · Prüfung fehlgeschlagen ({e})",
+  "ui.update.idle": "Version {v}",
+  "ui.update.later": "Später",
+  "ui.update.banner": "Neue Version <b>v{v}</b> ist da",
+  "ui.update.notes": "Versionshinweise",
+  "ui.hint.update": "<ul><li>Die Prüfung liest nur die Infos zur neuesten Version von GitHub (api.github.com); sonst wird nichts gesendet.</li><li>Herunterladen öffnet die Zip im Browser: über den vorhandenen Ordner entpacken; Einstellungen und Zähler bleiben erhalten.</li></ul>",
+  "log.update_found": "Neue Version gefunden: v{v}",
+  "mini.full_na": "Volle Ruhezeit jetzt nicht verfügbar (Fahrzeug muss stehen, Ruhezeit noch offen)",
+  "mini.week_na": "Wochenruhezeit / Neustart jetzt nicht verfügbar"
 }

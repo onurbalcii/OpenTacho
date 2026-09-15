@@ -203,6 +203,9 @@
   .xnote .x { flex: 0 0 auto; background: none; border: 0; color: var(--dim); cursor: pointer; font: inherit; font-size: 12px; line-height: 1.3; padding: 0 2px; }
   .xnote .x:hover { color: var(--text); }
   .psrc .ic { color: var(--gold); font-size: 14px; }
+  .top .upd { flex-basis: 100%; margin-top: -2px; padding-top: 6px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .top .upd b { color: var(--gold); }
+  .top .upd .sm { padding: 4px 10px; font-size: 12px; }
   .top .job { flex-basis: 100%; margin-top: -4px; padding-top: 6px; border-top: 1px solid var(--line); font-family: var(--serif); font-style: var(--italic);
               font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; overflow: hidden; }
   .top .job span { text-align: center; line-height: 1.35; }   /* uzun iş satırı (ETA ile) iki satıra sarılabilir */
@@ -412,7 +415,7 @@
   .mini-preview { position: relative; height: 92px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
                   background: url("assets/bg_starry.jpg") center / cover; }
   .mini-preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.25)); pointer-events: none; }
-  .mini-preview iframe { position: absolute; left: 50%; top: 50%; width: 540px; height: 76px; border: 0; background: transparent;
+  .mini-preview iframe { position: absolute; left: 50%; top: 50%; width: 574px; height: 76px; border: 0; background: transparent;
                          transform: translate(-50%, -50%) scale(.55); pointer-events: none; }
   .mini-preview[hidden] { display: none; }
   .row.range input[type="range"] { flex: 1; min-width: 80px; padding: 0; border: 0; background: transparent; accent-color: var(--gold); cursor: pointer; }
@@ -464,7 +467,8 @@
   html[data-theme="dark"] .lp-card img, html[data-theme="light"] .lp-card img { filter: none; }
   .lp-card h2 { margin: 0; font-family: var(--serif); font-style: var(--italic); color: var(--gold); font-size: 30px; letter-spacing: .5px; position: relative; }
   .lp-card p { margin: 0 0 8px; color: var(--muted); font-size: 13px; position: relative; }
-  .lp-btns { display: grid; gap: 8px; width: 100%; position: relative; }
+  .lp-btns { display: grid; gap: 8px; width: 100%; position: relative; grid-template-columns: 1fr 1fr; }
+  .lp-btns button:first-child { grid-column: 1 / -1; }
   .lp-btns button { border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--text); border-radius: 999px; padding: 12px 16px; font: inherit;
                     font-size: 15px; font-weight: 600; cursor: pointer; transition: .2s; }
   .lp-btns button:hover { background: var(--gold); color: #1b1f2a; }
@@ -726,6 +730,7 @@
       </div>
     </div>
     <div class="prof" id="profLine" hidden></div>
+    <div class="upd" id="updBar" hidden><span id="updBarT"></span><button class="sm primary" id="updBarGet"><i class="ic" data-ic="download"></i><span id="updBarGetT"></span></button><button class="sm" id="updBarLater" data-i18n="ui.update.later">Daha sonra</button></div>
     <div class="job" id="jobLine" hidden></div>
   </div>
 
@@ -966,6 +971,7 @@
       </div>
       <div class="row"><button class="sm primary" id="miniOpen"><i class="ic" data-ic="strip"></i><span data-i18n="ui.mini_open">Mini şeride geç</span></button></div>
       <div class="row range"><label for="miniOpacity" data-i18n="ui.mini_opacity">Arka plan yoğunluğu</label><input type="range" id="miniOpacity" min="30" max="100" step="5"><b id="miniOpacityVal">70%</b></div>
+      <div class="row range"><label for="miniScale" data-i18n="ui.mini_scale">Boyut</label><input type="range" id="miniScale" min="70" max="160" step="10"><b id="miniScaleVal">100%</b></div>
       <div class="mini-preview" id="miniPreview" hidden><iframe id="miniPreviewFrame" title="" tabindex="-1"></iframe></div>
       <div class="hint" data-i18n-html="ui.hint.mini"></div>
     </div>
@@ -994,7 +1000,14 @@
       <div class="hint" data-i18n="ui.hint.tour"></div>
     </div>
 
-    <div class="about" data-i18n="ui.about"></div>
+    <div class="sec">
+      <h4><i class="ic" data-ic="download"></i><span data-i18n="ui.sec.update">Güncellemeler</span></h4>
+      <div class="kv" id="updInfo"></div>
+      <div class="row"><button class="sm" id="updCheck" data-i18n="ui.update.check">Şimdi denetle</button><button class="sm primary" id="updGet" hidden><i class="ic" data-ic="download"></i><span id="updGetT"></span></button><button class="sm" id="updNotes" data-i18n="ui.update.notes" hidden>Sürüm notları</button></div>
+      <label class="check"><input type="checkbox" id="updAuto"> <span data-i18n="ui.update.auto">Açılışta güncellemeleri denetle</span></label>
+      <div class="hint" data-i18n-html="ui.hint.update"></div>
+    </div>
+    <div class="about" id="about"></div>
   </div>
 </aside>
 
@@ -1090,6 +1103,7 @@
     bell: SVG(`<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M12 3.5v1.5"/>`),
     strip: SVG(`<rect x="2.5" y="8.5" width="19" height="7" rx="3.5"/><path d="M6.5 12h5M15 12h2.5"/>`),
     image: SVG(`<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5.2-5.2L7 19.5"/>`),
+    download: SVG(`<path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 19.5h15"/>`),
     history: SVG(`<path d="M4.2 12a7.8 7.8 0 1 0 2.3-5.5"/><path d="M4 4.2v4.4h4.4"/><path d="M12 8.2v4.2l2.7 1.6"/>`),
     help: SVG(`<circle cx="12" cy="12" r="9"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>`),
     flourish: SVG(`<path d="M2 14c6-9 14-9 26-3" opacity=".85"/><path d="M6 17c5-5 11-6 20-3" opacity=".5"/>`, "0 0 32 24"),
@@ -1346,6 +1360,24 @@
     $("modeManual").classList.toggle("on", st.mode === "manual");
     $("modeHint").textContent = st.mode === "auto" ? T("ui.hint.mode_auto") : T("ui.hint.mode_manual");
     $("onTop").checked = !!st.on_top;
+    if (document.activeElement !== $("miniScale") && st.mini_scale != null) { $("miniScale").value = st.mini_scale; $("miniScaleVal").textContent = st.mini_scale + "%"; }
+    $("about").textContent = `${T("ui.about")} · v${st.version || "?"}`;
+    {
+      const u = st.update || {};
+      let info;
+      if (u.state === "busy") info = T("ui.update.checking");
+      else if (u.state === "ok") info = u.newer ? T("ui.update.newer", { v: u.latest, c: u.version }) : T("ui.update.current", { v: u.version });
+      else if (u.state === "error") info = T("ui.update.error", { v: u.version, e: u.error || "?" });
+      else info = T("ui.update.idle", { v: u.version });
+      if ($("updInfo").innerHTML !== info) $("updInfo").innerHTML = info;
+      $("updCheck").disabled = u.state === "busy";
+      $("updGet").hidden = !u.newer; $("updNotes").hidden = !u.newer;
+      if (u.newer) $("updGetT").textContent = T("ui.update.get", { v: u.latest });
+      if (document.activeElement !== $("updAuto")) $("updAuto").checked = !!u.check;
+      const show = !!(u.newer && u.latest && u.latest !== u.seen);
+      $("updBar").hidden = !show;
+      if (show) { $("updBarT").innerHTML = T("ui.update.banner", { v: u.latest }); $("updBarGetT").textContent = T("ui.update.get", { v: u.latest }); }
+    }
     if (document.activeElement !== $("miniOpacity") && st.mini_opacity != null) { $("miniOpacity").value = Math.round(st.mini_opacity * 100); $("miniOpacityVal").textContent = Math.round(st.mini_opacity * 100) + "%"; }
     $("autoBreak").checked = !!st.auto_break;
     $("strictRest").checked = !!st.strict_rest; $("fines").checked = !!st.fines; $("voice").checked = !!st.voice;
@@ -1458,7 +1490,7 @@
 
   // ---- sesli anons: Windows'un yerleşik konuşma sesleri (çevrimdışı); dile uygun ses varsa onu seçer ----
   let voiceSeq = null;
-  const VOICE_LANG = { tr: "tr-TR", en: "en-US", de: "de-DE", ru: "ru-RU", pl: "pl-PL" };
+  const VOICE_LANG = { tr: "tr-TR", en: "en-US", de: "de-DE", ru: "ru-RU", pl: "pl-PL", "pt-BR": "pt-BR", es: "es-ES", fr: "fr-FR", it: "it-IT", cs: "cs-CZ" };
   function pickVoice(code) {
     if (!("speechSynthesis" in window)) return null;
     const want = (VOICE_LANG[code] || "en-US").toLowerCase(), all = speechSynthesis.getVoices();
@@ -1787,7 +1819,8 @@
     clearTimeout(pvTimer);
     const theme = (last && last.theme) || "vangogh";
     const key = theme === "custom" ? `custom&win=${custom.win.slice(1)}&accent=${custom.accent.slice(1)}` : theme;
-    if (pvTheme !== key) { pvTheme = key; pvFrame.src = `mini.html#preview=1&theme=${key}&alpha=${$("miniOpacity").value / 100}`; }
+    if (pvTheme !== key) { pvTheme = key; pvFrame.src = `mini.html#preview=1&theme=${key}&alpha=${$("miniOpacity").value / 100}&scale=${$("miniScale").value / 100}`; }
+    sizePreview();
     $("miniPreview").hidden = false;
     pushPreviewAlpha();
   }
@@ -1797,6 +1830,18 @@
   ["pointerup", "blur", "touchend", "keyup"].forEach(ev => $("miniOpacity").addEventListener(ev, hidePreviewSoon));
   $("miniOpacity").addEventListener("input", () => { $("miniOpacityVal").textContent = $("miniOpacity").value + "%"; showPreview(); pushPreviewAlpha(); });
   $("miniOpacity").addEventListener("change", () => { call("set_mini_opacity", $("miniOpacity").value / 100); hidePreviewSoon(); });
+  function sizePreview() { const sc = $("miniScale").value / 100; pvFrame.style.width = Math.round(574 * sc) + "px"; pvFrame.style.height = Math.round(76 * sc) + "px"; $("miniPreview").style.height = Math.max(92, Math.round(76 * sc * .55) + 26) + "px"; }
+  function pushPreviewScale() { const sc = $("miniScale").value / 100; try { pvFrame.contentWindow && pvFrame.contentWindow.postMessage({ scale: sc }, "*"); } catch (e) {} sizePreview(); }
+  ["pointerdown", "focus", "touchstart"].forEach(ev => $("miniScale").addEventListener(ev, () => { showPreview(); pushPreviewScale(); }));
+  ["pointerup", "blur", "touchend", "keyup"].forEach(ev => $("miniScale").addEventListener(ev, hidePreviewSoon));
+  $("miniScale").addEventListener("input", () => { $("miniScaleVal").textContent = $("miniScale").value + "%"; showPreview(); pushPreviewScale(); });
+  $("miniScale").addEventListener("change", () => { call("set_mini_scale", $("miniScale").value); hidePreviewSoon(); });
+  $("updCheck").addEventListener("click", () => call("check_update"));
+  $("updGet").addEventListener("click", () => call("open_update", false));
+  $("updNotes").addEventListener("click", () => call("open_update", true));
+  $("updAuto").addEventListener("change", () => call("set_update_check", $("updAuto").checked));
+  $("updBarGet").addEventListener("click", () => call("open_update", false));
+  $("updBarLater").addEventListener("click", () => call("set_update_seen", (last && last.update && last.update.latest) || ""));
   // kısayol yakalama: bir sonraki tuş bileşimi
   let hkCapturing = false;
   const VK_NAMES = { 8: "Backspace", 9: "Tab", 13: "Enter", 19: "Pause", 20: "CapsLock", 27: "Esc", 32: "Space", 33: "PgUp", 34: "PgDn", 35: "End", 36: "Home",
@@ -1972,7 +2017,7 @@
         drive_block: m.drive_block, drive_daily: m.drive_daily, rest: m.rest, limits: L, rest_target: m.rest >= 45 ? 660 : 45, remaining: rem, next_req: remD <= remB ? "REST" : "BREAK",
         break_credited: m.credited, big, moving: m.status === "DRIVING", manual_rate: m.rate, on_top: m.on_top, log: [...m.log].reverse().slice(0, 6),
         rules: m.rules || "eu", ruleset: m.ruleset || "auto",
-        lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }, { code: "custom", name: "Özel" }],
+        lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }, { code: "de", name: "Deutsch" }, { code: "ru", name: "Русский" }, { code: "pl", name: "Polski" }, { code: "pt-BR", name: "Português (Brasil)" }, { code: "es", name: "Español" }, { code: "fr", name: "Français" }, { code: "it", name: "Italiano" }, { code: "cs", name: "Čeština" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }, { code: "custom", name: "Özel" }],
         custom: { win: m.cwin || "#1c2a5e", accent: m.caccent || "#fdca4f", bg: !!m.cbg, bg_rev: m.cbgrev || 1 }, yard_max: 40,
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
         skip: off && m.rest < 45 ? { available: true, busy: false, minutes: 46 - m.rest, label: "Molayı atla" } : { available: false },
@@ -1988,7 +2033,8 @@
           : { on: true, kind: "eu", drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
               ext: { auto: true, on: false, bonus: true, used: 1, max: 2 }, red: { auto: true, used: 0, max: 3 }, local: m.abs, day_left: 300 }) : { on: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
-        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7,
+        split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7, mini_scale: m.scale || 100,
+        version: "2.1.0", update: m.upd || { state: "ok", latest: "2.2.0", newer: true, url: "https://github.com/onurbalcii/OpenTacho/releases", zip: "https://github.com/onurbalcii/OpenTacho/releases/download/v2.2.0/OpenTacho-win64.zip", error: null, version: "2.1.0", check: true, seen: null },
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
           : [{ k: "drive", v: "4:30", st: "active" }, { k: "break", v: "0:45", st: "plan" }, { k: "drive", v: "4:30", st: "plan" }, { k: "daily", v: "11:00", st: "plan" }],
         flags: [...(m.status === "ON_DUTY" ? [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] : []), ...(m.weekly && m.status !== "OFF_DUTY" ? [{ ic: "clock", t: "gün sonu 22:10 · kalan 5:00", warn: true }] : [])],
@@ -1999,6 +2045,8 @@
     api = {
       get_strings: async () => { try { const r = await fetch(`../lang/${m.lang}.json`); strings = await r.json(); if (m.rules === "us") for (const k of Object.keys(strings)) if (k.endsWith(".us")) strings[k.slice(0, -3)] = strings[k]; } catch (e) {} return strings; },
       set_ruleset: async v => { m.ruleset = v; m.rules = v === "auto" ? "eu" : v; return view(); },
+      set_mini_scale: async v => { m.scale = +v; return view(); }, check_update: async () => view(), open_update: async () => view(), set_update_check: async () => view(),
+      set_update_seen: async v => { m.upd = Object.assign({}, m.upd || { state: "ok", latest: "2.2.0", newer: true, version: "2.1.0", check: true }, { seen: v }); return view(); },
       get_state: async () => { tickMock(); return view(); },
       set_status: async s => { if (s === "OFF_DUTY") m.status = m.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"; else if (s === "YARD_MOVE") m.status = m.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"; else m.status = s; return view(); },
       set_mode: async v => { m.mode = v; return view(); }, set_manual_clock: async (d, h, mi) => { m.abs = d * 1440 + h * 60 + mi; return view(); },

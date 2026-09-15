@@ -78,7 +78,7 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   **pro Profil** geführt — beim Profilwechsel im Spiel wechselt die App die Zähler (Ordner `profiles\`).
 - **Strenger Modus** (optional): Pausen und Ruhezeiten zählen nur bei **Motor aus + Feststellbremse**; das Hauptfeld zeigt, warum nichts zählt.
 - **Verstoßschwere**: jeder Verstoß wird nach den EU-Klassen eingestuft (leicht / schwer / sehr schwer); optionale **virtuelle Bußgelder** (€, ungefähr); ein **Bezahlen**-Knopf überträgt sie ins Spiel — eine Kopie des neuesten Spielstands mit vom Bankkonto abgezogenem Bußgeld wird in einen neuen Slot „OpenTacho: Bußgeld bezahlt“ geschrieben und im Spiel über Laden geladen.
-- **Sprachansagen**: kurze Sätze mit der Offline-Stimme von Windows („noch 15 Minuten Lenkzeit“, „Pause abgeschlossen“ …), in allen fünf Sprachen; getrennte Lautstärkeregler für Warnton und Ansagen.
+- **Sprachansagen**: kurze Sätze mit der Offline-Stimme von Windows („noch 15 Minuten Lenkzeit“, „Pause abgeschlossen“ …), in jeder App-Sprache; getrennte Lautstärkeregler für Warnton und Ansagen.
 - **Wochenregeln** (optional, Einstellungen → Regeln; Standard: einfacher Modus): **56 h** pro Woche / **90 h** in zwei
   Wochen (Spiel-Kalenderwoche), Tageslenkzeit zweimal pro Woche auf **10 h** verlängert, Tagesruhezeit dreimal pro Woche
   auf **9 h** verkürzt, **Tagesspanne** (Ruhezeit muss innerhalb von 13/15 h beginnen; im Hauptfeld als „Tagesende“),
@@ -108,12 +108,16 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
 - **Tonwarnungen**: ein kurzer Ton 15 min vor Ende der Fahr-/Ruhezeit, zweimal bei einem Verstoß,
   einmal beim Abschluss einer Pause/Ruhezeit (abschaltbar; `.wav`-Dateien austauschen, um ihn zu ändern).
 - **Mini-Leiste**: ein globaler Hotkey (Standard `Strg + Num 0`, änderbar) tauscht das Fenster gegen eine
-  kleine, immer sichtbare Anzeige über dem Spiel — Statussymbol, Restzeit, nächster Schritt, drei Mini-Balken,
-  Spieluhr, Markierungen, Lieferfrist und Schaltflächen für Pause / Rangieren / Überspringen — frei verschiebbar.
+  kleine, immer sichtbare Anzeige über dem Spiel — Statussymbol, Restzeit, nächster Schritt, Mini-Balken (Block ·
+  Tag · Ruhe · Woche/Zyklus), Spieluhr, Markierungen, Lieferfrist mit Planer-Urteil und Schaltflächen für Pause /
+  Rangieren / Überspringen / Volle Ruhezeit / Wochenruhezeit — frei verschiebbar; Deckkraft und Größe (70–160 %) einstellbar.
 - **Designs**: Van Gogh (Standard, ein algorithmisch gemalter Hintergrund im Stil der *Sternennacht*
   mit Glasflächen), schlicht dunkel, schlicht hell und **Eigenes**: dein eigenes Hintergrundbild (JPG/PNG/WebP) plus
   ein Canvas-Farbwähler für Fenster- und Akzentfarbe (RGB/HEX; Textfarbe automatisch, die Mini-Leiste folgt denselben Farben).
-- **Sprachen**: Deutsch, Englisch, Türkisch, Russisch, Polnisch — eine neue Sprache ist eine einzige JSON-Datei.
+- **Sprachen**: Deutsch, Englisch, Türkisch, Russisch, Polnisch, brasilianisches Portugiesisch, Spanisch, Französisch,
+  Italienisch, Tschechisch — eine neue Sprache ist eine einzige JSON-Datei.
+- **Update-Prüfung**: beim Start fragt die App GitHub nach der neuesten Version (abschaltbar) und zeigt bei einer
+  neueren Version ein Banner mit Download-Schaltfläche; Einstellungen → App zeigt Version, manuelle Prüfung und Download-Link.
 - **Erster Start**: Sprachauswahl, dann eine kurze Einführung in Bildschirm und Einstellungsreiter
   (jederzeit neu startbar unter Einstellungen → App).
 - Merkt sich Fensterposition/-größe, Option „immer im Vordergrund“, Ereignisprotokoll, Feedback-Schaltfläche.

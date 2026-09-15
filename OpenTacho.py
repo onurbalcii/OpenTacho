@@ -98,8 +98,12 @@ SII_DLL = os.path.join(APP_DIR, "lib", "SII_Decrypt.dll")
 if not os.path.exists(SII_DLL) and os.path.exists(os.path.join(DATA_DIR, "SII_Decrypt.dll")):
     SII_DLL = os.path.join(DATA_DIR, "SII_Decrypt.dll")
 APP_NAME = "OpenTacho"
+APP_VERSION = "2.1.0"
 WINDOW_TITLE = APP_NAME
-MINI_W, MINI_H = 540, 76          # mini şerit penceresi (px)
+UPDATE_API = "https://api.github.com/repos/onurbalcii/OpenTacho/releases/latest"   # sürüm denetimi (yalnızca son sürüm bilgisi okunur)
+RELEASES_URL = "https://github.com/onurbalcii/OpenTacho/releases"
+MINI_W, MINI_H = 574, 76          # mini şerit penceresi (px, %100 ölçekte)
+MINI_SCALE_MIN, MINI_SCALE_MAX = 70, 160   # mini şerit ölçeği (%)
 DEFAULT_LANG = "tr"
 DEFAULT_THEME = "vangogh"
 # Geri bildirim formu, dile göre (bilinmeyen dil -> "en"). Kendi çatalında kendi form bağlantılarını yaz.
@@ -205,7 +209,10 @@ class I18n:
             return {}
 
     def load(self, code):
-        code = (code or DEFAULT_LANG).lower()
+        code = str(code or DEFAULT_LANG)
+        # dosya adı büyük/küçük harfe duyarlı olabilir (pt-BR): listedeki yazımı kullan
+        known = {c.lower(): c for c in (fn[:-5] for fn in os.listdir(LANG_DIR) if fn.endswith(".json"))} if os.path.isdir(LANG_DIR) else {}
+        code = known.get(code.lower(), code)
         d = self._read(code)
         if not d and code != "en":
             code, d = "en", self._read("en")
@@ -313,6 +320,9 @@ DEFAULT_STATE = {
     "hotkey": {"mods": 2, "vk": 96, "name": "Ctrl + Num 0"},   # mini şerit kısayolu (MOD_CONTROL, VK_NUMPAD0)
     "mini_pos": None,          # mini şerit konumu {"x","y"}
     "mini_opacity": 0.7,       # mini şerit pencere opaklığı (0.3–1.0; LWA_ALPHA, oyun altından görünür)
+    "mini_scale": 100,         # mini şerit ölçeği (%): sayfa zoom + pencere boyutu birlikte
+    "update_check": True,      # açılışta GitHub'dan son sürümü denetle
+    "update_seen": None,       # "Daha sonra" denilen sürüm: o sürüm için açılış uyarısı tekrar çıkmaz
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -339,6 +349,50 @@ def log_error(msg):
             f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + msg + "\n")
     except Exception:
         pass
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in re.findall(r"\d+", str(v or ""))[:3]) or (0,)
+
+
+class UpdateCheck:
+    """GitHub Releases'tan son sürümü okur (api.github.com, yalnızca etiket + zip adresi). Ağ yoksa sessizce 'error'."""
+
+    def __init__(self, on_found=None):
+        self.on_found = on_found
+        self.lock = threading.Lock()
+        self.busy = False
+        self.info = {"state": "idle", "latest": None, "newer": False, "url": RELEASES_URL, "zip": None, "error": None, "at": None}
+
+    def start(self):
+        threading.Thread(target=self.fetch, daemon=True).start()
+
+    def fetch(self):
+        with self.lock:
+            if self.busy:
+                return self.info
+            self.busy = True
+            self.info = dict(self.info, state="busy")
+        try:
+            import urllib.request
+            req = urllib.request.Request(UPDATE_API, headers={"User-Agent": f"OpenTacho/{APP_VERSION}", "Accept": "application/vnd.github+json"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                data = json.loads(r.read().decode("utf-8"))
+            latest = str(data.get("tag_name") or "").lstrip("vV")
+            zipurl = next((a.get("browser_download_url") for a in (data.get("assets") or []) if str(a.get("name", "")).lower().endswith(".zip")), None)
+            newer = bool(latest) and version_tuple(latest) > version_tuple(APP_VERSION)
+            info = {"state": "ok", "latest": latest, "newer": newer, "url": data.get("html_url") or RELEASES_URL, "zip": zipurl, "error": None, "at": time.time()}
+        except Exception as e:
+            info = {"state": "error", "latest": None, "newer": False, "url": RELEASES_URL, "zip": None, "error": str(e)[:120], "at": time.time()}
+        with self.lock:
+            self.info = info
+            self.busy = False
+        if info["newer"] and self.on_found:
+            try:
+                self.on_found(info)
+            except Exception:
+                pass
+        return info
 
 
 def hm(minutes):
@@ -1352,6 +1406,7 @@ class Tacho:
         self.park_brake = False    # telemetri: el freni
         self.engine = False        # telemetri: motor çalışıyor
         self.prev_ev = None        # iş olayı bayrakları (delivered/cancelled/fined: tersine dönen bool)
+        self.updates = UpdateCheck(on_found=self._update_found)
         self.tel_last = {}         # son okunan telemetri (tutarlar için)
         self.voice_seq = 0         # sesli anons: her yeni cümlede artar (sayfa değişince okur)
         self.voice_text = ""
@@ -1920,7 +1975,7 @@ class Tacho:
     SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
                     "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
                     "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice",
-                    "sound_volume", "voice_volume", "ruleset", "last_game")
+                    "sound_volume", "voice_volume", "ruleset", "last_game", "mini_scale", "update_check", "update_seen")
 
     @classmethod
     def counter_keys(cls):
@@ -2754,6 +2809,16 @@ class Tacho:
             kind = self.rules_kind()
             self.log(L("log.ruleset", name=L("ui.ruleset.nm_" + kind)))
 
+    def act_set_update_check(self, flag):
+        with self.lock:
+            self.s["update_check"] = bool(flag)
+            self.dirty = True
+
+    def act_set_update_seen(self, version):
+        with self.lock:
+            self.s["update_seen"] = str(version or "")[:20] or None
+            self.dirty = True
+
     def act_set_auto_ext(self, flag):
         with self.lock:
             s = self.s
@@ -3099,14 +3164,15 @@ class Tacho:
                 return
             pos = self.s.get("mini_pos") or {}
             kw = {}
-            if "x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], MINI_W, MINI_H):
+            mw, mh = self.mini_size()
+            if "x" in pos and "y" in pos and rect_on_screen(pos["x"], pos["y"], mw, mh):
                 kw = {"x": int(pos["x"]), "y": int(pos["y"])}
             theme = self.s.get("theme") or DEFAULT_THEME
             bg = {"dark": "#171b22", "light": "#ffffff"}.get(theme, "#0b1230")
             if theme == "custom":
                 bg = _mix_hex(self.s["custom"]["win"], "#000000", 0.35)
-            win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#" + theme_hash(self.s), js_api=self.api,
-                                        width=MINI_W, height=MINI_H,
+            win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#" + theme_hash(self.s) + f"&scale={mw / MINI_W:.3f}", js_api=self.api,
+                                        width=mw, height=mh,
                                         min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
                                         background_color=bg, **kw)
             # pencere var ama henüz gösterilmedi: görev çubuğunda yer almasın; saydamlık pencere alfasıyla
@@ -3115,13 +3181,13 @@ class Tacho:
             # WinForms boyutu çerçeve kaldırılmadan önce uygular (16 px eksik kalır); tam boyuta getir.
             # Pencere create_window içinde eşzamanlı gösterildiği için "shown" olayına bağlanmak geç kalır.
             try:
-                win.resize(MINI_W, MINI_H)
+                win.resize(mw, mh)
             except Exception:
                 pass
 
             def shown():
                 try:
-                    win.resize(MINI_W, MINI_H)
+                    win.resize(*self.mini_size())
                 except Exception:
                     pass
 
@@ -3219,6 +3285,45 @@ class Tacho:
         if "n" in edge:
             nh = max(MINH, h - dy); y += h - nh; h = nh
         u.SetWindowPos(hwnd, None, x, y, w, h, 0x0004 | 0x0010)   # NOZORDER | NOACTIVATE
+
+    def mini_size(self):
+        """Mini şerit penceresi (px): temel boyut × ölçek."""
+        sc = max(MINI_SCALE_MIN, min(MINI_SCALE_MAX, int(self.s.get("mini_scale") or 100))) / 100.0
+        return int(round(MINI_W * sc)), int(round(MINI_H * sc))
+
+    def act_set_mini_scale(self, value):
+        with self.lock:
+            self.s["mini_scale"] = max(MINI_SCALE_MIN, min(MINI_SCALE_MAX, int(round(float(value)))))
+            self.dirty = True
+            w, h = self.mini_size()
+        win = self.mini_win
+        if win is not None:
+            try:
+                win.resize(w, h)   # sayfa zoom'u view'deki mini_scale ile kendisi uygular
+            except Exception:
+                pass
+
+    def _update_found(self, info):
+        with self.lock:
+            self.log(L("log.update_found", v=info.get("latest")))
+
+    def update_view(self):
+        s = self.s
+        return dict(self.updates.info, version=APP_VERSION, check=bool(s.get("update_check", True)), seen=s.get("update_seen"))
+
+    def act_check_update(self):
+        return self.updates.fetch()
+
+    def act_open_update(self, releases=False):
+        info = self.updates.info
+        url = info.get("url") or RELEASES_URL
+        if not releases and info.get("zip"):
+            url = info["zip"]
+        try:
+            import webbrowser
+            webbrowser.open(url)
+        except Exception as e:
+            log_error("güncelleme bağlantısı açılamadı: %r" % e)
 
     def act_set_mini_opacity(self, value):
         with self.lock:
@@ -3416,6 +3521,9 @@ class Tacho:
             "mini": self.mini_on,
             "win_max": self.win_maxed,
             "mini_opacity": s["mini_opacity"],
+            "mini_scale": int(s.get("mini_scale") or 100),
+            "version": APP_VERSION,
+            "update": self.update_view(),
             "split": {"part1": s["rest_part1"] if split else 0, "need": need, "done": s["rest_daily_done"],
                       "enabled": bool(s["split_rest"]) and self.R.kind == "eu", "supported": self.R.kind == "eu",
                       "stored": s["rest_part1"] if s["rest_part1"] >= self.R.split_p1 else 0},
@@ -3872,6 +3980,26 @@ class Api:
         self._t.act_set_ruleset(value)
         return self.get_state()
 
+    def set_mini_scale(self, value):
+        self._t.act_set_mini_scale(value)
+        return self.get_state()
+
+    def check_update(self):
+        self._t.act_check_update()
+        return self.get_state()
+
+    def open_update(self, releases=False):
+        self._t.act_open_update(bool(releases))
+        return self.get_state()
+
+    def set_update_check(self, flag):
+        self._t.act_set_update_check(flag)
+        return self.get_state()
+
+    def set_update_seen(self, version):
+        self._t.act_set_update_seen(version)
+        return self.get_state()
+
     def set_auto_red(self, flag):
         self._t.act_set_auto_red(flag)
         return self.get_state()
@@ -3935,6 +4063,8 @@ def main():
     hk = tacho.s.get("hotkey") or {}
     tacho.hotkeys.set(hk.get("mods", 2), hk.get("vk", 96))
     tacho.hotkeys.start()
+    if tacho.s.get("update_check", True):
+        tacho.updates.start()   # arka planda; ağ yoksa sessiz
 
     def remember(**vals):
         with tacho.lock:

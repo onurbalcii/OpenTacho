@@ -9,6 +9,7 @@
     const h = new URLSearchParams(location.hash.slice(1)), t = h.get("theme"), l = h.get("lang");
     if (t) document.documentElement.dataset.theme = t;
     if (l) document.documentElement.lang = l;
+    const sc = parseFloat(h.get("scale")); if (sc > 0) document.documentElement.style.zoom = sc;   // mini şerit ölçeği (pencere de Python'da aynı oranda)
     if (t === "custom") {   // özel tema: pencere + vurgu renginden şerit paleti (ana penceredekiyle aynı türetme, sade)
       const rgb = x => { x = (x || "").replace("#", ""); return /^[0-9a-fA-F]{6}$/.test(x) ? [0, 2, 4].map(i => parseInt(x.slice(i, i + 2), 16)) : null; };
       const hex = c => "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("");
@@ -84,9 +85,11 @@
   .next .arrow { opacity: .55; }
 
   /* üç mini gösterge */
-  .gauges { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 0 12px; height: 56px; justify-content: center;
+  .gauges { flex: none; display: flex; flex-direction: column; gap: 5px; padding: 0 12px; height: 60px; justify-content: center;
             border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  .gauges.four { gap: 3px; }
   .g { display: grid; grid-template-columns: 13px 66px 56px; align-items: center; gap: 7px; font-size: 10.5px; color: var(--muted); }
+  .g[hidden] { display: none; }
   .g .ic { width: 13px; height: 13px; color: var(--gold); }
   .g .v { font-family: var(--display); font-variant-numeric: tabular-nums; text-align: right; color: var(--text); white-space: nowrap; }
   .track { position: relative; height: 5px; border-radius: 3px; background: var(--track); }
@@ -109,13 +112,14 @@
   .flag.job.late, .flag.job.late b { color: var(--bad); }
 
   /* eylemler */
-  .acts { flex: none; display: grid; grid-template-columns: 27px 27px; grid-auto-rows: 27px; gap: 5px; }
+  .acts { flex: none; display: grid; grid-template-columns: 27px 27px 27px; grid-auto-rows: 27px; gap: 5px; }
   .act { border: 1px solid var(--line); border-radius: 8px; background: var(--act-bg); color: var(--muted); cursor: pointer;
          display: grid; place-items: center; padding: 0; transition: color .15s, border-color .15s, background .15s; }
   .act .ic { width: 15px; height: 15px; }
   .act:hover { color: var(--gold); border-color: var(--gold); }
   .act.on { color: var(--gold); border-color: currentColor; background: var(--gold-soft); }
   #bBreak.on { color: var(--sky); } #bYard.on { color: var(--yard); }
+  .flag.job.ok, .flag.job.ok b { color: var(--sky); } .flag.job.warn, .flag.job.warn b { color: var(--warn); }
   .act:disabled { opacity: .32; cursor: default; }
   .act:disabled:hover { color: var(--muted); border-color: var(--line); }
   .act.na { opacity: .16; }
@@ -141,6 +145,7 @@
     <div class="g" id="gBlock"><i class="ic"></i><span class="track"><span class="fill"></span></span><span class="v"></span></div>
     <div class="g" id="gDaily"><i class="ic"></i><span class="track"><span class="fill"></span></span><span class="v"></span></div>
     <div class="g" id="gRest"><i class="ic"></i><span class="track"><span class="fill rest"></span><span class="tick" hidden></span></span><span class="v"></span></div>
+    <div class="g" id="gWeek" hidden><i class="ic"></i><span class="track"><span class="fill"></span></span><span class="v"></span></div>
   </div>
   <div class="info">
     <div class="clock" id="clock"><i class="ic" id="clockIc"></i><b id="clockT">--:--</b><span id="clockD"></span></div>
@@ -150,6 +155,8 @@
     <button class="act" id="bBreak"><i class="ic"></i></button>
     <button class="act" id="bYard"><i class="ic"></i></button>
     <button class="act" id="bSkip"><i class="ic"></i></button>
+    <button class="act" id="bFull"><i class="ic"></i></button>
+    <button class="act" id="bWeek"><i class="ic"></i></button>
     <button class="act" id="bExpand"><i class="ic"></i></button>
   </div>
 </div>
@@ -180,11 +187,14 @@
   let api = null, S = {}, sLang = null, last = null, curRules = null;
   const T = (k, p) => { let s = S[k] != null ? S[k] : k; if (p) for (const x in p) s = s.split(`{${x}}`).join(p[x]); return s; };
   const setIcon = (el, name) => { if (el.dataset.ic !== name) { el.dataset.ic = name; el.innerHTML = ICONS[name] || ""; } };
+  const clk = a => { a = Math.round(a); return String(Math.floor(((a % 1440) + 1440) % 1440 / 60)).padStart(2, "0") + ":" + String(((a % 60) + 60) % 60).padStart(2, "0"); };
 
   setIcon($("clockIc"), "clock");
   setIcon($("bBreak").firstElementChild, "cup");
   setIcon($("bYard").firstElementChild, "yard");
   setIcon($("bSkip").firstElementChild, "skip");
+  setIcon($("bFull").firstElementChild, "bed");
+  setIcon($("bWeek").firstElementChild, "calendar");
   setIcon($("bExpand").firstElementChild, "expand");
 
   function gauge(id, ic, v, max, tone, title) {
@@ -204,6 +214,7 @@
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(); }
     else if (st.rules && st.rules !== curRules) { loadStrings(); }
     curRules = st.rules || "eu";
+    if (st.mini_scale) { const z = String(st.mini_scale / 100); if (document.documentElement.style.zoom !== z) document.documentElement.style.zoom = z; }
     const L = st.limits, sp = st.split || { part1: 0, need: L.rest, done: false }, rt = st.rest_target;
     const resting = st.status === "OFF_DUTY";
     const offjob = st.offjob && !(st.offjob_rest && resting);
@@ -245,6 +256,10 @@
     gauge("gBlock", "wheel", st.drive_block, L.block, gtone(st.drive_block, L.block), T("ui.bar.block"));
     gauge("gDaily", "road", st.drive_daily, L.daily, gtone(st.drive_daily, L.daily), T("ui.bar.daily"));
     gauge("gRest", isBreak ? "cup" : "bed", st.rest, rt, "rest", sp.part1 ? T("ui.bar.rest2") : T("ui.bar.rest"));
+    const wk = st.weekly || { on: false };
+    $("gWeek").hidden = !wk.on;
+    document.querySelector(".gauges").classList.toggle("four", !!wk.on);
+    if (wk.on) gauge("gWeek", "calendar", wk.drive, wk.week_limit, gtone(wk.drive, wk.week_limit), T("ui.bar.week"));
     const tick = $("gRest").children[1].children[1];
     const showTick = rt > L.break && !sp.part1 && !st.break_credited && st.rest < L.break;
     tick.hidden = !showTick;
@@ -257,8 +272,14 @@
     let fl = (st.flags || []).map(f => `<i class="flag" title="${esc(f.t)}">${ICONS[f.ic] || ""}</i>`).join("");
     if (st.job) {
       const j = st.job, due = j.remaining, late = due != null && due < 0;
-      const tt = `${j.src} → ${j.dst}${j.cargo ? " · " + j.cargo : ""}${j.km ? " · " + j.km + " km" : ""}`;
-      fl += `<span class="flag job${late ? " late" : ""}" title="${esc(tt)}">${ICONS.doc}${due == null ? "" : `<b>${late ? "+" + hm(-due) : hm(due)}</b>`}</span>`;
+      let tt = `${j.src} → ${j.dst}${j.cargo ? " · " + j.cargo : ""}${j.km ? " · " + j.km + " km" : ""}`;
+      let cls = late ? " late" : "";
+      const p = st.plan && st.plan.available && st.plan.src === "route" ? st.plan : null;   // planlayıcı: yetişir mi
+      if (p && p.now && p.now.margin != null && !late) {
+        const mg = p.now.margin; cls = mg < 0 ? " late" : mg < 30 ? " warn" : " ok";
+        tt += ` · ${mg < 0 ? T("plan.late", { d: hm(-mg) }) : T("plan.fits", { d: hm(mg) })}${p.eta_local != null ? " · " + T("plan.eta", { t: st.clock && st.clock.local != null ? clk(p.eta_local) : "" }) : ""}`;
+      }
+      fl += `<span class="flag job${cls}" title="${esc(tt)}">${ICONS.doc}${due == null ? "" : `<b>${late ? "+" + hm(-due) : hm(due)}</b>`}</span>`;
     }
     $("flags").innerHTML = fl;
 
@@ -276,6 +297,16 @@
     bS.disabled = !sk.available || !!sk.busy || !!sk.blocked;
     bS.title = !sk.available ? T("mini.skip_na") : sk.busy ? `${sk.label} · ${T("skip.sending")}`
              : sk.blocked ? `${sk.label} · ⚠ ${sk.blocked}` : `${sk.label} · ${T("skip.sub", { d: hm(sk.minutes) })}`;
+    const fr = st.full_rest || {}, bF = $("bFull");
+    bF.classList.toggle("na", !fr.available);
+    bF.disabled = !fr.available || !!fr.busy || !!fr.blocked;
+    bF.title = !fr.available ? T("mini.full_na") : fr.busy ? `${fr.label} · ${T("skip.sending")}` : fr.blocked ? `${fr.label} · ⚠ ${fr.blocked}` : `${fr.label} · ${T("fullrest.sub", { d: hm(fr.minutes) })}`;
+    const wr = st.wrest || {}, rr = st.red_rest || {}, bW = $("bWeek");
+    const wAct = wr.available ? wr : rr.available ? rr : null;   // haftalık dinlenme / 34 sa yeniden başlatma, yoksa kısa dinlenme (AB)
+    bW.classList.toggle("na", !wAct);
+    bW.disabled = !wAct || !!wAct.busy || !!wAct.blocked;
+    bW.dataset.fn = wAct === rr ? "red_rest" : "weekly_rest";
+    bW.title = !wAct ? T("mini.week_na") : wAct.busy ? `${wAct.label} · ${T("skip.sending")}` : wAct.blocked ? `${wAct.label} · ⚠ ${wAct.blocked}` : `${wAct.label} · ${T("skip.sub", { d: hm(wAct.minutes) })}`;
     $("bExpand").title = T("mini.expand");
     document.body.title = "";
   }
@@ -290,6 +321,8 @@
   $("bBreak").addEventListener("click", () => call("set_status", last && last.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"));
   $("bYard").addEventListener("click", () => call("set_status", last && last.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"));
   $("bSkip").addEventListener("click", () => call("skip_rest"));
+  $("bFull").addEventListener("click", () => call("full_rest"));
+  $("bWeek").addEventListener("click", () => call($("bWeek").dataset.fn || "weekly_rest"));
   $("bExpand").addEventListener("click", () => api && api.toggle_mini());
 
   const H = new URLSearchParams(location.hash.slice(1));
@@ -297,9 +330,11 @@
   if (PREVIEW) {
     document.body.style.pointerEvents = "none";
     document.body.style.opacity = H.get("alpha") || ".7";   // gerçek pencerede aynı etkiyi LWA_ALPHA verir
+    const psc = parseFloat(H.get("scale")); if (psc > 0) document.documentElement.style.zoom = psc;
     window.addEventListener("message", e => {
       const d = e.data || {};
       if (d.alpha != null) document.body.style.opacity = d.alpha;
+      if (d.scale != null) document.documentElement.style.zoom = d.scale;
       if (d.theme) { document.documentElement.dataset.theme = d.theme; if (last) { last.theme = d.theme; render(last); } }
     });
   } else if (window.pywebview && window.pywebview.api) { api = window.pywebview.api; start(); }
@@ -313,7 +348,9 @@
       limits: { block: 270, daily: 540, break: 45, break2: 30, rest: 660 }, drive_block: 128, drive_daily: 398, rest: 0, rest_target: 45,
       remaining: 142, next_req: "REST", break_credited: true, break_part1: 0, split: { part1: 0, need: 660, done: false },
       big: { label: "KALAN SÜRÜŞ", value: "2:22", sub: "Sonra günlük dinlenme", tone: "ok" }, flags: [],
-      clock: { time: "17:42", day: "Sal", tz_name: "CEST" }, job: { src: "Berlin", dst: "Praha", cargo: "Cam", remaining: 265, km: 348 }, skip: { available: false } };
+      clock: { time: "17:42", day: "Sal", tz_name: "CEST", local: 1000 }, job: { src: "Berlin", dst: "Praha", cargo: "Cam", remaining: 265, km: 348 }, skip: { available: false },
+      plan: { available: true, src: "route", now: { margin: 35 }, eta_local: 1230 }, weekly: q.get("weekly") ? { on: true, drive: 2058, week_limit: 3360 } : { on: false },
+      full_rest: { available: false }, wrest: { available: false }, red_rest: { available: false }, mini_scale: parseFloat(q.get("scale")) * 100 || 100 };
     const sc_ = {
       drive: {},
       duty: { status: "ON_DUTY", moving: false, flags: [{ ic: "parked", t: "araç duruyor" }, { ic: "timer-off", t: "sayaç durdu" }] },

@@ -554,5 +554,22 @@
   "ui.ruleset.nm_eu": "EU — 561/2006",
   "ui.ruleset.nm_us": "US — FMCSA HOS",
   "tour.welcome.b.us": "One rule: <b>8:00 driving → 0:30 break → 3:00 driving → 10:00 off duty</b> (US · FMCSA).<ul><li>Everything is counted in game time.</li><li>With the game running, states are detected from speed automatically.</li><li>This short tour explains the screen and the logic — the arrow keys work too.</li></ul>",
-  "tour.bars.b.us": "<ul><li><b>Driving block</b> — 8:00 before a 30-min break is due.</li><li><b>Daily driving</b> — 11:00; the middle mark is 8:00.</li><li><b>Rest</b> — target 0:30 break or 10:00 off duty; the notch is the 30-minute break threshold.</li></ul>"
+  "tour.bars.b.us": "<ul><li><b>Driving block</b> — 8:00 before a 30-min break is due.</li><li><b>Daily driving</b> — 11:00; the middle mark is 8:00.</li><li><b>Rest</b> — target 0:30 break or 10:00 off duty; the notch is the 30-minute break threshold.</li></ul>",
+  "ui.mini_scale": "Size",
+  "ui.sec.update": "Updates",
+  "ui.update.check": "Check now",
+  "ui.update.auto": "Check for updates at startup",
+  "ui.update.current": "Version {v} · up to date ✓",
+  "ui.update.newer": "New version <b>v{v}</b> available (you have {c})",
+  "ui.update.get": "Download v{v}",
+  "ui.update.checking": "Checking…",
+  "ui.update.error": "Version {v} · check failed ({e})",
+  "ui.update.idle": "Version {v}",
+  "ui.update.later": "Later",
+  "ui.update.banner": "New version <b>v{v}</b> is out",
+  "ui.update.notes": "Release notes",
+  "ui.hint.update": "<ul><li>The check reads the latest release info from GitHub (api.github.com); nothing else is sent.</li><li>Download opens the zip in your browser: extract it over the existing folder; settings and counters are kept.</li></ul>",
+  "log.update_found": "New version found: v{v}",
+  "mini.full_na": "Full rest not available now (vehicle must be stopped, rest not yet complete)",
+  "mini.week_na": "Weekly rest / restart not available now"
 }

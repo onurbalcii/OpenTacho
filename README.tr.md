@@ -75,7 +75,7 @@ gerçekten yaptığınla birebir örtüşür.
   başka profile geçince o profilin sayaçları gelir (`profiles\` klasörü).
 - **Sıkı mod** (isteğe bağlı): mola ve dinlenme yalnızca **motor kapalı + el freni çekili** iken sayılır; sayılmıyorsa ana panelde nedeni görünür.
 - **İhlal ciddiyeti**: her ihlal AB sınıflarıyla etiketlenir (hafif / ciddi / çok ciddi); isteğe bağlı **sanal ceza** tutarları (€, yaklaşık); **Öde** düğmesi cezayı oyuna yansıtır — en yeni kaydın kopyası, banka hesabından düşülmüş olarak "OpenTacho: ceza ödendi" adlı yeni bir kayıt slotuna yazılır, oyunda Yükle'den seçilir.
-- **Sesli anons**: Windows'un çevrimdışı konuşma sesiyle kısa cümleler ("sürüş süresinin bitmesine 15 dakika kaldı", "mola tamamlandı"…), 5 dilde; ikaz sesi ve anons için ayrı ses seviyeleri.
+- **Sesli anons**: Windows'un çevrimdışı konuşma sesiyle kısa cümleler ("sürüş süresinin bitmesine 15 dakika kaldı", "mola tamamlandı"…), uygulamanın her dilinde; ikaz sesi ve anons için ayrı ses seviyeleri.
 - **Haftalık kurallar** (isteğe bağlı, Ayarlar → Kurallar; varsayılan basit mod): haftalık **56 sa** / iki haftalık **90 sa**
   sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
   düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /
@@ -105,11 +105,15 @@ gerçekten yaptığınla birebir örtüşür.
   mola/dinlenme tamamlanınca bir kez (kapatılabilir; `.wav` dosyalarını değiştirerek özelleştirilebilir).
 - **Mini şerit**: global kısayol (varsayılan `Ctrl + Num 0`, değiştirilebilir) pencereyi oyunun
   üstünde küçük, sürüklenebilir bir göstergeyle değiştirir — durum ikonu, kalan süre, sonraki adım,
-  üç mini çubuk, oyun saati, bayraklar, teslimat süresi ve Mola / İç hareket / Atla düğmeleri.
+  mini çubuklar (blok · günlük · dinlenme · haftalık/çevrim), oyun saati, bayraklar, planlayıcı kararıyla teslimat
+  süresi ve Mola / İç hareket / Atla / Tam dinlenme / Haftalık dinlenme düğmeleri; saydamlık ve boyut (%70–160) ayarlanabilir.
 - **Temalar**: Van Gogh (varsayılan; *Yıldızlı Gece* esintili algoritmik arka plan + cam paneller),
   sade koyu, sade açık ve **Özel**: kendi arka plan görselin (JPG/PNG/WebP) + canvas renk seçiciyle pencere ve
   vurgu rengi (RGB/HEX; yazı rengi kendiliğinden seçilir, mini şerit aynı renkleri kullanır).
-- **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe — yeni dil tek JSON dosyası.
+- **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe, Brezilya Portekizcesi, İspanyolca, Fransızca, İtalyanca,
+  Çekçe — yeni dil tek JSON dosyası.
+- **Sürüm denetimi**: açılışta GitHub'dan son sürüm sorulur (kapatılabilir); yeni sürüm varsa üstte indirme
+  düğmeli bir şerit çıkar. Ayarlar → Uygulama'da sürüm numarası, elle denetim ve indirme bağlantısı.
 - **İlk açılış**: dil seçimi, ardından ekranı ve ayar sekmelerini adım adım anlatan kısa bir rehber turu
   (Ayarlar → Uygulama'dan her zaman yeniden başlatılabilir).
 - Pencere konumu/boyutu hatırlanır, her zaman üstte seçeneği, olay listesi, geri bildirim butonu.

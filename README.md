@@ -76,7 +76,7 @@ actually did.
   kept **per profile** — switch profiles in the game and the app switches counters (`profiles\` folder).
 - **Strict mode** (optional): breaks and rests count only with the **engine off + parking brake on**; the main panel shows why nothing is counting.
 - **Violation severity**: every violation is labelled by the EU classes (minor / serious / very serious); optional **virtual fines** (€, approximate); a **Pay** button reflects them in the game — a copy of your newest save with the fine deducted from the bank account is written to a new save slot named "OpenTacho: fine paid", to be loaded from the game's Load menu.
-- **Voice announcements**: short sentences with Windows' offline voice ("15 minutes of driving time left", "break complete"…), in all five languages; separate volume sliders for the alert sound and the voice.
+- **Voice announcements**: short sentences with Windows' offline voice ("15 minutes of driving time left", "break complete"…), in every app language; separate volume sliders for the alert sound and the voice.
 - **Weekly rules** (optional, Settings → Rules; simple mode by default): weekly **56 h** / fortnightly **90 h**
   driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
   times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**
@@ -106,13 +106,18 @@ actually did.
 - **Sound alerts**: a short notification 15 min before driving/rest ends, twice at a
   violation, once when a break/rest completes (can be muted; swap the `.wav` files to change it).
 - **Mini strip**: a global hotkey (default `Ctrl + Num 0`, changeable) swaps the window for a
-  small always-on-top gauge over the game — status icon, time left, next step, three mini bars,
-  game clock, flags, delivery due time and Break / Yard move / Skip buttons — drag it anywhere.
+  small always-on-top gauge over the game — status icon, time left, next step, mini bars (block · daily ·
+  rest · weekly/cycle), game clock, flags, delivery due time with the planner's verdict, and Break / Yard move /
+  Skip / Full rest / Weekly rest buttons — drag it anywhere; opacity and size (70–160 %) are adjustable.
 - **Themes**: Van Gogh (default, an algorithmically painted *Starry Night*-style backdrop with
   glass panels), simple dark, simple light and **Custom**: your own background image (JPG/PNG/WebP) plus a
   canvas colour picker for the window and accent colours (RGB/HEX; text colour is chosen automatically, the mini strip
   follows the same colours).
-- **Languages**: English, Turkish, German, Russian, Polish — adding one is a single JSON file.
+- **Languages**: English, Turkish, German, Russian, Polish, Brazilian Portuguese, Spanish, French, Italian,
+  Czech — adding one is a single JSON file.
+- **Update check**: on start the app asks GitHub for the latest release (can be switched off) and shows a
+  banner with a download button when a newer version exists; Settings → App shows the version, a manual check
+  and the download link.
 - **First run**: a language picker, then a short guided tour of the screen and the settings tabs
   (restart it any time from Settings → App).
 - Remembers window position/size, always-on-top option, event log, feedback button.
