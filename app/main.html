@@ -371,6 +371,7 @@
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .seg button.on { background: var(--gold-soft); color: var(--gold); font-weight: 600; border-color: var(--gold-line); }
   .seg button:disabled { opacity: .4; cursor: not-allowed; }
+  .seg.three { grid-template-columns: 1fr 1fr 1fr; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .row label { color: var(--muted); font-size: 13px; }
   .row.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -822,13 +823,21 @@
   <!-- ===== KURALLAR ===== -->
   <div class="page" data-page="kural" hidden>
     <div class="sec">
-      <h4><i class="ic" data-ic="bed"></i><span data-i18n="ui.sec.daily_rest">Günlük dinlenme</span></h4>
-      <div class="seg"><button id="splitOff" data-i18n="ui.seg.single">Tek parça (11 sa)</button><button id="splitOn" data-i18n="ui.seg.split">Bölünebilir (3 + 9)</button></div>
-      <div class="hint" id="splitHint"></div>
-      <div class="row" id="part1Row" hidden><span class="kv" id="part1Text"></span><button class="sm" id="clearPart1" data-i18n="ui.part1.clear">1. kısmı iptal et</button></div>
+      <h4><i class="ic" data-ic="route"></i><span data-i18n="ui.ruleset">Kural seti</span></h4>
+      <div class="seg three" id="rulesetSeg"><button data-rs="auto" data-i18n="ui.ruleset.opt_auto">Oyuna göre</button><button data-rs="eu" data-i18n="ui.ruleset.opt_eu">AB (561/2006)</button><button data-rs="us" data-i18n="ui.ruleset.opt_us">ABD (FMCSA)</button></div>
+      <div class="kv" id="rulesetInfo"></div>
+      <div class="hint" data-i18n-html="ui.hint.ruleset"></div>
     </div>
 
     <div class="sec">
+      <h4><i class="ic" data-ic="bed"></i><span data-i18n="ui.sec.daily_rest">Günlük dinlenme</span></h4>
+      <div class="seg" id="splitSeg"><button id="splitOff" data-i18n="ui.seg.single">Tek parça (11 sa)</button><button id="splitOn" data-i18n="ui.seg.split">Bölünebilir (3 + 9)</button></div>
+      <div class="hint" id="splitHint"></div>
+      <div class="hint" id="usNoSplit" data-i18n="ui.us_no_split" hidden></div>
+      <div class="row" id="part1Row" hidden><span class="kv" id="part1Text"></span><button class="sm" id="clearPart1" data-i18n="ui.part1.clear">1. kısmı iptal et</button></div>
+    </div>
+
+    <div class="sec" id="secSplitBreak">
       <h4><i class="ic" data-ic="cup"></i><span data-i18n="ui.sec.split_break">Bölünmüş mola (15 + 30)</span></h4>
       <label class="check"><input type="checkbox" id="splitBreak"> <span data-i18n="ui.split_break"></span></label>
       <div class="kv" id="part1bText" hidden></div>
@@ -864,8 +873,10 @@
       <label class="check"><input type="checkbox" id="weeklyRules"> <span data-i18n="ui.weekly_rules">Haftalık kuralları uygula</span></label>
       <div class="hint" data-i18n-html="ui.hint.weekly"></div>
       <div id="weeklyOpts" hidden>
-        <label class="check"><input type="checkbox" id="autoExt"> <span id="autoExtText"></span></label>
-        <label class="check"><input type="checkbox" id="autoRed"> <span id="autoRedText"></span></label>
+        <div id="euWeeklyOpts">
+          <label class="check"><input type="checkbox" id="autoExt"> <span id="autoExtText"></span></label>
+          <label class="check"><input type="checkbox" id="autoRed"> <span id="autoRedText"></span></label>
+        </div>
         <div class="kv wk" id="weeklyInfo"></div>
       </div>
     </div>
@@ -1107,6 +1118,7 @@
 
   const SEQ_ICON = { drive: "wheel", break: "cup", break1: "cup", part1: "bed", daily: "moon" };
   let seqSig = "";
+  let curRules = null;   // etkin kural seti (eu | us): değişince metin varyantları yeniden yüklenir
   function renderSeq(boxes) {
     const sig = JSON.stringify(boxes);
     if (sig === seqSig) return;
@@ -1174,6 +1186,9 @@
     $("tsub").textContent = st.conn && st.conn.text ? st.conn.text : "";
     if (st.onboarded === false && !onboardShown) { onboardShown = true; showLangPick(st.langs || []); }
     if (st.lang && st.lang !== sLang) { sLang = st.lang; loadStrings(st.lang); }
+    else if (st.rules && st.rules !== curRules) { loadStrings(st.lang); }
+    curRules = st.rules || "eu";
+    document.documentElement.classList.toggle("us", curRules === "us");
     document.documentElement.dataset.theme = st.theme || "vangogh";
     syncCustom(st);
     document.body.classList.toggle("manual", st.mode === "manual");
@@ -1278,14 +1293,23 @@
       if (wk.on) {
         $("fWeek").style.width = pct(wk.drive, wk.week_limit); $("fWeek").className = "fill " + tone(wk.drive, wk.week_limit);
         $("vWeek").textContent = `${hm(wk.drive)} / ${hm(wk.week_limit)}`;
-        const fCls = wk.fortnight > wk.fortnight_limit ? "bad" : (wk.fortnight_limit - wk.fortnight <= 60 ? "warn" : "");
         let due = "";
         if (wk.wrest_kind) due = `<span>${T(wk.wrest_kind === "regular" ? "ui.wrest.done" : "ui.wrest.reduced_done")}</span>`;
         else if (wk.wrest_due != null && wk.local != null) {
           const left = wk.wrest_due - wk.local;
           due = `<span class="${left < 0 ? "bad" : left <= 1440 ? "warn" : ""}">${left < 0 ? T("ui.wrest.over", { r: hm(-left) }) : T("ui.wrest.due", { t: fmtAbs(wk.wrest_due) })}</span>`;
         }
-        $("wLine").innerHTML = `<span class="${fCls}">${T("ui.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) })}</span>${due}`;
+        if (wk.kind === "us") {
+          // ABD: 14 saatlik sürüş penceresi (günün ilk sürüşünden itibaren) + 34 sa yeniden başlatma bilgisi
+          let win;
+          if (wk.rest_deadline == null || wk.local == null) win = `<span>${T("ui.window_idle")}</span>`;
+          else { const left = wk.rest_deadline - wk.local;
+            win = `<span class="${left < 0 ? "bad" : left <= 60 ? "warn" : ""}">${left < 0 ? T("ui.window_over", { r: hm(-left) }) : T("ui.window_line", { r: hm(left), t: fmtAbs(wk.rest_deadline) })}</span>`; }
+          $("wLine").innerHTML = win + due;
+        } else {
+          const fCls = wk.fortnight > wk.fortnight_limit ? "bad" : (wk.fortnight_limit - wk.fortnight <= 60 ? "warn" : "");
+          $("wLine").innerHTML = `<span class="${fCls}">${T("ui.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) })}</span>${due}`;
+        }
       }
     }
     const rt = st.rest_target;
@@ -1341,13 +1365,19 @@
         $("autoExtText").textContent = T("ui.auto_ext", { n: wk.ext.used, max: wk.ext.max });
         $("autoRed").checked = !!wk.red.auto;
         $("autoRedText").textContent = T("ui.auto_red", { n: wk.red.used, max: wk.red.max });
-        const parts = [T("ui.weekly_info.week", { d: hm(wk.drive), l: hm(wk.week_limit) }), T("ui.weekly_info.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) })];
+        $("euWeeklyOpts").hidden = wk.kind === "us";
+        const parts = [T("ui.weekly_info.week", { d: hm(wk.drive), l: hm(wk.week_limit) })];
+        if (wk.kind !== "us") parts.push(T("ui.weekly_info.fortnight", { f: hm(wk.fortnight), fl: hm(wk.fortnight_limit) }));
         if (wk.rest_deadline != null) parts.push(T("ui.weekly_info.day_end", { t: fmtAbs(wk.rest_deadline) }));
         if (wk.wrest_due != null) parts.push(T("ui.weekly_info.wrest", { t: fmtAbs(wk.wrest_due) }));
         $("weeklyInfo").innerHTML = parts.map(esc).join("<br>");
       }
     }
     {
+      const us = st.rules === "us";
+      document.querySelectorAll("#rulesetSeg button").forEach(b => b.classList.toggle("on", b.dataset.rs === (st.ruleset || "auto")));
+      $("rulesetInfo").innerHTML = T("ui.ruleset.active", { name: T("ui.ruleset.nm_" + (st.rules || "eu")) });
+      $("splitSeg").hidden = us; $("splitHint").hidden = us; $("usNoSplit").hidden = !us; $("secSplitBreak").hidden = us;
       const en = !!(st.split && st.split.enabled);
       $("splitOn").classList.toggle("on", en);
       $("splitOff").classList.toggle("on", !en);
@@ -1356,7 +1386,7 @@
       $("splitOff").title = st.split_locked ? T("ui.split.locked_title") : "";
       $("offjobRest").checked = !!st.offjob_rest;
       const stored = st.split ? st.split.stored : 0;
-      $("part1Row").hidden = !stored;
+      $("part1Row").hidden = !stored || us;
       if (stored) $("part1Text").textContent = T("ui.part1.stored", { p1: hm(stored) }) + (en ? T("ui.part1.stored_on") : T("ui.part1.stored_off"));
     }
     if (st.auto_break_cfg) $("autoBreakText").textContent = T("ui.auto_break", { rem: st.auto_break_cfg.remaining, min: st.auto_break_cfg.stopped });
@@ -1456,6 +1486,7 @@
   $("redRestBtn").addEventListener("click", () => call("red_rest"));
   $("wRest").addEventListener("click", () => call("weekly_rest"));
   $("offjobRest").addEventListener("change", () => call("set_offjob_rest", $("offjobRest").checked));
+  document.querySelectorAll("#rulesetSeg button").forEach(b => b.addEventListener("click", () => call("set_ruleset", b.dataset.rs)));
   $("splitOn").addEventListener("click", () => call("set_split_rest", true));
   $("splitOff").addEventListener("click", () => call("set_split_rest", false));
   $("clearPart1").addEventListener("click", () => call("clear_part1"));
@@ -1549,8 +1580,8 @@
         if (w.ext_used) extra.push(T("ui.hist.ext_used", { n: w.ext_used }));
         if (w.red_used) extra.push(T("ui.hist.red_used", { n: w.red_used }));
         out.push(`<div class="hweek${w.ago === 0 ? " cur" : ""}"><div class="hd"><b>${title}</b><span>${T("ui.hist.wdays", { n: w.days })}</span></div>` +
-                 `<div class="track"><div class="fill ${w.drive > w.limit ? "bad" : ""}" style="width:${Math.min(100, w.drive / w.limit * 100)}%"></div></div>` +
-                 `<div class="hstats"><span><i class="ic">${ICONS.wheel}</i><b>${hm(w.drive)}</b> / ${hm(w.limit)}</span>` +
+                 (w.limit ? `<div class="track"><div class="fill ${w.drive > w.limit ? "bad" : ""}" style="width:${Math.min(100, w.drive / w.limit * 100)}%"></div></div>` : "") +
+                 `<div class="hstats"><span><i class="ic">${ICONS.wheel}</i><b>${hm(w.drive)}</b>${w.limit ? " / " + hm(w.limit) : ""}</span>` +
                  (w.violations ? `<span class="bad"><i class="ic">${ICONS.bell}</i><b>${w.violations}</b> ${T("ui.hist.viol")}</span>` : `<span class="ok"><i class="ic">${ICONS.check}</i>${T("ui.hist.ok")}</span>`) +
                  `<span>${wr}</span>${extra.map(x => `<span>${x}</span>`).join("")}${w.fines ? `<span class="fine">${T("ui.hist.fines")} <b>≈ ${w.fines} €</b></span>` : ""}</div>` +
                  `</div>`);
@@ -1923,8 +1954,8 @@
   // pywebview yoksa (tarayıcıda önizleme) küçük bir taklit: sadece görünüm için
   setTimeout(() => {
     if (api) return;
-    const L = { block: 270, daily: 540, break: 45, rest: 660 };
-    const m = { weekly: !!new URLSearchParams(location.search).get("weekly"), mode: "auto", status: (new URLSearchParams(location.search).get("status")) || "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
+    const L = new URLSearchParams(location.search).get("rules") === "us" ? { block: 480, daily: 660, break: 30, rest: 600 } : { block: 270, daily: 540, break: 45, rest: 660 };
+    const m = { weekly: !!new URLSearchParams(location.search).get("weekly"), rules: new URLSearchParams(location.search).get("rules") || "eu", ruleset: new URLSearchParams(location.search).get("rules") || "auto", mode: "auto", status: (new URLSearchParams(location.search).get("status")) || "DRIVING", drive_block: 78, drive_daily: 78, rest: 0, abs: 16 * 1440 + 352, credited: false, rate: 19, on_top: true, lang: "tr", theme: (new URLSearchParams(location.search).get("theme")) || "vangogh", onboarded: !new URLSearchParams(location.search).get("tour"),
                 log: [{ t: "05:52", m: "Oyuna bağlanıldı" }, { t: "05:53", m: "Sürüş başladı" }] };
     let strings = {};
     const view = () => {
@@ -1940,6 +1971,7 @@
         clock: { abs: m.abs, local: m.abs - 60, day: ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"][Math.floor((m.abs - 60) / 1440) % 7], time: `${String(Math.floor((m.abs - 60) % 1440 / 60)).padStart(2,"0")}:${String((m.abs - 60) % 60).padStart(2,"0")}`, tz_name: "BST", offset: -60 },
         drive_block: m.drive_block, drive_daily: m.drive_daily, rest: m.rest, limits: L, rest_target: m.rest >= 45 ? 660 : 45, remaining: rem, next_req: remD <= remB ? "REST" : "BREAK",
         break_credited: m.credited, big, moving: m.status === "DRIVING", manual_rate: m.rate, on_top: m.on_top, log: [...m.log].reverse().slice(0, 6),
+        rules: m.rules || "eu", ruleset: m.ruleset || "auto",
         lang: m.lang, langs: [{ code: "tr", name: "Türkçe" }, { code: "en", name: "English" }], theme: m.theme, themes: [{ code: "vangogh", name: "Van Gogh" }, { code: "dark", name: "Sade koyu" }, { code: "light", name: "Sade açık" }, { code: "custom", name: "Özel" }],
         custom: { win: m.cwin || "#1c2a5e", accent: m.caccent || "#fdca4f", bg: !!m.cbg, bg_rev: m.cbgrev || 1 }, yard_max: 40,
         auto_break: true, auto_break_cfg: { remaining: 10, stopped: 5 },
@@ -1950,8 +1982,11 @@
         plan: { available: true, src: "route", drive: 250, deadline: 400, ferry: 90, ferry_est: true, avg_kmh: 70, learned: false, eta_local: m.abs + 385, now: { total: 385, drive: 250, breaks: 0, rests: 0, wrests: 0, ferry: 90, margin: 15 } },
         red_rest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 541, label: "Kısa dinlenme (9:00)", n: 1, max: 3 } : { available: false },
         wrest: m.weekly && m.status !== "DRIVING" ? { available: true, busy: false, minutes: 2701, label: "Haftalık dinlenme (45:00)" } : { available: false },
-        weekly: m.weekly ? { on: true, drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
-                             ext: { auto: true, on: false, bonus: true, used: 1, max: 2 }, red: { auto: true, used: 0, max: 3 }, local: m.abs, day_left: 300 } : { on: false },
+        weekly: m.weekly ? (m.rules === "us"
+          ? { on: true, kind: "us", drive: 2900 + m.drive_block, fortnight: null, week_limit: 4200, fortnight_limit: null, cycle_days: 8, rest_deadline: m.abs + 300, wrest_due: null, wrest_kind: null,
+              ext: { auto: false, on: false, bonus: false, used: 0, max: 0 }, red: { auto: false, used: 0, max: 0 }, local: m.abs, day_left: 300 }
+          : { on: true, kind: "eu", drive: 1980 + m.drive_block, fortnight: 4110 + m.drive_block, week_limit: 3360, fortnight_limit: 5400, rest_deadline: m.abs + 300, wrest_due: m.abs + 2000, wrest_kind: null,
+              ext: { auto: true, on: false, bonus: true, used: 1, max: 2 }, red: { auto: true, used: 0, max: 3 }, local: m.abs, day_left: 300 }) : { on: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
         split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7,
         seq_boxes: off ? [{ k: "drive", v: hm(m.drive_block), st: m.rest >= 45 ? "done" : "part" }, { k: "break", v: m.rest >= 45 ? hm(m.rest) : "0:45", st: m.rest >= 45 ? "done" : "active" }, { k: "drive", v: hm(Math.min(270, remD)), st: "plan" }, { k: "daily", v: "11:00", st: "plan" }]
@@ -1962,7 +1997,8 @@
     };
     const tickMock = () => { m.abs += 1; if (m.status === "DRIVING") { m.drive_block++; m.drive_daily++; m.rest = 0; } else if (m.status === "OFF_DUTY") { m.rest++; if (m.rest === 45) { m.credited = true; m.drive_block = 0; m.log.push({ t: "", m: "45 dk mola tamamlandı ✓" }); } } };
     api = {
-      get_strings: async () => { try { const r = await fetch(`../lang/${m.lang}.json`); strings = await r.json(); } catch (e) {} return strings; },
+      get_strings: async () => { try { const r = await fetch(`../lang/${m.lang}.json`); strings = await r.json(); if (m.rules === "us") for (const k of Object.keys(strings)) if (k.endsWith(".us")) strings[k.slice(0, -3)] = strings[k]; } catch (e) {} return strings; },
+      set_ruleset: async v => { m.ruleset = v; m.rules = v === "auto" ? "eu" : v; return view(); },
       get_state: async () => { tickMock(); return view(); },
       set_status: async s => { if (s === "OFF_DUTY") m.status = m.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"; else if (s === "YARD_MOVE") m.status = m.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"; else m.status = s; return view(); },
       set_mode: async v => { m.mode = v; return view(); }, set_manual_clock: async (d, h, mi) => { m.abs = d * 1440 + h * 60 + mi; return view(); },

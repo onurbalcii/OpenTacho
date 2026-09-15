@@ -80,6 +80,11 @@ gerçekten yaptığınla birebir örtüşür.
   sürüş (oyun takvim haftası), günlük sürüşü haftada 2× **10 saate** uzatma, günlük dinlenmeyi haftada 3× **9 saate**
   düşürme, **gün yayılımı** (dinlenme en geç 13/15 sa sonra; ana panelde "gün sonu"), **haftalık dinlenme** 45 sa /
   azaltılmış 24 sa (en geç 6 gün sonra; tek düğmeyle iki adımda atlanır), geçmişte hafta kartları ve ihlal türleri.
+- **ABD kural seti (FMCSA HOS)**: American Truck Simulator'da oyuna göre otomatik seçilir (Ayarlar → Kurallar'dan
+  AB ya da ABD elle de seçilebilir): **8 sa sürüşten sonra 30 dk mola**, günde **11 sa** sürüş, **10 sa** dinlenme;
+  isteğe bağlı ABD katmanı **14 sa pencereyi** (günün ilk sürüşünden 14 sa sonra sürüş biter, molalar uzatmaz),
+  **70 sa / 8 gün** görev çevrimini ve **34 sa yeniden başlatmayı** (tek düğmeyle atlanır) ekler. Çubuklar, planlayıcı,
+  geçmiş, çıktılar ve sesli anonslar etkin kural setine uyar. Uyuyucu kabin bölmesi (7/3) modellenmez.
 - **Zaman atlamaları**: uyku / feribot / tren dinlenme sayılır; **dorse yükleme/boşaltma sayılmaz**;
   kayıt yüklenince sayaçlar o ana geri döner.
 - **Görev dışı modu**: aktif teslimat yoksa hiçbir şey ilerlemez (dinlenme isteğe bağlı sayılır).
@@ -144,7 +149,8 @@ isteğe bağlı geri bildirim butonunun tarayıcıda açtığı formdur.
 
 **Harita modları, ProMods ya da ATS ile çalışır mı?**
 Evet. Yalnızca telemetri (saat, hız, iş) okuduğu için harita ve kamyon modları fark etmez;
-American Truck Simulator da aynı eklentiyi kullanır.
+American Truck Simulator da aynı eklentiyi kullanır — ATS'de ABD FMCSA kuralı (8 sa / 30 dk / 11 sa / 10 sa,
+14 sa pencere, 70 sa / 8 gün) kendiliğinden devreye girer; Ayarlar → Kurallar'dan istenen set seçilebilir.
 
 **Mini şerit oyunun üstünde görünmüyor.**
 Windows, *özel tam ekran* (exclusive fullscreen) modundaki bir oyunun üstüne hiçbir şey çizemez.

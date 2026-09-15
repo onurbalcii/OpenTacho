@@ -80,6 +80,11 @@ odpowiadają temu, co naprawdę zrobiłeś.
   tygodniach (tydzień kalendarzowy gry), jazda dzienna dwa razy w tygodniu wydłużona do **10 h**, odpoczynek dzienny trzy razy
   w tygodniu skrócony do **9 h**, **rozpiętość dnia** (odpoczynek musi zacząć się w ciągu 13/15 h; na głównym panelu „koniec dnia”),
   **odpoczynek tygodniowy** 45 h / skrócony 24 h (najpóźniej po 6 dniach; jeden przycisk pomija go w dwóch krokach), karty tygodni w historii, nowe rodzaje naruszeń.
+- **Reguły USA (FMCSA HOS)** dla American Truck Simulator, wybierane automatycznie według gry (Ustawienia → Zasady
+  pozwalają wymusić UE lub USA): **30-minutowa przerwa po 8 h** jazdy, **11 h** jazdy dziennie, **10 h** odpoczynku;
+  opcjonalna warstwa USA dodaje **14-godzinne okno** (jazda kończy się 14 h po pierwszej jeździe dnia, przerwy go nie
+  wydłużają), cykl **70 h / 8 dni** i **restart 34 h** (pomijany jednym przyciskiem). Paski, planer, historia, wydruki
+  i komunikaty głosowe podążają za aktywnym zestawem reguł. Podział w kabinie sypialnej (7/3) nie jest modelowany.
 - **Obsługa skoków czasu**: sen / prom / pociąg liczą się jako odpoczynek; **ładowanie i rozładunek
   naczepy — nie**; wczytanie zapisu cofa liczniki do tej chwili.
 - **Tryb bez zlecenia**: brak aktywnej dostawy → nic się nie liczy (odpoczynek opcjonalnie tak). Ustawienie
@@ -144,7 +149,8 @@ opcjonalny przycisk opinii, który otwiera formularz w przeglądarce.
 
 **Czy działa z modami map, ProMods lub ATS?**
 Tak. Odczytuje tylko telemetrię (zegar, prędkość, zlecenie), więc mody map i ciężarówek nie mają
-znaczenia; American Truck Simulator używa tej samej wtyczki.
+znaczenia; American Truck Simulator używa tej samej wtyczki — w ATS automatycznie obowiązują reguły USA FMCSA
+(8 h / 30 min / 11 h / 10 h, okno 14 h, 70 h / 8 dni); w Ustawienia → Zasady można wymusić dowolny zestaw.
 
 **Mini pasek nie pokazuje się nad grą.**
 Windows nie potrafi rysować nakładek nad grą w trybie *pełnoekranowym wyłącznym*. Ustaw tryb

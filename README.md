@@ -81,6 +81,11 @@ actually did.
   driving (game calendar week), daily driving extended to **10 h** twice a week, daily rest reduced to **9 h** three
   times a week, **day spread** (rest must start within 13/15 h; shown as "day end" in the main panel), **weekly rest**
   45 h / reduced 24 h (due within 6 days; one button skips it in two steps), week cards in the history, new violation kinds.
+- **US rule set (FMCSA HOS)** for American Truck Simulator, chosen automatically by game (Settings → Rules
+  lets you force EU or US): **30-min break after 8 h** of driving, **11 h** driving per day, **10 h** off duty;
+  the optional US layer adds the **14-hour window** (driving ends 14 h after the day's first drive, breaks don't
+  extend it), the **70 h / 8 days** on-duty cycle and the **34-hour restart** (one button skips it). Bars, planner,
+  history, printouts and voice texts follow the active rule set. Sleeper-berth split (7/3) is not modelled.
 - **Time skips handled**: sleeping / ferry / train count as rest; **trailer loading and
   unloading do not**; loading a save rolls the counters back to that moment.
 - **Off-job mode**: no active delivery → nothing counts (rest optionally still does). Setting a
@@ -147,7 +152,8 @@ optional feedback button, which opens a web form in your browser.
 
 **Does it work with map mods, ProMods or ATS?**
 Yes. It only reads telemetry (clock, speed, job), so map and truck mods do not matter, and
-American Truck Simulator uses the same plugin.
+American Truck Simulator uses the same plugin — in ATS the US FMCSA rules (8 h / 30 min / 11 h / 10 h,
+14 h window, 70 h / 8 days) apply automatically; Settings → Rules can force either rule set.
 
 **The mini strip does not show over the game.**
 Windows cannot draw any overlay over a game in *exclusive fullscreen*. Set the game's display

@@ -59,6 +59,30 @@ FINE_SLOT = "opentacho_fine"   # ceza ödemesi: en yeni kaydın kopyası bu slot
 FERRY_MIN_EST = 30             # rota süresi, sürüş tahminini bu kadar dk aşarsa fark feribot/tren sayılır
 
 
+RULE_BIG = 10 ** 9   # kural setinde olmayan seçenek (bölünmüş mola/dinlenme vb.): hiçbir karşılaştırma tutmasın
+RULES = {
+    # AB 561/2006 (ETS2 varsayılanı)
+    "eu": dict(kind="eu", block=270, daily=540, daily_ext=600, ext_per_week=2, break_min=45, break_p1=15, break_p2=30,
+               rest=660, rest_red=540, red_per_week=3, split_p1=180, split_p2=540,
+               week=3360, fortnight=5400, wrest=2700, wrest_red=1440, wrest_span=6 * 1440, window=None, cycle=None, cycle_days=None),
+    # ABD FMCSA HOS, yük taşımacılığı (ATS varsayılanı): 11 sa sürüş / 14 sa pencere / 8 sa sonra 30 dk / 10 sa dinlenme /
+    # 70 sa - 8 gün çevrimi / 34 sa yeniden başlatma. Uyuyucu kabin bölmesi (7/3) ve olumsuz hava uzatması modellenmez.
+    "us": dict(kind="us", block=480, daily=660, daily_ext=660, ext_per_week=0, break_min=30, break_p1=RULE_BIG, break_p2=RULE_BIG,
+               rest=600, rest_red=RULE_BIG, red_per_week=0, split_p1=RULE_BIG, split_p2=600,
+               week=None, fortnight=None, wrest=2040, wrest_red=RULE_BIG, wrest_span=None, window=840, cycle=4200, cycle_days=8),
+}
+
+
+class _Rules:
+    def __init__(self, d):
+        self.__dict__.update(d)
+
+
+RULES = {k: _Rules(v) for k, v in RULES.items()}
+SEVERITY["window"] = (60, 120)
+SEVERITY["cycle"] = (240, 840)
+
+
 def severity(kind, over):
     a, b = SEVERITY.get(kind, (60, 120))
     return "minor" if over <= a else ("serious" if over <= b else "vserious")
@@ -189,8 +213,17 @@ class I18n:
         self.d = d
         self.fallback = self._read("en") if code != "en" else d
 
+    variant = None   # "us": ABD kural seti açıkken "<anahtar>.us" varsa o kullanılır
+
     def __call__(self, key, **kw):
-        s = self.d.get(key)
+        s = None
+        if self.variant:
+            vk = key + "." + self.variant
+            s = self.d.get(vk)
+            if s is None:
+                s = self.fallback.get(vk)
+        if s is None:
+            s = self.d.get(key)
         if s is None:
             s = self.fallback.get(key, key)
         if kw:
@@ -207,6 +240,11 @@ class I18n:
     def strings(self):
         out = dict(self.fallback)
         out.update(self.d)
+        if self.variant:
+            suf = "." + self.variant
+            for k in list(out):
+                if k.endswith(suf):
+                    out[k[:-len(suf)]] = out[k]
         return out
 
     @staticmethod
@@ -247,6 +285,8 @@ DEFAULT_STATE = {
     "day_segments": [],        # günün akışı: [{"t": "drive"|"rest", "m": dk, "k": rest türü, "a": başlangıç (yerel dk)}]
     "day_violations": [],      # bugünkü ihlaller: [{"t": yerel dk, "kind": block|daily|weekly|fortnight|span|wrest, "over": aşım dk, "open": bool}]
     "weekly_rules": False,     # haftalık kurallar (56/90 sa, gün yayılımı, haftalık dinlenme); kapalı = basit mod
+    "ruleset": "auto",         # kural seti: auto (ETS2 → AB, ATS → ABD) | eu | us
+    "last_game": None,         # son bağlanılan oyun (1 ETS2, 2 ATS): oyun kapalıyken kural seti seçimi için
     "auto_ext": True,          # otomatik uzatılmış sürüş: 9 sa aşılırsa gün 10 saate uzar (haftada 2×)
     "ext_drive": False,        # bugün günlük sürüş 10 saate uzatıldı (9 sa aşıldı, hak bu hafta harcandı)
     "ext_consumed": False,     # (ext_drive ile aynı anda set edilir; eski kayıtlarla uyum için tutulur)
@@ -254,6 +294,7 @@ DEFAULT_STATE = {
     "week": {"start": None, "ext_used": 0, "red_used": 0, "wrest": None},   # içinde bulunulan takvim haftası
     "weeks_meta": {},          # geçmiş haftalar: {"<hafta başı>": {"ext_used", "red_used", "wrest"}}
     "last_wrest_end": None,    # son haftalık dinlenmenin bittiği yerel dk (sonraki en geç +6 gün)
+    "restart_end": None,       # ABD: son 34 sa yeniden başlatmanın bittiği yerel dk (çevrim bundan sonrasını sayar)
     "wrest_kind": None,        # süren dinlenme haftalık dinlenme eşiğini geçtiyse "reduced" | "regular"
     "days": [],                # arşiv: günlük dinlenme tamamlanınca (ya da sıfırlamada) kapanan günler (takograf geçmişi)
     "jobs": [],                # iş kayıtları: [{"src","dst","cargo","km","income","t0","t1","drive","rest","breaks","viol","fines","outcome","revenue",...}]
@@ -1411,13 +1452,70 @@ class Tacho:
         self.s["status"] = status
         self.log(note or L("log.status_started", name=L("status." + status)))
 
+    # ---- kural seti ----
+    def rules_kind(self):
+        """Etkin kural seti: ayar eu/us ise o; auto ise oyuna göre (ATS → us, aksi → eu). Metin varyantını da seçer."""
+        s = self.s
+        rs = s.get("ruleset") or "auto"
+        if rs in ("eu", "us"):
+            kind = rs
+        else:
+            g = self.game if (self.connected and self.game) else s.get("last_game")
+            kind = "us" if g == 2 else "eu"
+        L.variant = "us" if kind == "us" else None
+        return kind
+
+    @property
+    def R(self):
+        return RULES[self.rules_kind()]
+
     def remaining(self):
         s = self.s
-        r = min(DRIVE_BLOCK - s["drive_block"], self.daily_limit() - s["drive_daily"])
-        wi = self.week_info()
-        if wi:
-            r = min(r, DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"])
+        r = min(self.R.block - s["drive_block"], self.daily_limit() - s["drive_daily"])
+        for v in self.week_rems().values():
+            r = min(r, v)
         return r
+
+    def week_rems(self):
+        """Haftalık katman açıkken bağlayıcı kalan süreler: AB → weekly / fortnight; ABD → cycle (70 sa / 8 gün) ve window (14 sa pencere)."""
+        wi = self.week_info()
+        if not wi:
+            return {}
+        R = self.R
+        if R.kind == "us":
+            out = {"cycle": R.cycle - wi["cycle"]}
+            rd, local = self.rest_deadline(), self.local_abs()
+            if rd is not None and local is not None:
+                out["window"] = rd - local
+            return out
+        return {"weekly": R.week - wi["drive"], "fortnight": R.fortnight - wi["fortnight"]}
+
+    @staticmethod
+    def _duty(drive, start, end, rest):
+        """ABD çevrimi için görev süresi: gün aralığından dinlenme düşülür (yükleme/bekleme görevde sayılır); en az sürüş kadar."""
+        span = (end - start) if (start is not None and end is not None) else 0
+        return max(drive, span - rest) if span > 0 else drive
+
+    def cycle_minutes(self):
+        """ABD: son cycle_days takvim günündeki görev süresi (34 sa yeniden başlatmadan sonrası)."""
+        s = self.s
+        R = self.R
+        local = self.local_abs()
+        if local is None or not R.cycle:
+            return 0
+        day0 = local // 1440 - (R.cycle_days - 1)
+        after = s.get("restart_end")
+        total = 0
+        for d in s.get("days") or []:
+            a = d.get("start")
+            if a is None or a // 1440 < day0 or (after is not None and a < after):
+                continue
+            total += self._duty(d.get("drive", 0), a, d.get("end"), d.get("rest", 0))
+        ts = self._today_start()
+        if ts is not None and ts // 1440 >= day0 and (after is None or ts >= after):
+            segs = s["day_segments"]
+            total += self._duty(sum(x["m"] for x in segs if x["t"] == "drive"), ts, local, sum(x["m"] for x in segs if x["t"] == "rest"))
+        return total
 
     # ---- haftalık kurallar ----
     def weekly_on(self):
@@ -1425,17 +1523,17 @@ class Tacho:
 
     def daily_limit(self):
         """Bugünkü günlük sürüş sınırı: 9 sa, uzatıldıysa 10 sa."""
-        return DRIVE_DAILY_EXT if (self.weekly_on() and self.s["ext_drive"]) else DRIVE_DAILY
+        return self.R.daily_ext if (self.weekly_on() and self.s["ext_drive"]) else self.R.daily
 
     def ext_available(self):
         """Bugün otomatik uzatma devreye girebilir mi (hak var, henüz kullanılmadı)."""
         s = self.s
-        return self.weekly_on() and bool(s["auto_ext"]) and not s["ext_drive"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK
+        return self.weekly_on() and bool(s["auto_ext"]) and not s["ext_drive"] and s["week"].get("ext_used", 0) < self.R.ext_per_week
 
     def red_available(self):
         """9 saatlik dinlenme kısa günlük dinlenme olarak sayılabilir mi (otomatik açık, hak var)."""
         s = self.s
-        return self.weekly_on() and bool(s["auto_red"]) and s["week"].get("red_used", 0) < RED_PER_WEEK
+        return self.weekly_on() and bool(s["auto_red"]) and s["week"].get("red_used", 0) < self.R.red_per_week
 
     @staticmethod
     def week_start_of(local):
@@ -1469,6 +1567,9 @@ class Tacho:
         if local is None:
             return None
         ws = self.week_start_of(local)
+        if self.R.kind == "us":
+            cyc = self.cycle_minutes()
+            return {"start": ws, "drive": cyc, "cycle": cyc, "fortnight": 0}
         wd = self.week_drive(ws)
         return {"start": ws, "drive": wd, "fortnight": wd + self.week_drive(ws - WEEK_MIN)}
 
@@ -1494,30 +1595,32 @@ class Tacho:
         if not self.weekly_on() or self.s["rest_daily_done"]:
             return None
         ts = self._today_start()
-        return None if ts is None else ts + 1440 - self.daily_need()
+        if ts is None:
+            return None
+        return ts + (self.R.window if self.R.window else 1440 - self.daily_need())
 
     def wrest_due(self):
         """Haftalık dinlenmenin en geç başlaması gereken yerel dk."""
-        if not self.weekly_on() or self.s["last_wrest_end"] is None:
+        if not self.weekly_on() or self.s["last_wrest_end"] is None or self.R.wrest_span is None:
             return None
-        return self.s["last_wrest_end"] + WREST_SPAN
+        return self.s["last_wrest_end"] + self.R.wrest_span
 
     def split_active(self):
         """Bölünmüş dinlenme açık ve geçerli bir 1. kısım saklı mı."""
-        return bool(self.s["split_rest"]) and self.s["rest_part1"] >= SPLIT_PART1
+        return bool(self.s["split_rest"]) and self.s["rest_part1"] >= self.R.split_p1
 
     def daily_need(self):
         """Günlük dinlenmeyi tamamlamak için gereken kesintisiz süre: 11 sa; 1. kısım varsa ya da kısa dinlenme seçildiyse 9 sa."""
-        return SPLIT_PART2 if self.split_active() else REST_MIN
+        return self.R.split_p2 if self.split_active() else self.R.rest
 
     def break_need(self):
         """Bu blok için gereken mola: 1. parça (>= 15 dk) alındıysa 30, yoksa 45."""
-        return BREAK_PART2 if (self.s["split_break"] and self.s["break_part1"] >= BREAK_PART1) else BREAK_MIN
+        return self.R.break_p2 if (self.s["split_break"] and self.s["break_part1"] >= self.R.break_p1) else self.R.break_min
 
     def rest_target(self):
         """Şu an işe yarayan dinlenme hedefi (mola ihtiyacı ya da günlük ihtiyaç)."""
         s = self.s
-        rem_block = DRIVE_BLOCK - s["drive_block"]
+        rem_block = self.R.block - s["drive_block"]
         rem_daily = self.daily_limit() - s["drive_daily"]
         next_break = rem_daily > rem_block
         bn = self.break_need()
@@ -1548,7 +1651,7 @@ class Tacho:
             s["break_credited"] = True
             s["rest_credited"] = True
             s["drive_block"] = 0
-            if bn == BREAK_PART2:
+            if bn == self.R.break_p2:
                 self.log(L("log.break_split_done", p1=hm(s["break_part1"]), p2=hm(after)))
             else:
                 self.log(L("log.break_done"))
@@ -1560,16 +1663,18 @@ class Tacho:
         if not s["rest_daily_done"] and after >= need:
             self._complete_daily(reduced=False)
         if self.weekly_on():
-            kind = "regular" if after >= WREST_MIN else ("reduced" if after >= WREST_REDUCED else None)
+            kind = "regular" if after >= self.R.wrest else ("reduced" if after >= self.R.wrest_red else None)
             if kind:
                 if kind != s["wrest_kind"]:
                     s["wrest_kind"] = kind
                     s["week"]["wrest"] = kind
                     self.log(L("log.wrest_" + kind))
-                    self._close_violation(("weekly", "fortnight", "wrest"))
+                    self._close_violation(("weekly", "fortnight", "wrest", "cycle"))
                     self._sound("done")
                     self._voice("wrest_done")
                 s["last_wrest_end"] = self.local_abs()   # dinlenme sürdükçe bitişi ileri taşı
+                if self.R.kind == "us":
+                    s["restart_end"] = s["last_wrest_end"]   # 34 sa yeniden başlatma: çevrim buradan sonra sayılır
         self.dirty = True
 
     def strict_blocked(self):
@@ -1597,7 +1702,7 @@ class Tacho:
             self.log(L("log.split_done", p1=hm(s["rest_part1"]), p2=hm(need)))
         elif reduced:
             s["week"]["red_used"] = s["week"].get("red_used", 0) + 1
-            self.log(L("log.red_done", n=s["week"]["red_used"], max=RED_PER_WEEK))
+            self.log(L("log.red_done", n=s["week"]["red_used"], max=self.R.red_per_week))
         else:
             self.log(L("log.daily_done"))
         s["rest_part1"] = 0
@@ -1611,11 +1716,9 @@ class Tacho:
     def _track_violation(self):
         """Sürerken aşılan her sınır için ihlal açar / aşımı günceller (blok, günlük, haftalık, iki haftalık, gün yayılımı, haftalık dinlenme)."""
         s = self.s
-        rems = {"block": DRIVE_BLOCK - s["drive_block"], "daily": self.daily_limit() - s["drive_daily"]}
-        wi = self.week_info()
-        if wi:
-            rems["weekly"] = DRIVE_WEEK - wi["drive"]
-            rems["fortnight"] = DRIVE_FORTNIGHT - wi["fortnight"]
+        rems = {"block": self.R.block - s["drive_block"], "daily": self.daily_limit() - s["drive_daily"]}
+        rems.update(self.week_rems())   # AB: weekly/fortnight · ABD: cycle/window
+        if self.R.kind == "eu" and self.week_info():
             local = self.local_abs()
             rd, wd = self.rest_deadline(), self.wrest_due()
             if rd is not None and local is not None:
@@ -1745,7 +1848,8 @@ class Tacho:
         out = [weeks[k] for k in sorted(weeks, reverse=True)]
         for w in out:
             w["ago"] = (cur - w["start"]) // WEEK_MIN
-            w["limit"] = DRIVE_WEEK
+            w["limit"] = self.R.week   # ABD: None (çevrim takvim haftasına bağlı değil)
+            w["kind"] = self.R.kind
         return out
 
     def _close_rest_segment(self, kind):
@@ -1762,26 +1866,26 @@ class Tacho:
         st = s["status"]
         if st == "DRIVING":
             r = s["rest"]
-            if not s["rest_daily_done"] and r >= REST_REDUCED and self.red_available():
+            if not s["rest_daily_done"] and r >= self.R.rest_red and self.red_available():
                 self._complete_daily(reduced=True)   # 9 sa dinlendi, 11'i beklemeden yola çıktı: kısa günlük dinlenme
             s["drive_block"] += d
             s["drive_daily"] += d
             kind = "short"
             if r > 0 and s["rest_daily_done"]:
                 kind = "break"  # günlük dinlenme zaten tamamlanmıştı, fazlası önemsiz
-            elif r >= SPLIT_PART1 and s["split_rest"]:
+            elif r >= self.R.split_p1 and s["split_rest"]:
                 s["rest_part1"] = r
                 kind = "part1"
-                self.log(L("log.rest_part1", r=hm(r), p2=hm(SPLIT_PART2)))
-            elif r >= SPLIT_PART1:
+                self.log(L("log.rest_part1", r=hm(r), p2=hm(self.R.split_p2)))
+            elif r >= self.R.split_p1:
                 kind = "break"
                 self.log(L("log.rest_lost_split_off", r=hm(r)))
             elif s["rest_credited"]:
                 kind = "break"  # mola kredilendi (45 ya da 15+30), sessizce
-            elif s["split_break"] and BREAK_PART1 <= r < BREAK_MIN and not s["break_part1"]:
+            elif s["split_break"] and self.R.break_p1 <= r < self.R.break_min and not s["break_part1"]:
                 s["break_part1"] = r
                 kind = "break1"
-                self.log(L("log.break_part1", r=hm(r), p2=hm(BREAK_PART2)))
+                self.log(L("log.break_part1", r=hm(r), p2=hm(self.R.break_p2)))
             elif r >= 5:
                 self.log(L("log.rest_lost", r=hm(r)))
             if r > 0:
@@ -1797,10 +1901,10 @@ class Tacho:
                 if s["last_wrest_end"] is None:
                     local = self.local_abs()
                     s["last_wrest_end"] = (local - d) if local is not None else None   # ilk sürüş: haftalık dinlenme yeni bitmiş sayılır
-                if not s["ext_drive"] and s["auto_ext"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK and s["drive_daily"] > DRIVE_DAILY:
+                if not s["ext_drive"] and s["auto_ext"] and s["week"].get("ext_used", 0) < self.R.ext_per_week and s["drive_daily"] > self.R.daily:
                     s["ext_drive"] = s["ext_consumed"] = True   # 9 sa aşıldı: bugün 10 sa, hak harcandı
                     s["week"]["ext_used"] = s["week"].get("ext_used", 0) + 1
-                    self.log(L("log.ext_used", n=s["week"]["ext_used"], max=EXT_PER_WEEK))
+                    self.log(L("log.ext_used", n=s["week"]["ext_used"], max=self.R.ext_per_week))
             self._track_violation()
         elif st == "OFF_DUTY":
             if self.strict_blocked():
@@ -1816,7 +1920,7 @@ class Tacho:
     SETTING_KEYS = ("mode", "manual_abs", "manual_rate", "on_top", "auto_break", "split_rest", "split_break", "sounds", "onboarded", "hotkey",
                     "mini_pos", "mini_opacity", "offjob_rest", "tz_adjust", "set_time_frame", "win", "lang", "theme", "custom",
                     "weekly_rules", "auto_ext", "auto_red", "profile_key", "spd_km", "spd_min", "strict_rest", "fines", "voice",
-                    "sound_volume", "voice_volume")
+                    "sound_volume", "voice_volume", "ruleset", "last_game")
 
     @classmethod
     def counter_keys(cls):
@@ -1917,19 +2021,22 @@ class Tacho:
         ferry_at = drive_min / 2.0 if ferry_min > 0 else None
         ferry_done = False
         driven = 0.0
-        block = DRIVE_BLOCK - s["drive_block"]
+        R = self.R
+        block = R.block - s["drive_block"]
         daily = self.daily_limit() - s["drive_daily"] + (60 if self.ext_available() else 0)
-        week = None
-        wi = self.week_info()
-        if wi:
-            week = min(DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"])
+        wr = self.week_rems()
+        wk_keys = [k for k in ("weekly", "fortnight", "cycle") if k in wr]
+        week = min(wr[k] for k in wk_keys) if wk_keys else None
+        week_full = R.cycle if R.kind == "us" else R.week
+        win = (wr.get("window", R.window) if R.window else None)   # ABD: 14 sa pencere (gün başladıysa kalanı)
         if s["status"] == "OFF_DUTY" and s["rest"] > 0 and not s["rest_credited"] and s["rest"] < self.break_need():
             pass   # süren mola tamamlanmadan çıkılıyor sayılır (kalan mola yok sayılmaz, sayaçlar olduğu gibi)
         if rest_first:
             need_rest = 0 if s["rest_daily_done"] else max(0, self.daily_need() - s["rest"])
             t += need_rest
             rests += 1 if need_rest > 0 else 0
-            block, daily = DRIVE_BLOCK, DRIVE_DAILY + (60 if (self.weekly_on() and s["auto_ext"] and s["week"].get("ext_used", 0) < EXT_PER_WEEK) else 0)
+            block, daily = R.block, R.daily + (60 if (self.weekly_on() and s["auto_ext"] and s["week"].get("ext_used", 0) < R.ext_per_week) else 0)
+            win = R.window
         need = drive_min
         guard = 0
         while need > 0 and guard < 60:
@@ -1937,19 +2044,25 @@ class Tacho:
             if ferry_at is not None and not ferry_done and driven >= ferry_at:
                 ferry_done = True
                 t += ferry_min
-                if ferry_min >= REST_MIN:
-                    rests += 1; block = DRIVE_BLOCK; daily = DRIVE_DAILY
-                elif ferry_min >= BREAK_MIN:
-                    block = DRIVE_BLOCK
+                if ferry_min >= R.rest:
+                    rests += 1; block = R.block; daily = R.daily; win = R.window
+                else:
+                    if ferry_min >= R.break_min:
+                        block = R.block
+                    if win is not None:
+                        win -= ferry_min
                 continue
-            lim = min(block, daily) if week is None else min(block, daily, week)
+            lims = [block, daily] + ([week] if week is not None else []) + ([win] if win is not None else [])
+            lim = min(lims)
             if lim <= 0:
                 if week is not None and week <= 0:
-                    t += WREST_MIN; wrests += 1; week = DRIVE_WEEK; block = DRIVE_BLOCK; daily = DRIVE_DAILY
-                elif daily <= 0:
-                    t += REST_MIN; rests += 1; block = DRIVE_BLOCK; daily = DRIVE_DAILY
+                    t += R.wrest; wrests += 1; week = week_full; block = R.block; daily = R.daily; win = R.window
+                elif daily <= 0 or (win is not None and win <= 0):
+                    t += R.rest; rests += 1; block = R.block; daily = R.daily; win = R.window
                 else:
-                    t += BREAK_MIN; breaks += 1; block = DRIVE_BLOCK
+                    t += R.break_min; breaks += 1; block = R.block
+                    if win is not None:
+                        win -= R.break_min
                 continue
             d = min(need, lim)
             if ferry_at is not None and not ferry_done and driven + d > ferry_at:
@@ -1957,6 +2070,8 @@ class Tacho:
             need -= d; t += d; block -= d; daily -= d; driven += d
             if week is not None:
                 week -= d
+            if win is not None:
+                win -= d
         if ferry_at is not None and not ferry_done:
             t += ferry_min
         return {"total": t, "drive": drive_min, "breaks": breaks, "rests": rests, "wrests": wrests, "ferry": ferry_min if ferry_min > 0 else 0,
@@ -2002,7 +2117,7 @@ class Tacho:
         return out
 
     PROV_KEYS = ("status", "drive_block", "drive_daily", "rest", "break_credited", "rest_part1", "rest_daily_done", "day_segments",
-                 "break_part1", "rest_credited", "day_violations", "ext_drive", "ext_consumed", "week", "last_wrest_end", "wrest_kind")
+                 "break_part1", "rest_credited", "day_violations", "ext_drive", "ext_consumed", "week", "last_wrest_end", "wrest_kind", "restart_end")
 
     HIST_KEYS = PROV_KEYS + ("prov", "last_move_abs")
 
@@ -2340,6 +2455,9 @@ class Tacho:
         self.tel_abs = now = tel["time_abs"]
         self._check_profile()
         s = self.s
+        if self.game and s.get("last_game") != self.game:
+            s["last_game"] = self.game
+            self.dirty = True
         job_on = bool(self.job and self.job.get("on"))
         job_start = self.job.get("start") if self.job else None
         loaded = bool(self.job and self.job.get("loaded"))
@@ -2551,7 +2669,7 @@ class Tacho:
             "busy": self.skip is not None,
             "blocked": self.skip_info_blockers(),
             "minutes": need + SKIP_MARGIN,
-            "label": L("skip.break") if target in (BREAK_MIN, BREAK_PART2) else (L("skip.part2") if self.split_active() else L("skip.daily")),
+            "label": L("skip.break") if target in (self.R.break_min, self.R.break_p2) else (L("skip.part2") if self.split_active() else L("skip.daily")),
         }
 
     def skip_info_blockers(self):
@@ -2592,11 +2710,13 @@ class Tacho:
             return {"available": False}
         if s["wrest_kind"] == "regular":
             return {"available": False}
-        need = WREST_MIN - s["rest"]
+        if self.R.kind == "us" and self.week_rems().get("cycle", RULE_BIG) > self.R.daily:
+            return {"available": False}   # 34 sa yeniden başlatma: çevrimde bir tam gün kalmıyorsa öner
+        need = self.R.wrest - s["rest"]
         if need <= 0:
             return {"available": False}
         return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(),
-                "minutes": need + SKIP_MARGIN, "label": L("wrest.label", d=hm(WREST_MIN))}
+                "minutes": need + SKIP_MARGIN, "label": L("wrest.label", d=hm(self.R.wrest))}
 
     def act_weekly_rest(self):
         with self.lock:
@@ -2623,6 +2743,16 @@ class Tacho:
                 s["ext_drive"] = s["ext_consumed"] = False
             self.dirty = True
             self.log(L("log.weekly_on" if flag else "log.weekly_off"))
+
+    def act_set_ruleset(self, value):
+        with self.lock:
+            value = value if value in ("auto", "eu", "us") else "auto"
+            if value == (self.s.get("ruleset") or "auto"):
+                return
+            self.s["ruleset"] = value
+            self.dirty = True
+            kind = self.rules_kind()
+            self.log(L("log.ruleset", name=L("ui.ruleset.nm_" + kind)))
 
     def act_set_auto_ext(self, flag):
         with self.lock:
@@ -2735,13 +2865,13 @@ class Tacho:
         s = self.s
         if not self.red_available() or s["mode"] != "auto" or not self.connected or self.speed > MOVE_KMH:
             return {"available": False}
-        if s["rest_daily_done"] or self.split_active() or s["rest"] >= REST_REDUCED:
+        if s["rest_daily_done"] or self.split_active() or s["rest"] >= self.R.rest_red:
             return {"available": False}
         if self.offjob and not s["offjob_rest"]:
             return {"available": False}
-        need = REST_REDUCED - s["rest"]
+        need = self.R.rest_red - s["rest"]
         return {"available": True, "busy": self.skip is not None, "blocked": self.skip_info_blockers(), "minutes": need + SKIP_MARGIN,
-                "label": L("redrest.label", d=hm(REST_REDUCED)), "n": s["week"].get("red_used", 0) + 1, "max": RED_PER_WEEK}
+                "label": L("redrest.label", d=hm(self.R.rest_red)), "n": s["week"].get("red_used", 0) + 1, "max": self.R.red_per_week}
 
     def act_red_rest(self):
         with self.lock:
@@ -2832,7 +2962,7 @@ class Tacho:
         """Günün akışını kutucuk listesi olarak kurar: geçmiş (✓), şimdiki (aktif), plan.
         Kutucuk: {"k": drive|break|part1|daily, "v": "S:DD", "st": done|active|plan, "n": "1/2"|"2/2"|None}"""
         s = self.s
-        split_on = bool(s["split_rest"])
+        split_on = bool(s["split_rest"]) and self.R.kind == "eu"
         resting = s["status"] == "OFF_DUTY"
         boxes = []
         drive_acc = 0
@@ -2862,7 +2992,8 @@ class Tacho:
                 boxes.append({"k": k, "v": hm(seg["m"]), "st": "done", "n": "1/2" if k == "part1" else None})
         part1_seen = any(b["k"] == "part1" for b in boxes)
         break_seen = any(b["k"] == "break" for b in boxes)
-        need = SPLIT_PART2 if (split_on and (part1_seen or s["rest_part1"] >= SPLIT_PART1)) else REST_MIN
+        need = self.R.split_p2 if (split_on and (part1_seen or s["rest_part1"] >= self.R.split_p1)) else self.R.rest
+        is_p2 = split_on and need == self.R.split_p2
         bn = self.break_need()
         rem_daily = self.daily_limit() - s["drive_daily"]
         rest = s["rest"]
@@ -2873,35 +3004,35 @@ class Tacho:
             if drive_acc > 0:
                 boxes.append({"k": "drive", "v": hm(drive_acc), "st": "done" if credited else "part"})
             if s["rest_daily_done"] or rest >= need:
-                boxes.append({"k": "daily", "v": hm(need), "st": "done", "n": "2/2" if need == SPLIT_PART2 else None})
+                boxes.append({"k": "daily", "v": hm(need), "st": "done", "n": "2/2" if is_p2 else None})
             elif not credited and self.rest_target() == bn:
                 boxes.append({"k": "break", "v": hm(bn), "st": "active"})
                 if rem_daily > 0:
-                    boxes.append({"k": "drive", "v": hm(min(DRIVE_BLOCK, rem_daily)), "st": "plan"})
-                boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if need == SPLIT_PART2 else None})
-            elif split_on and rest >= SPLIT_PART1 and not part1_seen:
+                    boxes.append({"k": "drive", "v": hm(min(self.R.block, rem_daily)), "st": "plan"})
+                boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if is_p2 else None})
+            elif split_on and rest >= self.R.split_p1 and not part1_seen:
                 # şu an 1. kısım olabilecek bir dinlenme: sürerse 11 sa, kalkarsa 3+9
                 boxes.append({"k": "part1", "v": hm(rest), "st": "active", "n": "1/2"})
                 if rem_daily > 0:
-                    boxes.append({"k": "drive", "v": hm(min(DRIVE_BLOCK, rem_daily)), "st": "plan"})
-                boxes.append({"k": "daily", "v": hm(SPLIT_PART2), "st": "plan", "n": "2/2"})
+                    boxes.append({"k": "drive", "v": hm(min(self.R.block, rem_daily)), "st": "plan"})
+                boxes.append({"k": "daily", "v": hm(self.R.split_p2), "st": "plan", "n": "2/2"})
             elif credited and rem_daily > 0:
                 # mola tamamlandı, dinlenme sürüyor: kalkarsa kalan sürüş hakkı ve günlük dinlenme
                 boxes.append({"k": "break", "v": hm(rest), "st": "done"})
-                boxes.append({"k": "drive", "v": hm(min(DRIVE_BLOCK, rem_daily)), "st": "plan"})
-                boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if need == SPLIT_PART2 else None})
+                boxes.append({"k": "drive", "v": hm(min(self.R.block, rem_daily)), "st": "plan"})
+                boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if is_p2 else None})
             else:
-                boxes.append({"k": "daily", "v": hm(need), "st": "active", "n": "2/2" if need == SPLIT_PART2 else None})
+                boxes.append({"k": "daily", "v": hm(need), "st": "active", "n": "2/2" if is_p2 else None})
         else:
             before_block = s["drive_daily"] - s["drive_block"]
-            limit = max(0, min(DRIVE_BLOCK, self.daily_limit() - before_block))
+            limit = max(0, min(self.R.block, self.daily_limit() - before_block))
             boxes.append({"k": "drive", "v": hm(max(0, limit - block_used_before)), "st": "active"})
             after = self.daily_limit() - (before_block + limit)
             if not break_seen and not s["break_credited"]:
                 boxes.append({"k": "break", "v": hm(bn), "st": "plan"})
                 if after > 0:
-                    boxes.append({"k": "drive", "v": hm(min(DRIVE_BLOCK, after)), "st": "plan"})
-            boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if need == SPLIT_PART2 else None})
+                    boxes.append({"k": "drive", "v": hm(min(self.R.block, after)), "st": "plan"})
+            boxes.append({"k": "daily", "v": hm(need), "st": "plan", "n": "2/2" if is_p2 else None})
         return boxes
 
     # ---- sesli uyarılar ----
@@ -3114,11 +3245,12 @@ class Tacho:
         if not self.weekly_on():
             return {"on": False}
         w = s["week"]
-        out = {"on": True, "drive": wi["drive"] if wi else 0, "fortnight": wi["fortnight"] if wi else 0,
-               "week_limit": DRIVE_WEEK, "fortnight_limit": DRIVE_FORTNIGHT,
+        R = self.R
+        out = {"on": True, "kind": R.kind, "drive": wi["drive"] if wi else 0, "fortnight": (wi["fortnight"] if wi else 0) if R.kind == "eu" else None,
+               "week_limit": R.cycle if R.kind == "us" else R.week, "fortnight_limit": R.fortnight, "cycle_days": R.cycle_days,
                "rest_deadline": self.rest_deadline(), "wrest_due": self.wrest_due(), "wrest_kind": s["wrest_kind"],
-               "ext": {"auto": bool(s["auto_ext"]), "on": bool(s["ext_drive"]), "bonus": bool(s["ext_drive"]) or self.ext_available(), "used": w.get("ext_used", 0), "max": EXT_PER_WEEK},
-               "red": {"auto": bool(s["auto_red"]), "used": w.get("red_used", 0), "max": RED_PER_WEEK},
+               "ext": {"auto": bool(s["auto_ext"]), "on": bool(s["ext_drive"]), "bonus": bool(s["ext_drive"]) or self.ext_available(), "used": w.get("ext_used", 0), "max": self.R.ext_per_week},
+               "red": {"auto": bool(s["auto_red"]), "used": w.get("red_used", 0), "max": self.R.red_per_week},
                "local": local}
         rd = out["rest_deadline"]
         out["day_left"] = None if (rd is None or local is None) else rd - local
@@ -3161,13 +3293,14 @@ class Tacho:
         off = self.tz_offset()
         local = None if abs_now is None else abs_now + off
         self._roll_week()
-        rem_block = DRIVE_BLOCK - s["drive_block"]
+        rem_block = self.R.block - s["drive_block"]
         rem_daily = self.daily_limit() - s["drive_daily"]
         wi = self.week_info()
-        rem_week = min(DRIVE_WEEK - wi["drive"], DRIVE_FORTNIGHT - wi["fortnight"]) if wi else None
+        wr = self.week_rems()
+        rem_week = min(wr.values()) if wr else None
         remaining = min(rem_block, rem_daily) if rem_week is None else min(rem_block, rem_daily, rem_week)
         if rem_week is not None and rem_week <= rem_daily and rem_week <= rem_block:
-            next_req = "WREST"
+            next_req = "REST" if min(wr, key=wr.get) == "window" else "WREST"   # ABD: 14 sa pencere dolunca 10 sa dinlenme
         else:
             next_req = "REST" if rem_daily <= rem_block else "BREAK"
         need_txt = L("need.part2", d=hm(self.daily_need())) if self.split_active() else L("need.daily")
@@ -3186,9 +3319,9 @@ class Tacho:
             if s["rest_daily_done"] or rest >= need:
                 label, value = L("big.daily_done"), hm(rest)
                 sub = L("big.daily_done_sub")
-            elif rest >= REST_REDUCED and self.red_available():
+            elif rest >= self.R.rest_red and self.red_available():
                 label, value = L("big.red_ready"), f"{hm(rest)} / {hm(need)}"
-                sub = L("big.red_ready_sub", n=s["week"].get("red_used", 0) + 1, max=RED_PER_WEEK, d=hm(need))
+                sub = L("big.red_ready_sub", n=s["week"].get("red_used", 0) + 1, max=self.R.red_per_week, d=hm(need))
             elif s["rest_credited"]:
                 value = f"{hm(rest)} / {hm(need)}"
                 if remaining > 0:
@@ -3197,14 +3330,14 @@ class Tacho:
                 else:
                     label = daily_lbl
                     sub = L("big.then_drive_full")
-            elif target in (BREAK_MIN, BREAK_PART2):
-                label = L("big.break_part2") if target == BREAK_PART2 else L("big.break")
+            elif target in (self.R.break_min, self.R.break_p2):
+                label = L("big.break_part2") if target == self.R.break_p2 else L("big.break")
                 value = f"{hm(rest)} / {hm(target)}"
-                sub = L("big.then_drive", d=hm(min(DRIVE_BLOCK, rem_daily)))
+                sub = L("big.then_drive", d=hm(min(self.R.block, rem_daily)))
             else:
                 label, value = daily_lbl, f"{hm(rest)} / {hm(need)}"
                 sub = L("big.daily_sub_rem", rem=hm(remaining)) if remaining > 0 else L("big.then_drive_full")
-            seq = 3 if (s["rest_credited"] or target not in (BREAK_MIN, BREAK_PART2)) else 1
+            seq = 3 if (s["rest_credited"] or target not in (self.R.break_min, self.R.break_p2)) else 1
         else:
             if remaining < 0:
                 tone = "bad"
@@ -3263,7 +3396,9 @@ class Tacho:
                 "offset": off,
             },
             "drive_block": s["drive_block"], "drive_daily": s["drive_daily"], "rest": s["rest"],
-            "limits": {"block": DRIVE_BLOCK, "daily": self.daily_limit(), "break": BREAK_MIN, "break2": BREAK_PART2, "rest": REST_MIN},
+            "limits": {"block": self.R.block, "daily": self.daily_limit(), "break": self.R.break_min,
+                       "break2": self.R.break_p2 if self.R.kind == "eu" else self.R.break_min, "rest": self.R.rest},
+            "rules": self.R.kind, "ruleset": s.get("ruleset") or "auto",
             "weekly": self.weekly_view(wi, local),
             "wrest": self.wrest_info(),
             "red_rest": self.red_rest_info(),
@@ -3273,8 +3408,8 @@ class Tacho:
             "sound_volume": int(s.get("sound_volume", 100)), "voice_volume": int(s.get("voice_volume", 100)),
             "voice_ev": {"seq": self.voice_seq, "text": self.voice_text},
             "rest_target": need if s["rest_credited"] else target,
-            "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= BREAK_PART1) else 0,
-            "split_break": bool(s["split_break"]),
+            "break_part1": s["break_part1"] if (s["split_break"] and s["break_part1"] >= self.R.break_p1) else 0,
+            "split_break": bool(s["split_break"]) and self.R.kind == "eu",
             "sounds": bool(s["sounds"]),
             "onboarded": bool(s["onboarded"]),
             "hotkey": s["hotkey"],
@@ -3282,7 +3417,8 @@ class Tacho:
             "win_max": self.win_maxed,
             "mini_opacity": s["mini_opacity"],
             "split": {"part1": s["rest_part1"] if split else 0, "need": need, "done": s["rest_daily_done"],
-                      "enabled": bool(s["split_rest"]), "stored": s["rest_part1"] if s["rest_part1"] >= SPLIT_PART1 else 0},
+                      "enabled": bool(s["split_rest"]) and self.R.kind == "eu", "supported": self.R.kind == "eu",
+                      "stored": s["rest_part1"] if s["rest_part1"] >= self.R.split_p1 else 0},
             "remaining": remaining, "next_req": next_req,
             "break_credited": s["break_credited"],
             "big": {"label": label, "value": value, "sub": sub, "tone": tone},
@@ -3292,7 +3428,7 @@ class Tacho:
             "moving": self.speed > MOVE_KMH and not self.paused and s["mode"] == "auto" and self.connected,
             "offjob": offjob_view,
             "offjob_rest": bool(s["offjob_rest"]),
-            "split_locked": bool(s["split_rest"]) and s["rest_part1"] >= SPLIT_PART1,
+            "split_locked": bool(s["split_rest"]) and s["rest_part1"] >= self.R.split_p1,
             "manual_rate": s["manual_rate"],
             "on_top": s["on_top"],
             "lang": L.code,
@@ -3392,7 +3528,7 @@ class Tacho:
 
     def act_set_split_rest(self, flag):
         with self.lock:
-            if not flag and self.s["split_rest"] and self.s["rest_part1"] >= SPLIT_PART1:
+            if not flag and self.s["split_rest"] and self.s["rest_part1"] >= self.R.split_p1:
                 self.log(L("log.split_locked"))
                 return
             self.s["split_rest"] = bool(flag)
@@ -3526,6 +3662,7 @@ class Tacho:
             s["ext_drive"] = s["ext_consumed"] = False
             s["wrest_kind"] = None
             s["last_wrest_end"] = self.local_abs()
+            s["restart_end"] = s["last_wrest_end"]
             s["drive_block"] = 0
             s["drive_daily"] = 0
             s["rest"] = 0
@@ -3729,6 +3866,10 @@ class Api:
 
     def set_auto_ext(self, flag):
         self._t.act_set_auto_ext(flag)
+        return self.get_state()
+
+    def set_ruleset(self, value):
+        self._t.act_set_ruleset(value)
         return self.get_state()
 
     def set_auto_red(self, flag):

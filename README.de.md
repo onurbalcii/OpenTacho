@@ -84,6 +84,11 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   auf **9 h** verkürzt, **Tagesspanne** (Ruhezeit muss innerhalb von 13/15 h beginnen; im Hauptfeld als „Tagesende“),
   **Wochenruhezeit** 45 h / verkürzt 24 h (fällig innerhalb von 6 Tagen; eine Schaltfläche überspringt sie in zwei Schritten),
   Wochenkarten im Verlauf, neue Verstoßarten.
+- **US-Regelwerk (FMCSA HOS)** für American Truck Simulator, automatisch nach Spiel gewählt (Einstellungen → Regeln
+  erzwingt EU oder USA): **30-Minuten-Pause nach 8 h** Fahrzeit, **11 h** Fahren pro Tag, **10 h** Ruhezeit; die
+  optionale US-Ebene ergänzt das **14-Stunden-Fenster** (14 h nach der ersten Fahrt des Tages endet die Fahrzeit, Pausen
+  verlängern es nicht), den **70 h / 8 Tage**-Zyklus und den **34-Stunden-Neustart** (per Knopf überspringbar). Balken,
+  Planer, Verlauf, Ausdrucke und Sprachansagen folgen dem aktiven Regelwerk. Die Schlafkabinen-Teilung (7/3) wird nicht abgebildet.
 - **Zeitsprünge verarbeitet**: Schlafen / Fähre / Zug zählen als Ruhezeit; **Anhänger be- und
   entladen nicht**; das Laden eines Spielstands setzt die Zähler auf diesen Moment zurück.
 - **Modus „Kein Auftrag“**: ohne aktive Lieferung zählt nichts (Ruhezeit optional weiterhin). Eine
@@ -148,7 +153,8 @@ ist die optionale Feedback-Schaltfläche, die ein Webformular im Browser öffnet
 
 **Funktioniert es mit Karten-Mods, ProMods oder ATS?**
 Ja. Es liest nur Telemetrie (Uhr, Geschwindigkeit, Auftrag), Karten- und Lkw-Mods spielen
-also keine Rolle; American Truck Simulator nutzt dasselbe Plugin.
+also keine Rolle; American Truck Simulator nutzt dasselbe Plugin — in ATS gilt automatisch das US-FMCSA-Regelwerk
+(8 h / 30 min / 11 h / 10 h, 14-h-Fenster, 70 h / 8 Tage); unter Einstellungen → Regeln lässt sich jedes Regelwerk erzwingen.
 
 **Die Mini-Leiste erscheint nicht über dem Spiel.**
 Windows kann über ein Spiel im *exklusiven Vollbild* kein Overlay zeichnen. Stelle den Anzeigemodus
