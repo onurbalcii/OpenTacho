@@ -506,5 +506,8 @@
   "export.cargo": "Cargo",
   "export.outcome": "Outcome",
   "export.money": "Amount",
-  "export.late_col": "Lateness"
+  "export.late_col": "Lateness",
+  "export.file.printout": "Tachograph printout",
+  "export.file.days": "Days",
+  "export.file.jobs": "Jobs"
 }

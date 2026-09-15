@@ -506,5 +506,8 @@
   "export.cargo": "Fracht",
   "export.outcome": "Ergebnis",
   "export.money": "Betrag",
-  "export.late_col": "Verspätung"
+  "export.late_col": "Verspätung",
+  "export.file.printout": "Tachographenausdruck",
+  "export.file.days": "Tage",
+  "export.file.jobs": "Aufträge"
 }

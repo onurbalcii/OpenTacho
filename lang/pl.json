@@ -506,5 +506,8 @@
   "export.cargo": "Ładunek",
   "export.outcome": "Wynik",
   "export.money": "Kwota",
-  "export.late_col": "Spóźnienie"
+  "export.late_col": "Spóźnienie",
+  "export.file.printout": "Wydruk tachografu",
+  "export.file.days": "Dni",
+  "export.file.jobs": "Zlecenia"
 }

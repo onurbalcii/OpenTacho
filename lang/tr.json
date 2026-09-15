@@ -506,5 +506,8 @@
   "export.cargo": "Yük",
   "export.outcome": "Sonuç",
   "export.money": "Tutar",
-  "export.late_col": "Gecikme"
+  "export.late_col": "Gecikme",
+  "export.file.printout": "Takograf çıktısı",
+  "export.file.days": "Günler",
+  "export.file.jobs": "İşler"
 }

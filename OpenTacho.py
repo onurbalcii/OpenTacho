@@ -312,6 +312,13 @@ def hm_signed(minutes):
     return ("+" if minutes >= 0 else "-") + hm(abs(minutes))
 
 
+def safe_filename(s, limit=40):
+    """Dosya adı parçası: Windows'un yasakladığı karakterler atılır, Unicode harfler (ı, ş, ç…) kalır."""
+    s = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', "", str(s or ""))
+    s = re.sub(r"\s+", " ", s).strip(" .")
+    return s[:limit].rstrip(" .") or "x"
+
+
 # ---------------- PDF takograf çıktısı (reportlab; yoksa yalnızca txt) ----------------
 _PDF_FONTS = None
 
@@ -2174,13 +2181,14 @@ class Tacho:
                 h = self.history()
                 jobs = self.jobs_view()["jobs"]
                 p = self.saves.profile
-                who = re.sub(r"[^0-9A-Za-z_-]+", "_", (p["name"] if p else "profile"))[:32] or "profile"
-                stamp = time.strftime("%Y%m%d_%H%M")
+                who = safe_filename(p["name"] if p else ("American Truck Simulator" if self.game == 2 else "Euro Truck Simulator 2"))
+                stamp = time.strftime("%Y-%m-%d %H.%M")
+                fname = lambda label, ext: os.path.join(EXPORT_DIR, f"OpenTacho - {safe_filename(L(label))} - {who} - {stamp}.{ext}")
             files = []
             recs = ([dict(h["today"], _label=L("ui.hist.today"))] if (h["today"]["drive"] > 0 or h["today"]["segments"]) else []) + \
                    [dict(d, _label=L("ui.hist.day", n=len(h["days"]) - i)) for i, d in enumerate(h["days"])]
             if kind == "csv":
-                f1 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}_days.csv")
+                f1 = fname("export.file.days", "csv")
                 with open(f1, "w", encoding="utf-8-sig", newline="") as f:
                     w = csv.writer(f, delimiter=";")
                     w.writerow(["day", "start", "end", "driving_min", "rest_min", "rests", "violations", "violation_details", "fines_eur", "saved"])
@@ -2189,7 +2197,7 @@ class Tacho:
                         w.writerow([r["_label"], self._fmt_abs(r.get("start")), self._fmt_abs(r.get("end")), r.get("drive", 0), r.get("rest", 0), r.get("rests", 0),
                                     len(r.get("violations") or []), vd, r.get("fines") or 0, r.get("saved", "")])
                 files.append(f1)
-                f2 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}_jobs.csv")
+                f2 = fname("export.file.jobs", "csv")
                 with open(f2, "w", encoding="utf-8-sig", newline="") as f:
                     w = csv.writer(f, delimiter=";")
                     w.writerow(["from", "to", "cargo", "planned_km", "driven_km", "start", "end", "duration_min", "driving_min", "rest_min", "breaks", "ferries",
@@ -2200,11 +2208,11 @@ class Tacho:
                                     j.get("late", ""), j.get("income", 0), j.get("revenue", ""), j.get("penalty", ""), j.get("damage", ""), sum(j.get("fines") or []), j.get("saved", "")])
                 files.append(f2)
             else:
-                f1 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}.txt")
+                f1 = fname("export.file.printout", "txt")
                 with open(f1, "w", encoding="utf-8", newline="\n") as f:
                     f.write(self._printout(recs, jobs, p, h))
                 files.append(f1)
-                f2 = os.path.join(EXPORT_DIR, f"opentacho_{who}_{stamp}.pdf")
+                f2 = fname("export.file.printout", "pdf")
                 try:
                     pdf_printout(f2, recs, jobs, p or {"name": "American Truck Simulator" if self.game == 2 else "Euro Truck Simulator 2"},
                                  bool(self.s.get("fines")), self._fmt_abs)

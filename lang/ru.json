@@ -506,5 +506,8 @@
   "export.cargo": "Груз",
   "export.outcome": "Итог",
   "export.money": "Сумма",
-  "export.late_col": "Опоздание"
+  "export.late_col": "Опоздание",
+  "export.file.printout": "Распечатка тахографа",
+  "export.file.days": "Дни",
+  "export.file.jobs": "Заказы"
 }
