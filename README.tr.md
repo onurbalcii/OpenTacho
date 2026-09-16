@@ -112,7 +112,8 @@ gerçekten yaptığınla birebir örtüşür.
   süresi ve Mola / İç hareket / Atla / Tam dinlenme / Haftalık dinlenme düğmeleri; saydamlık ve boyut (%70–160) ayarlanabilir.
 - **Temalar**: Van Gogh (varsayılan; *Yıldızlı Gece* esintili algoritmik arka plan + cam paneller),
   sade koyu, sade açık ve **Özel**: kendi arka plan görselin (JPG/PNG/WebP) + canvas renk seçiciyle pencere ve
-  vurgu rengi (RGB/HEX; yazı rengi kendiliğinden seçilir, mini şerit aynı renkleri kullanır).
+  vurgu rengi (RGB/HEX; yazı rengi kendiliğinden seçilir, mini şerit aynı renkleri kullanır). Görsel yerleşimi: doldur, sığdır,
+  ortala, döşe ya da uzat; özel tema sade temanın düz görünümünü kullanır.
 - **Diller**: Türkçe, İngilizce, Almanca, Rusça, Lehçe, Brezilya Portekizcesi, İspanyolca, Fransızca, İtalyanca,
   Çekçe — yeni dil tek JSON dosyası.
 - **Telefon / tablette ikinci ekran** (Ayarlar → Uygulama → *Mobil cihazda kullan* ya da dişlinin altındaki telefon

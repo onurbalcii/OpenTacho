@@ -115,7 +115,7 @@ actually did.
 - **Themes**: Van Gogh (default, an algorithmically painted *Starry Night*-style backdrop with
   glass panels), simple dark, simple light and **Custom**: your own background image (JPG/PNG/WebP) plus a
   canvas colour picker for the window and accent colours (RGB/HEX; text colour is chosen automatically, the mini strip
-  follows the same colours).
+  follows the same colours). Image placement: fill, fit, centre, tile or stretch; the custom theme uses the plain flat look.
 - **Languages**: English, Turkish, German, Russian, Polish, Brazilian Portuguese, Spanish, French, Italian,
   Czech — adding one is a single JSON file.
 - **Second screen on a phone or tablet** (Settings → App → *Use on a phone or tablet*, or the phone button under

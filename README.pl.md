@@ -113,6 +113,7 @@ odpowiadają temu, co naprawdę zrobiłeś.
 - **Motywy**: Van Gogh (domyślny, algorytmicznie namalowane tło w stylu *Gwiaździstej nocy*
   ze szklanymi panelami), prosty ciemny, prosty jasny i **Własny**: własny obraz tła (JPG/PNG/WebP) plus
   próbnik kolorów na canvasie dla koloru okna i akcentu (RGB/HEX; kolor tekstu dobierany automatycznie, mini pasek używa tych samych kolorów).
+  Ułożenie obrazu: wypełnij, dopasuj, wyśrodkuj, kafelki lub rozciągnij; własny motyw używa płaskiego wyglądu prostego motywu.
 - **Języki**: polski, angielski, turecki, niemiecki, rosyjski, portugalski (Brazylia), hiszpański, francuski, włoski,
   czeski — nowy język to jeden plik JSON.
 - **Drugi ekran na telefonie lub tablecie** (Ustawienia → Aplikacja → *Używaj na telefonie lub tablecie* albo

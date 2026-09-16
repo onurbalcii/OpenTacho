@@ -103,7 +103,7 @@ SII_DLL = os.path.join(APP_DIR, "lib", "SII_Decrypt.dll")
 if not os.path.exists(SII_DLL) and os.path.exists(os.path.join(DATA_DIR, "SII_Decrypt.dll")):
     SII_DLL = os.path.join(DATA_DIR, "SII_Decrypt.dll")
 APP_NAME = "OpenTacho"
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 WINDOW_TITLE = APP_NAME
 UPDATE_API = "https://api.github.com/repos/onurbalcii/OpenTacho/releases/latest"   # sürüm denetimi (yalnızca son sürüm bilgisi okunur)
 RELEASES_URL = "https://github.com/onurbalcii/OpenTacho/releases"
@@ -194,7 +194,8 @@ TICK = 0.25            # saniye
 
 STATUSES = ("DRIVING", "ON_DUTY", "OFF_DUTY", "YARD_MOVE")
 THEMES = ("vangogh", "dark", "light", "custom")
-DEFAULT_CUSTOM = {"win": "#1c2a5e", "accent": "#fdca4f", "bg": False}   # özel tema: pencere rengi, vurgu rengi, arka plan görseli var mı
+DEFAULT_CUSTOM = {"win": "#1c2a5e", "accent": "#fdca4f", "bg": False, "fit": "cover"}   # özel tema: pencere rengi, vurgu rengi, arka plan görseli var mı, yerleşimi
+CUSTOM_FITS = ("cover", "contain", "center", "tile", "stretch")           # görsel yerleşimi: doldur / sığdır / ortala / döşe / uzat
 CUSTOM_BG_FILE = os.path.join(DATA_DIR, "custom_bg.img")                 # kullanıcının seçtiği görsel (jpeg/png), exe'nin yanında
 CUSTOM_BG_MAX = 15 * 1024 * 1024
 
@@ -1570,7 +1571,7 @@ def theme_bg_color(s):
     theme = s.get("theme") or DEFAULT_THEME
     if theme == "custom":
         w = s["custom"]["win"]
-        return _mix_hex(w, "#ffffff", 0.35) if _is_light(w) else _mix_hex(w, "#000000", 0.45)
+        return _mix_hex(w, "#000000", 0.07) if _is_light(w) else _mix_hex(w, "#000000", 0.45)
     return THEME_BG.get(theme, "#0d1117")
 
 
@@ -1745,7 +1746,8 @@ class Tacho:
         c = st.get("custom") if isinstance(st.get("custom"), dict) else {}
         st["custom"] = {"win": c.get("win") if _hex_ok(c.get("win")) else DEFAULT_CUSTOM["win"],
                         "accent": c.get("accent") if _hex_ok(c.get("accent")) else DEFAULT_CUSTOM["accent"],
-                        "bg": bool(c.get("bg")) and os.path.exists(CUSTOM_BG_FILE)}
+                        "bg": bool(c.get("bg")) and os.path.exists(CUSTOM_BG_FILE),
+                        "fit": c.get("fit") if c.get("fit") in CUSTOM_FITS else DEFAULT_CUSTOM["fit"]}
         L.load(st.get("lang") or DEFAULT_LANG)
         st["lang"] = L.code
         # bağlantı yeniden kurulunca saat yeniden eşitlenir
@@ -3480,7 +3482,7 @@ class Tacho:
             theme = self.s.get("theme") or DEFAULT_THEME
             bg = {"dark": "#171b22", "light": "#ffffff"}.get(theme, "#0b1230")
             if theme == "custom":
-                bg = _mix_hex(self.s["custom"]["win"], "#000000", 0.35)
+                bg = self.s["custom"]["win"]
             win = webview.create_window(WINDOW_TITLE + " Mini", OVERLAY_FILE + "#" + theme_hash(self.s) + f"&scale={mw / MINI_W:.3f}", js_api=self.api,
                                         width=mw, height=mh,
                                         min_size=(300, 60), frameless=True, easy_drag=True, on_top=True, resizable=False,
@@ -3904,7 +3906,8 @@ class Tacho:
             "langs": I18n.available(),
             "theme": s["theme"],
             "themes": [{"code": t, "name": L("theme." + t)} for t in THEMES],
-            "custom": {"win": s["custom"]["win"], "accent": s["custom"]["accent"], "bg": bool(s["custom"].get("bg")), "bg_rev": self.bg_rev},
+            "custom": {"win": s["custom"]["win"], "accent": s["custom"]["accent"], "bg": bool(s["custom"].get("bg")), "bg_rev": self.bg_rev,
+                       "fit": s["custom"].get("fit") or DEFAULT_CUSTOM["fit"]},
             "feedback_url": feedback_url(),
             "yard_max": int(YARD_MAX_KMH),
             "auto_break": s["auto_break"],
@@ -4053,6 +4056,13 @@ class Tacho:
         if is_custom:
             self._restyle_border()
 
+    def act_set_custom_fit(self, fit):
+        if fit not in CUSTOM_FITS:
+            return
+        with self.lock:
+            self.s["custom"]["fit"] = fit
+            self.dirty = True
+
     def act_set_custom_bg(self, data_url):
         """Sayfadan gelen data:image/...;base64 görselini exe'nin yanına yazar."""
         try:
@@ -4200,6 +4210,10 @@ class Api:
 
     def set_custom(self, win, accent):
         self._t.act_set_custom(win, accent)
+        return self.get_state()
+
+    def set_custom_fit(self, fit):
+        self._t.act_set_custom_fit(fit)
         return self.get_state()
 
     def set_custom_bg(self, data_url):

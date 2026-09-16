@@ -114,7 +114,7 @@ odpovídají tomu, co jste skutečně udělali.
 - **Motivy**: Van Gogh (výchozí, algoritmicky malované pozadí ve stylu *Hvězdné noci* se
   skleněnými panely), jednoduchý tmavý, jednoduchý světlý a **Vlastní**: vlastní obrázek na pozadí (JPG/PNG/WebP) plus
   výběr barev na plátně pro barvu okna a zvýraznění (RGB/HEX; barva textu se volí automaticky, mini lišta
-  používá stejné barvy).
+  používá stejné barvy). Umístění obrázku: vyplnit, přizpůsobit, na střed, dlaždice nebo roztáhnout; vlastní motiv používá plochý vzhled jednoduchého motivu.
 - **Jazyky**: angličtina, turečtina, němčina, ruština, polština, brazilská portugalština, španělština, francouzština, italština,
   čeština — přidání dalšího je jeden soubor JSON.
 - **Druhá obrazovka na telefonu nebo tabletu** (Nastavení → Aplikace → *Použít na telefonu nebo tabletu*, nebo tlačítko telefonu pod

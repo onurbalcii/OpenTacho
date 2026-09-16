@@ -114,7 +114,7 @@ coinciden con lo que realmente hiciste.
 - **Temas**: Van Gogh (por defecto, un fondo pintado por algoritmo al estilo de *La noche estrellada* con
   paneles de cristal), oscuro simple, claro simple y **Personalizado**: tu propia imagen de fondo (JPG/PNG/WebP) más un
   selector de color en lienzo para los colores de ventana y de acento (RGB/HEX; el color del texto se elige automáticamente, la barra mini
-  usa los mismos colores).
+  usa los mismos colores). Colocación de la imagen: rellenar, ajustar, centrar, mosaico o estirar; el tema personalizado usa el aspecto plano del tema simple.
 - **Idiomas**: inglés, turco, alemán, ruso, polaco, portugués de Brasil, español, francés, italiano,
   checo — añadir uno es un único archivo JSON.
 - **Segunda pantalla en el móvil o la tableta** (Ajustes → App → *Usar en el móvil o la tableta*, o el botón de teléfono bajo

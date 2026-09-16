@@ -114,7 +114,7 @@ correspondent à ce que vous avez réellement fait.
 - **Thèmes** : Van Gogh (par défaut, un fond peint par algorithme façon *Nuit étoilée* avec des
   panneaux vitrés), sombre simple, clair simple et **Personnalisé** : votre propre image de fond (JPG/PNG/WebP) plus un
   sélecteur de couleurs sur canevas pour les couleurs de fenêtre et d'accent (RGB/HEX ; la couleur du texte est choisie automatiquement, le mini-bandeau
-  suit les mêmes couleurs).
+  suit les mêmes couleurs). Disposition de l'image : remplir, ajuster, centrer, mosaïque ou étirer ; le thème personnalisé reprend l'aspect plat du thème simple.
 - **Langues** : anglais, turc, allemand, russe, polonais, portugais du Brésil, espagnol, français, italien,
   tchèque — en ajouter une, c'est un seul fichier JSON.
 - **Second écran sur téléphone ou tablette** (Paramètres → Appli → *Utiliser sur téléphone ou tablette*, ou le bouton téléphone sous

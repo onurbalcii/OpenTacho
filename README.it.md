@@ -114,7 +114,7 @@ corrispondono a ciò che hai davvero fatto.
 - **Temi**: Van Gogh (di default, uno sfondo dipinto algoritmicamente in stile *Notte stellata* con
   pannelli di vetro), scuro semplice, chiaro semplice e **Personalizzato**: la tua immagine di sfondo (JPG/PNG/WebP) più un
   selettore colore su canvas per i colori di finestra e d'accento (RGB/HEX; il colore del testo si sceglie automaticamente, la mini barra
-  segue gli stessi colori).
+  segue gli stessi colori). Posizione dell'immagine: riempi, adatta, centra, affianca o estendi; il tema personalizzato usa l'aspetto piatto del tema semplice.
 - **Lingue**: inglese, turco, tedesco, russo, polacco, portoghese brasiliano, spagnolo, francese, italiano,
   ceco — aggiungerne una è un singolo file JSON.
 - **Secondo schermo su telefono o tablet** (Impostazioni → App → *Usa su telefono o tablet*, o il pulsante telefono sotto

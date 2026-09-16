@@ -247,9 +247,9 @@
     const root = document.documentElement; root.dataset.theme = theme === "custom" ? "custom" : theme; root.removeAttribute("style");
     if (theme === "custom") {
       const W = rgb(custom && custom.win) || [28, 42, 94], A = rgb(custom && custom.accent) || [253, 202, 79], B = [0, 0, 0], Wh = [255, 255, 255];
-      const light = lum(W) > .45, Tc = light ? [27, 31, 42] : [246, 241, 230], Wdd = mix(W, B, .55);
-      const v = { "--bg": `linear-gradient(160deg, ${hex(mix(W, Wh, .1))}, ${hex(mix(W, B, .35))})`, "--panel": rgba(Wdd, .45), "--gold": hex(A), "--gold-line": rgba(A, .78), "--gold-soft": rgba(A, .16),
-                  "--text": hex(Tc), "--muted": rgba(Tc, .72), "--dim": rgba(Tc, .42), "--line": rgba(Tc, .12), "--track": rgba(Wdd, .65),
+      const light = lum(W) > .45, Tc = light ? [27, 31, 42] : [246, 241, 230], Wdd = mix(W, B, light ? .1 : .55);
+      const v = { "--bg": hex(W), "--panel": light ? hex(mix(W, Wh, .3)) : hex(mix(W, B, .45)), "--gold": hex(A), "--gold-line": rgba(A, light ? .45 : .55), "--gold-soft": rgba(A, .16),
+                  "--text": hex(Tc), "--muted": rgba(Tc, .72), "--dim": rgba(Tc, .42), "--line": rgba(Tc, .12), "--track": hex(Wdd),
                   "--sky": light ? "#0f8f83" : "#7cc0ef", "--duty": light ? "#c2680a" : "#f3b979", "--yard": light ? "#7a48d6" : "#cdb0ff", "--bad": light ? "#d63b3b" : "#ff6b6b", "--warn": light ? "#d97a06" : "#ffa94d" };
       for (const k in v) root.style.setProperty(k, v[k]);
     }

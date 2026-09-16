@@ -117,6 +117,7 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
 - **Designs**: Van Gogh (Standard, ein algorithmisch gemalter Hintergrund im Stil der *Sternennacht*
   mit Glasflächen), schlicht dunkel, schlicht hell und **Eigenes**: dein eigenes Hintergrundbild (JPG/PNG/WebP) plus
   ein Canvas-Farbwähler für Fenster- und Akzentfarbe (RGB/HEX; Textfarbe automatisch, die Mini-Leiste folgt denselben Farben).
+  Bildanordnung: füllen, einpassen, mittig, kacheln oder strecken; das eigene Design nutzt den schlichten flachen Look.
 - **Sprachen**: Deutsch, Englisch, Türkisch, Russisch, Polnisch, brasilianisches Portugiesisch, Spanisch, Französisch,
   Italienisch, Tschechisch — eine neue Sprache ist eine einzige JSON-Datei.
 - **Zweitbildschirm auf Handy oder Tablet** (Einstellungen → App → *Auf Handy oder Tablet nutzen* oder der

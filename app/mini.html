@@ -16,11 +16,11 @@
       const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k), rgba = (c, a) => `rgba(${c.map(Math.round).join(",")},${a})`;
       const lum = c => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]); };
       const W = rgb(h.get("win")) || [28, 42, 94], A = rgb(h.get("accent")) || [253, 202, 79], B = [0, 0, 0], Wh = [255, 255, 255];
-      const light = lum(W) > .45, T = light ? [27, 31, 42] : [246, 241, 230], Wdd = mix(W, B, .55);
-      const v = { "--bg": `linear-gradient(160deg, ${hex(mix(W, Wh, .1))}, ${hex(mix(W, B, .35))})`,
-                  "--gold": hex(A), "--gold-line": rgba(A, .78), "--gold-soft": rgba(A, .16),
+      const light = lum(W) > .45, T = light ? [27, 31, 42] : [246, 241, 230], Wdd = mix(W, B, light ? .1 : .55);
+      const v = { "--bg": hex(W),   // sade temalar gibi düz: şerit = pencere rengi
+                  "--gold": hex(A), "--gold-line": rgba(A, light ? .45 : .55), "--gold-soft": rgba(A, .16),
                   "--text": hex(T), "--muted": rgba(T, .72), "--dim": rgba(T, .42), "--line": rgba(T, .12),
-                  "--track": rgba(Wdd, .65), "--act-bg": rgba(Wdd, .35),
+                  "--track": hex(Wdd), "--act-bg": light ? hex(mix(W, Wh, .3)) : hex(mix(W, B, .45)),
                   "--sky": light ? "#0f8f83" : "#7cc0ef", "--duty": light ? "#c2680a" : "#f3b979", "--yard": light ? "#7a48d6" : "#cdb0ff",
                   "--bad": light ? "#d63b3b" : "#ff6b6b", "--warn": light ? "#d97a06" : "#ffa94d" };
       for (const k in v) document.documentElement.style.setProperty(k, v[k]);
@@ -61,7 +61,7 @@
   .strip { position: relative; height: 100%; display: flex; align-items: center; gap: 12px; padding: 0 10px 0 12px;
            background: var(--bg); border: 1px solid var(--line); border-radius: 0; overflow: hidden; }   /* köşeleri Windows 11 DWM yuvarlar */
   .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
-  html[data-theme="vangogh"] .frame, html[data-theme="custom"] .frame { display: block; }
+  html[data-theme="vangogh"] .frame { display: block; }
   .frame .fr { x: 4px; y: 4px; width: calc(100% - 8px); height: calc(100% - 8px); rx: 5px; ry: 5px; fill: none;
                stroke: var(--gold-line); stroke-width: 1.4; filter: url(#wobble); opacity: .85; }
 

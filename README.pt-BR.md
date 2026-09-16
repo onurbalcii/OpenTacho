@@ -114,7 +114,7 @@ batem com o que você realmente fez.
 - **Temas**: Van Gogh (padrão, um fundo pintado por algoritmo no estilo *Noite Estrelada* com
   painéis de vidro), escuro simples, claro simples e **Personalizado**: sua própria imagem de fundo (JPG/PNG/WebP) mais um
   seletor de cores em canvas para as cores da janela e de destaque (RGB/HEX; a cor do texto é escolhida automaticamente, a barra mini
-  segue as mesmas cores).
+  segue as mesmas cores). Posição da imagem: preencher, ajustar, centralizar, lado a lado ou esticar; o tema personalizado usa o visual plano do tema simples.
 - **Idiomas**: inglês, turco, alemão, russo, polonês, português do Brasil, espanhol, francês, italiano,
   tcheco — adicionar um é um único arquivo JSON.
 - **Segunda tela no celular ou tablet** (Configurações → App → *Usar no celular ou tablet*, ou o botão de telefone sob
