@@ -1,6 +1,6 @@
 # OpenTacho
 
-[English](README.md) · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · **Polski**
+[English](README.md) · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · **Polski** · [Português (Brasil)](README.pt-BR.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Čeština](README.cs.md)
 
 Mały, konsekwentny tachograf czasu pracy dla **Euro Truck Simulator 2** i
 **American Truck Simulator** — jedna zasada, bez zamieszania, wszystko mierzone w **czasie gry**:
@@ -20,6 +20,9 @@ zostało, i ogarnia niewygodne przypadki (promy, sen, strefy czasowe, wczytywani
 </p>
 <p align="center">
   <img src="docs/screenshots/pl/mini.png" width="540" alt="Mini pasek nad grą">
+</p>
+<p align="center">
+  <img src="docs/screenshots/pl/mobile.png" width="250" alt="Drugi ekran na telefonie">
 </p>
 
 ## Szybki start
@@ -151,12 +154,16 @@ Tak — właśnie tym jest OpenTacho. Liczy czas jazdy, przerwy i odpoczynek dzi
 i odczytuje grę na żywo przez wtyczkę telemetrii scs-sdk-plugin.
 
 **Jaką zasadę stosuje?**
-Unijną zasadę czasu pracy: 4:30 jazdy → 45 minut przerwy → 4:30 jazdy → 11 godzin odpoczynku
-dziennego, plus dzielona przerwa 15 + 30 i dzielony odpoczynek dzienny 3 + 9. Nic więcej.
+Dwa zestawy reguł, wybierane według gry lub ręcznie (Ustawienia → Zasady): reguła UE (561/2006) — 4:30 jazdy →
+45 minut przerwy → 4:30 jazdy → 11 godzin odpoczynku dziennego, dzielona przerwa 15 + 30, dzielony odpoczynek dzienny
+3 + 9 i opcjonalna warstwa tygodniowa (56/90 h, wydłużenie do 10 h, skrócony odpoczynek 9 h, rozpiętość dnia, odpoczynek
+tygodniowy) — oraz reguły FMCSA (USA) dla American Truck Simulator (8 h / 30 min / 11 h / 10 h, opcjonalne okno 14 h,
+70 h / 8 dni, restart 34 h).
 
 **Czy potrzebuje internetu lub konta?**
-Nie. Wszystko działa lokalnie i offline; nic nie jest wysyłane. Jedyne działanie na zewnątrz to
-opcjonalny przycisk opinii, który otwiera formularz w przeglądarce.
+Konto nie jest potrzebne; wszystko liczy się lokalnie i offline, nic nie jest wysyłane. Na zewnątrz wychodzą tylko
+opcjonalne sprawdzanie aktualizacji (odczytuje informacje o najnowszym wydaniu z GitHub, można wyłączyć) i przycisk
+opinii, który otwiera formularz w przeglądarce. Drugi ekran na telefonie/tablecie pozostaje w sieci lokalnej.
 
 **Czy działa z modami map, ProMods lub ATS?**
 Tak. Odczytuje tylko telemetrię (zegar, prędkość, zlecenie), więc mody map i ciężarówek nie mają
@@ -183,7 +190,7 @@ odpoczynek w aplikacji zamiast spać w grze — zobacz *Zalecany sposób użycia
 trzyma się reguły UE, a sen w grze rzadko trwa 11 h potrzebnych na odpoczynek dzienny.
 
 **Czym różni się od aplikacji typu ELD?**
-To lekka, otwartoźródłowa (MIT) alternatywa: jeden zestaw zasad, bez konta, działa offline,
+To lekka, otwartoźródłowa (MIT) alternatywa: zestawy reguł UE i USA, bez konta, działa offline,
 jeden przenośny folder z `.exe`; promy, sen, strefy czasowe i wczytywanie zapisów ogarnia za Ciebie.
 
 ## Układ folderu
@@ -192,7 +199,7 @@ jeden przenośny folder z `.exe`; promy, sen, strefy czasowe i wczytywanie zapis
 OpenTacho.exe          aplikacja (kompilacja wydania)      OpenTacho.py   ta sama aplikacja ze źródeł
 plugin/                scs-telemetry.dll → skopiuj do folderu plugins gry
 app/                   zawartość okna: main.html, mini.html, mobile.html, assets/ (logo, tło, dźwięki)
-lang/                  en, tr, de, ru, pl — jeden plik JSON na język
+lang/                  en, tr, de, ru, pl, pt-BR, es, fr, it, cs — jeden plik JSON na język
 lib/                   SII_Decrypt.dll (funkcja stref czasowych)
 docs/screenshots/      obrazy użyte w tych README
 third_party/           licencje dołączonych komponentów

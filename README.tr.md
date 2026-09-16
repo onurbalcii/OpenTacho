@@ -1,6 +1,6 @@
 # OpenTacho
 
-[English](README.md) · **Türkçe** · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md)
+[English](README.md) · **Türkçe** · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md) · [Português (Brasil)](README.pt-BR.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Čeština](README.cs.md)
 
 **Euro Truck Simulator 2** ve **American Truck Simulator** için küçük, tek kurallı bir
 çalışma-süresi takografı. Her şey **oyun saatiyle** ölçülür:
@@ -20,6 +20,9 @@ halleder.
 </p>
 <p align="center">
   <img src="docs/screenshots/tr/mini.png" width="540" alt="Oyunun üstünde mini şerit">
+</p>
+<p align="center">
+  <img src="docs/screenshots/tr/mobile.png" width="250" alt="Telefonda ikinci ekran">
 </p>
 
 ## Hızlı başlangıç
@@ -150,12 +153,15 @@ Evet — OpenTacho tam olarak bu. Sürüş süresini, molaları ve günlük dinl
 sayar; oyunu scs-sdk-plugin telemetri eklentisi üzerinden canlı okur.
 
 **Hangi kuralı uygular?**
-AB çalışma-süresi kuralı: 4:30 sürüş → 45 dk mola → 4:30 sürüş → 11 saat günlük dinlenme; ek
-olarak 15 + 30 bölünmüş mola ve 3 + 9 bölünmüş günlük dinlenme. Başka bir şey yok.
+İki kural seti; oyuna göre otomatik ya da elle seçilir (Ayarlar → Kurallar): AB kuralı (561/2006) — 4:30 sürüş →
+45 dk mola → 4:30 sürüş → 11 saat günlük dinlenme, 15 + 30 bölünmüş mola, 3 + 9 bölünmüş günlük dinlenme ve isteğe
+bağlı haftalık katman (56/90 sa, 10 sa uzatma, 9 sa kısa dinlenme, gün yayılımı, haftalık dinlenme) — ve American Truck
+Simulator için ABD FMCSA kuralı (8 sa / 30 dk / 11 sa / 10 sa, isteğe bağlı 14 sa pencere, 70 sa / 8 gün, 34 sa yeniden başlatma).
 
 **İnternet ya da hesap gerekiyor mu?**
-Hayır. Her şey yerelde ve çevrimdışı çalışır; hiçbir veri gönderilmez. Dışa açılan tek şey,
-isteğe bağlı geri bildirim butonunun tarayıcıda açtığı formdur.
+Hesap yok; sayım tamamen yerelde ve çevrimdışı yapılır, hiçbir veri gönderilmez. Dışa çıkan tek istekler isteğe bağlı
+sürüm denetimi (GitHub'dan son sürüm bilgisini okur, kapatılabilir) ve tarayıcıda bir form açan geri bildirim
+düğmesidir. Telefon/tablet ikinci ekranı yerel ağın içinde kalır.
 
 **Harita modları, ProMods ya da ATS ile çalışır mı?**
 Evet. Yalnızca telemetri (saat, hız, iş) okuduğu için harita ve kamyon modları fark etmez;
@@ -182,7 +188,7 @@ Tam dinlenme düğmeleriyle atla — yukarıdaki *Önerilen kullanım* bölümü
 kuralına uymaz, oyun içi uyku da günlük dinlenmenin istediği 11 saati nadiren tutar.
 
 **ELD tarzı / çalışma-süresi uygulamalarından farkı ne?**
-Hafif ve açık kaynak (MIT) bir alternatif: tek kural seti, hesap yok, çevrimdışı çalışır, tek
+Hafif ve açık kaynak (MIT) bir alternatif: AB ve ABD kural setleri, hesap yok, çevrimdışı çalışır, tek
 bir taşınabilir klasörde `.exe`; feribot, uyku, saat dilimi ve kayıt geri yüklemelerini sizin
 yerinize halleder.
 
@@ -192,7 +198,7 @@ yerinize halleder.
 OpenTacho.exe          uygulama (sürüm paketi)             OpenTacho.py   aynı uygulama, kaynaktan
 plugin/                scs-telemetry.dll → oyunun plugins klasörüne kopyalanır
 app/                   pencere içeriği: main.html, mini.html, mobile.html, assets/ (logo, arka plan, sesler)
-lang/                  tr, en, de, ru, pl — dil başına bir JSON dosyası
+lang/                  tr, en, de, ru, pl, pt-BR, es, fr, it, cs — dil başına bir JSON dosyası
 lib/                   SII_Decrypt.dll (saat dilimi özelliği)
 docs/screenshots/      README'lerde kullanılan görüntüler
 third_party/           paketlenen bileşenlerin lisansları

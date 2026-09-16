@@ -24,6 +24,7 @@
     --text: #1b1f2a; --muted: rgba(27,31,42,.68); --dim: rgba(27,31,42,.38); --bg: #eef1f6; --panel: #ffffff; --line: #d9dee8; --track: #e3e7ef; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   [hidden] { display: none !important; }
+  html.shot { scrollbar-width: none; } html.shot::-webkit-scrollbar { display: none; }
   html, body { margin: 0; min-height: 100%; }
   body { font-family: var(--sans); color: var(--text); background: var(--bg); background-attachment: fixed; padding: max(10px, env(safe-area-inset-top)) 12px calc(64px + env(safe-area-inset-bottom)); -webkit-user-select: none; user-select: none; }
   svg { display: block; } .ic { display: inline-block; width: 1em; height: 1em; vertical-align: -.15em; }
@@ -275,6 +276,7 @@
     $("cover").hidden = true;
   });
   $("coverLogo").src = "/assets/logo.png?k=" + encodeURIComponent(KEY);
+  if (new URLSearchParams(location.search).get("shot")) { $("cover").hidden = true; document.documentElement.classList.add("shot"); }   // belge görüntüsü: kapak ve kaydırma çubuğu olmadan
   document.addEventListener("visibilitychange", () => { if (!document.hidden) { const v = $("nosleep"); try { v.play().catch(() => {}); } catch (e) {} } });
 
   // ---- çizim ----

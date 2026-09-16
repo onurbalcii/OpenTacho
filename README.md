@@ -1,6 +1,6 @@
 # OpenTacho
 
-**English** · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md)
+**English** · [Türkçe](README.tr.md) · [Deutsch](README.de.md) · [Русский](README.ru.md) · [Polski](README.pl.md) · [Português (Brasil)](README.pt-BR.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Čeština](README.cs.md)
 
 A small, opinionated hours-of-service tachograph for **Euro Truck Simulator 2** and
 **American Truck Simulator** — one rule, no fuss, measured entirely in **game time**:
@@ -20,6 +20,9 @@ loading) so you can just drive.
 </p>
 <p align="center">
   <img src="docs/screenshots/en/mini.png" width="540" alt="Mini strip over the game">
+</p>
+<p align="center">
+  <img src="docs/screenshots/en/mobile.png" width="250" alt="Second screen on a phone">
 </p>
 
 ## Quick start
@@ -154,12 +157,16 @@ Yes — that is exactly what OpenTacho is. It counts driving time, breaks and da
 time and reads the game live through the scs-sdk-plugin telemetry plugin.
 
 **Which rule does it follow?**
-The EU hours-of-service rule: 4:30 driving → 45-minute break → 4:30 driving → 11-hour daily
-rest, plus the 15 + 30 split break and the 3 + 9 split daily rest. Nothing else.
+Two rule sets, chosen by game or manually (Settings → Rules): the EU rule (561/2006) — 4:30 driving →
+45-minute break → 4:30 driving → 11-hour daily rest, the 15 + 30 split break, the 3 + 9 split daily rest and an
+optional weekly layer (56/90 h, 10 h extension, 9 h reduced rest, day spread, weekly rest) — and the US FMCSA
+hours-of-service rule for American Truck Simulator (8 h / 30 min / 11 h / 10 h, optional 14 h window, 70 h / 8 days,
+34 h restart).
 
 **Does it need an internet connection or an account?**
-No. Everything runs locally and offline; nothing is uploaded. The only outbound action is the
-optional feedback button, which opens a web form in your browser.
+No account, and everything counts locally and offline; nothing is uploaded. The only outbound requests are the
+optional update check (reads the latest release info from GitHub, can be switched off) and the feedback button,
+which opens a web form in your browser. The phone/tablet second screen stays inside your local network.
 
 **Does it work with map mods, ProMods or ATS?**
 Yes. It only reads telemetry (clock, speed, job), so map and truck mods do not matter, and
@@ -186,7 +193,7 @@ instead of sleeping in the game — see *Recommended setup* above. The game's fa
 EU rule, and in-game sleep rarely lasts the 11 h a daily rest needs.
 
 **How is it different from ELD-style / hours-of-service apps?**
-It is a lightweight, open-source (MIT) alternative: one rule set, no account, works offline,
+It is a lightweight, open-source (MIT) alternative: EU and US rule sets, no account, works offline,
 a single portable folder with an `.exe`, and it handles ferries, sleeping, time zones and save
 reloads for you.
 
@@ -196,7 +203,7 @@ reloads for you.
 OpenTacho.exe          the app (release build)            OpenTacho.py   the same app, run from source
 plugin/                scs-telemetry.dll → copy into the game's plugins folder
 app/                   window content: main.html, mini.html, mobile.html, assets/ (logo, background, sounds)
-lang/                  en, tr, de, ru, pl — one JSON file per language
+lang/                  en, tr, de, ru, pl, pt-BR, es, fr, it, cs — one JSON file per language
 lib/                   SII_Decrypt.dll (time-zone feature)
 docs/screenshots/      the images used in these READMEs
 third_party/           licenses of the bundled components

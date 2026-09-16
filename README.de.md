@@ -1,6 +1,6 @@
 # OpenTacho
 
-[English](README.md) · [Türkçe](README.tr.md) · **Deutsch** · [Русский](README.ru.md) · [Polski](README.pl.md)
+[English](README.md) · [Türkçe](README.tr.md) · **Deutsch** · [Русский](README.ru.md) · [Polski](README.pl.md) · [Português (Brasil)](README.pt-BR.md) · [Español](README.es.md) · [Français](README.fr.md) · [Italiano](README.it.md) · [Čeština](README.cs.md)
 
 Ein kleiner, konsequenter Lenkzeit-Tachograph für **Euro Truck Simulator 2** und
 **American Truck Simulator** — eine Regel, kein Schnickschnack, komplett in **Spielzeit** gemessen:
@@ -20,6 +20,9 @@ Spielstände, Anhänger beladen), damit du einfach fahren kannst.
 </p>
 <p align="center">
   <img src="docs/screenshots/de/mini.png" width="540" alt="Mini-Leiste über dem Spiel">
+</p>
+<p align="center">
+  <img src="docs/screenshots/de/mobile.png" width="250" alt="Zweitbildschirm auf dem Handy">
 </p>
 
 ## Schnellstart
@@ -155,12 +158,16 @@ Ja — genau das ist OpenTacho. Es zählt Lenkzeit, Pausen und Tagesruhezeit in 
 liest das Spiel live über das Telemetrie-Plugin scs-sdk-plugin.
 
 **Welche Regel gilt?**
-Die EU-Lenkzeitregel: 4:30 Fahren → 45 Minuten Pause → 4:30 Fahren → 11 Stunden Tagesruhezeit,
-dazu die geteilte Pause 15 + 30 und die geteilte Tagesruhezeit 3 + 9. Sonst nichts.
+Zwei Regelwerke, nach Spiel oder manuell gewählt (Einstellungen → Regeln): die EU-Regel (561/2006) — 4:30 Fahren →
+45 Minuten Pause → 4:30 Fahren → 11 Stunden Tagesruhezeit, die geteilte Pause 15 + 30, die geteilte Tagesruhezeit 3 + 9
+und eine optionale Wochenebene (56/90 h, 10-h-Verlängerung, 9 h verkürzte Ruhezeit, Tagesspanne, Wochenruhezeit) — und
+die US-FMCSA-Lenkzeitregel für American Truck Simulator (8 h / 30 min / 11 h / 10 h, optional 14-h-Fenster, 70 h / 8 Tage,
+34-h-Neustart).
 
 **Braucht es Internet oder ein Konto?**
-Nein. Alles läuft lokal und offline; nichts wird hochgeladen. Die einzige Verbindung nach außen
-ist die optionale Feedback-Schaltfläche, die ein Webformular im Browser öffnet.
+Kein Konto, und alles wird lokal und offline gezählt; nichts wird hochgeladen. Nach außen gehen nur die optionale
+Update-Prüfung (liest die Infos zur neuesten Version von GitHub, abschaltbar) und die Feedback-Schaltfläche, die ein
+Webformular im Browser öffnet. Der Zweitbildschirm auf Handy/Tablet bleibt im lokalen Netzwerk.
 
 **Funktioniert es mit Karten-Mods, ProMods oder ATS?**
 Ja. Es liest nur Telemetrie (Uhr, Geschwindigkeit, Auftrag), Karten- und Lkw-Mods spielen
@@ -188,7 +195,7 @@ statt mit Schlafen im Spiel überspringen — siehe *Empfohlene Nutzung* oben. D
 nicht der EU-Regel, und der Schlaf im Spiel dauert selten die 11 h einer Tagesruhezeit.
 
 **Was unterscheidet es von ELD-artigen Lenkzeit-Apps?**
-Es ist eine leichte Open-Source-Alternative (MIT): ein Regelsatz, kein Konto, offline, ein
+Es ist eine leichte Open-Source-Alternative (MIT): EU- und US-Regelwerk, kein Konto, offline, ein
 einzelner portabler Ordner mit `.exe`, und es kümmert sich um Fähren, Schlafen, Zeitzonen und
 geladene Spielstände.
 
@@ -198,7 +205,7 @@ geladene Spielstände.
 OpenTacho.exe          die App (Release-Build)             OpenTacho.py   dieselbe App, aus dem Quellcode
 plugin/                scs-telemetry.dll → in den plugins-Ordner des Spiels kopieren
 app/                   Fensterinhalt: main.html, mini.html, mobile.html, assets/ (Logo, Hintergrund, Töne)
-lang/                  en, tr, de, ru, pl — eine JSON-Datei pro Sprache
+lang/                  en, tr, de, ru, pl, pt-BR, es, fr, it, cs — eine JSON-Datei pro Sprache
 lib/                   SII_Decrypt.dll (Zeitzonen-Funktion)
 docs/screenshots/      die Bilder dieser READMEs
 third_party/           Lizenzen der mitgelieferten Komponenten
