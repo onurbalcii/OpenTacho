@@ -120,8 +120,8 @@ gerçekten yaptığınla birebir örtüşür.
   düğmesi): LAN paylaşımını açıp QR kodu okut — aynı Wi-Fi'deki cihaz takografı tarayıcısında gösterir, uygulama
   gerekmez: durum, kalan süre, çubuklar, günün akışı, iş ve ETA, bayraklar, olaylar; geçmiş ve planlayıcı sekmeleri.
   Mola / İç hareket / Atla / Tam dinlenme telefondan çalışır (kapatılabilir); sayfa ekranı uyanık tutar, uyarılarda
-  ses çalar ve titreşir. Adres rastgele bir anahtar taşır, internete hiçbir şey açılmaz, paylaşım kapalıyken hiçbir
-  şey dinlenmez. Windows güvenlik duvarı bir kez sorar — özel ağlar için izin ver.
+  ses çalar ve titreşir. Adres rastgele bir anahtar taşır, internete hiçbir şey açılmaz, paylaşım kapalıyken ve uygulama
+  kapatıldıktan sonra hiçbir şey dinlenmez; paylaşım her açılışta kapalı başlar, her açışta yeni kod verilir. Windows güvenlik duvarı bir kez sorar — özel ağlar için izin ver.
 - **Sürüm denetimi**: açılışta GitHub'dan son sürüm sorulur (kapatılabilir); yeni sürüm varsa üstte indirme
   düğmeli bir şerit çıkar. Ayarlar → Uygulama'da sürüm numarası, elle denetim ve indirme bağlantısı.
 - **İlk açılış**: dil seçimi, ardından ekranı ve ayar sekmelerini adım adım anlatan kısa bir rehber turu

@@ -587,7 +587,7 @@
   "ui.lan.ip": "Network address",
   "ui.lan.off_hint": "Sharing is off — switch it on and the QR code appears here.",
   "ui.lan.error": "Server could not start: {e}",
-  "ui.hint.lan": "<ul><li>No internet needed; the phone and the PC must be on the same local network (same router/Wi-Fi or the phone's hotspot). On guest networks devices may not see each other.</li><li>On first use Windows Firewall asks for permission: allow it for <b>private networks</b>.</li><li>The address carries a random 16-character key; nobody without the key can connect. <b>New code</b> drops old connections. Nothing listens while sharing is off.</li><li>\"Add to Home screen\" on the phone opens it like an app; the page keeps the screen awake, plays a sound and vibrates on alerts, and has history and planner tabs.</li></ul>",
+  "ui.hint.lan": "<ul><li>No internet needed; the phone and the PC must be on the same local network (same router/Wi-Fi or the phone's hotspot). On guest networks devices may not see each other.</li><li>On first use Windows Firewall asks for permission: allow it for <b>private networks</b>.</li><li>The address carries a random 16-character key; nobody without the key can connect. <b>New code</b> drops old connections. Nothing listens while sharing is off or after the app is closed. Sharing lasts for the session only: it is off after every restart, and every switch-on issues a new code and address.</li><li>\"Add to Home screen\" on the phone opens it like an app; the page keeps the screen awake, plays a sound and vibrates on alerts, and has history and planner tabs.</li></ul>",
   "mob.tap": "Tap to start",
   "mob.offline": "No connection — retrying…",
   "mob.readonly": "Control from the phone is off (enable it in the app)",

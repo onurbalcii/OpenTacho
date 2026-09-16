@@ -122,7 +122,7 @@ odpovídají tomu, co jste skutečně udělali.
   prohlížeči, bez aplikace: stav, zbývající čas, pruhy, průběh dne, zakázku s ETA, příznaky, události a záložky historie a plánovače.
   Přestávka / Manévrování / Přeskočit / Plný odpočinek fungují z telefonu (lze vypnout); stránka drží obrazovku zapnutou
   a při upozorněních pípá/vibruje. Odkaz obsahuje náhodný klíč, nic není vystaveno do internetu a při vypnutém
-  sdílení nic nenaslouchá. Brána firewall Windows se zeptá jednou — povolte pro soukromé sítě.
+  sdílení či po zavření aplikace nic nenaslouchá; po každém spuštění je sdílení vypnuté a každé zapnutí vydá nový kód. Brána firewall Windows se zeptá jednou — povolte pro soukromé sítě.
 - **Kontrola aktualizací**: při spuštění se aplikace zeptá GitHubu na nejnovější vydání (lze vypnout) a při novější
   verzi zobrazí pruh s tlačítkem stažení; Nastavení → Aplikace ukazuje verzi, ruční kontrolu
   a odkaz ke stažení.

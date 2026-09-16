@@ -333,7 +333,7 @@ DEFAULT_STATE = {
     "mini_scale": 100,         # mini şerit ölçeği (%): sayfa zoom + pencere boyutu birlikte
     "update_check": True,      # açılışta GitHub'dan son sürümü denetle
     "update_seen": None,       # "Daha sonra" denilen sürüm: o sürüm için açılış uyarısı tekrar çıkmaz
-    "lan": {"on": False, "control": True, "port": LAN_PORT, "key": None, "ip": None},   # LAN ikinci ekran: paylaşım, telefondan kontrol, erişim anahtarı
+    "lan": {"on": False, "control": True, "port": LAN_PORT, "key": None, "ip": None},   # LAN ikinci ekran: paylaşım (oturumluk, diske yazılmaz), telefondan kontrol, erişim anahtarı (oturumluk)
     "offjob_rest": True,       # görev dışındayken (aktif teslimat yok) dinlenme yine sayılsın mı (varsayılan açık)
     "tz_adjust": 0,            # saat göstergesine elle eklenen düzeltme (dk)
     "set_time_frame": "local", # g_set_time hangi saati alıyor: local (HUD saati, test edildi) | base
@@ -1748,6 +1748,14 @@ class Tacho:
                         "accent": c.get("accent") if _hex_ok(c.get("accent")) else DEFAULT_CUSTOM["accent"],
                         "bg": bool(c.get("bg")) and os.path.exists(CUSTOM_BG_FILE),
                         "fit": c.get("fit") if c.get("fit") in CUSTOM_FITS else DEFAULT_CUSTOM["fit"]}
+        # LAN paylaşımı oturumluk: her açılışta kapalı başlar, anahtar diskten okunmaz (açınca yenisi üretilir)
+        ln = st.get("lan") if isinstance(st.get("lan"), dict) else {}
+        try:
+            port = int(ln.get("port") or LAN_PORT)
+        except (TypeError, ValueError):
+            port = LAN_PORT
+        st["lan"] = {"on": False, "control": bool(ln.get("control", True)), "port": port if 1024 <= port <= 65535 else LAN_PORT,
+                     "key": None, "ip": ln.get("ip") if isinstance(ln.get("ip"), str) else None}
         L.load(st.get("lang") or DEFAULT_LANG)
         st["lang"] = L.code
         # bağlantı yeniden kurulunca saat yeniden eşitlenir
@@ -1757,7 +1765,9 @@ class Tacho:
 
     def save(self):
         with self.lock:
-            data = json.dumps(self.s, ensure_ascii=False, indent=1)
+            out = dict(self.s)
+            out["lan"] = dict(self.s["lan"], on=False, key=None)   # paylaşım ve anahtar diske yazılmaz: her açılışta yeniden açılır, yeni bağlantı verilir
+            data = json.dumps(out, ensure_ascii=False, indent=1)
             self.dirty = False
         tmp = STATE_FILE + ".tmp"
         try:
@@ -3656,8 +3666,8 @@ class Tacho:
         with self.lock:
             lan = self.s["lan"]
             lan["on"] = bool(on)
-            if on and not lan.get("key"):
-                lan["key"] = secrets.token_urlsafe(12)
+            lan["key"] = secrets.token_urlsafe(12) if on else None   # her açışta yeni bağlantı; kapatınca eski adres ölür
+            self.lan.clients = {}
             self.dirty = True
             port = int(lan.get("port") or LAN_PORT)
         if on:
@@ -4456,8 +4466,7 @@ def main():
     tacho.hotkeys.start()
     if tacho.s.get("update_check", True):
         tacho.updates.start()   # arka planda; ağ yoksa sessiz
-    if tacho.s["lan"].get("on") and tacho.s["lan"].get("key"):
-        tacho.lan.start(int(tacho.s["lan"].get("port") or LAN_PORT))
+    # LAN paylaşımı kayıttan geri gelmez: kullanıcı her oturumda uygulamadan açar, yeni bağlantı alır
 
     def remember(**vals):
         with tacho.lock:
@@ -4467,6 +4476,7 @@ def main():
             tacho.dirty = True
 
     def on_closing():
+        tacho.lan.stop()   # önce ağ kesilir: telefon anında "bağlantı yok" görür, kapanış sırasında hiçbir istek işlenmez
         try:
             if tacho.win_maxed and tacho.win_normal:
                 x, y, w, h = tacho.win_normal
@@ -4485,7 +4495,6 @@ def main():
                 tacho.mini_win.destroy()
             except Exception:
                 pass
-        tacho.lan.stop()
 
     def on_moved(x, y):
         if not tacho.win_maxed:

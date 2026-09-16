@@ -122,7 +122,8 @@ corrispondono a ciò che hai davvero fatto.
   browser, senza app: stato, tempo rimasto, barre, flusso della giornata, incarico con ETA, indicatori, eventi, più le schede cronologia e pianificatore.
   Pausa / Manovra / Salta / Riposo completo funzionano dal telefono (disattivabile); la pagina tiene lo schermo acceso
   e suona/vibra agli avvisi. Il link contiene una chiave casuale, nulla è esposto a internet e nulla
-  resta in ascolto a condivisione spenta. Il firewall di Windows chiede una volta — consentilo per le reti private.
+  resta in ascolto a condivisione spenta o ad app chiusa; a ogni riavvio la condivisione è spenta e ogni accensione
+  genera un nuovo codice. Il firewall di Windows chiede una volta — consentilo per le reti private.
 - **Controllo aggiornamenti**: all'avvio l'app chiede a GitHub l'ultima versione (disattivabile) e mostra un
   banner con pulsante di download quando esiste una versione più recente; Impostazioni → App mostra la versione, un controllo manuale
   e il link di download.

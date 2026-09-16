@@ -122,7 +122,8 @@ coinciden con lo que realmente hiciste.
   navegador, sin app: estado, tiempo restante, barras, flujo del día, encargo con ETA, indicadores, eventos, además de pestañas de historial y planificador.
   Pausa / Maniobra / Saltar / Descanso completo funcionan desde el móvil (se puede desactivar); la página mantiene la pantalla encendida
   y suena/vibra en los avisos. El enlace lleva una clave aleatoria, nada se expone a internet y nada
-  escucha con el compartir desactivado. El Firewall de Windows pregunta una vez — permítelo para redes privadas.
+  escucha con el compartir desactivado ni tras cerrar la app; tras cada reinicio el compartir está desactivado y cada
+  activación emite un código nuevo. El Firewall de Windows pregunta una vez — permítelo para redes privadas.
 - **Comprobación de actualizaciones**: al iniciar, la app consulta a GitHub la última versión (se puede desactivar) y muestra una
   franja con botón de descarga cuando hay una versión más nueva; Ajustes → App muestra la versión, una comprobación manual
   y el enlace de descarga.

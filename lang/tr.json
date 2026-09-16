@@ -587,7 +587,7 @@
   "ui.lan.ip": "Ağ adresi",
   "ui.lan.off_hint": "Paylaşım kapalı — açınca QR kod burada görünür.",
   "ui.lan.error": "Sunucu başlatılamadı: {e}",
-  "ui.hint.lan": "<ul><li>İnternet gerekmez; telefon ile bilgisayar aynı yerel ağda olmalı (aynı modem/Wi-Fi ya da telefonun hotspot'u). Misafir ağlarında cihazlar birbirini göremeyebilir.</li><li>İlk açılışta Windows güvenlik duvarı izin sorar: <b>özel ağlar</b> için izin ver.</li><li>Adres 16 karakterlik rastgele bir anahtar taşır; anahtarı bilmeyen bağlanamaz. <b>Yeni kod</b> eski bağlantıları düşürür. Paylaşım kapalıyken hiçbir şey dinlenmez.</li><li>Telefonda \"Ana ekrana ekle\" ile uygulama gibi açılır; sayfa ekranı uyanık tutar, uyarılarda ses çalar ve titreşir; geçmiş ve planlayıcı sekmeleri de vardır.</li></ul>",
+  "ui.hint.lan": "<ul><li>İnternet gerekmez; telefon ile bilgisayar aynı yerel ağda olmalı (aynı modem/Wi-Fi ya da telefonun hotspot'u). Misafir ağlarında cihazlar birbirini göremeyebilir.</li><li>İlk açılışta Windows güvenlik duvarı izin sorar: <b>özel ağlar</b> için izin ver.</li><li>Adres 16 karakterlik rastgele bir anahtar taşır; anahtarı bilmeyen bağlanamaz. <b>Yeni kod</b> eski bağlantıları düşürür. Paylaşım kapalıyken ve uygulama kapatıldıktan sonra hiçbir şey dinlenmez. Paylaşım oturumluktur: her açılışta kapalı başlar, her açışta yeni bir kod ve adres verilir.</li><li>Telefonda \"Ana ekrana ekle\" ile uygulama gibi açılır; sayfa ekranı uyanık tutar, uyarılarda ses çalar ve titreşir; geçmiş ve planlayıcı sekmeleri de vardır.</li></ul>",
   "mob.tap": "Dokun ve başla",
   "mob.offline": "Bağlantı yok — yeniden deneniyor…",
   "mob.readonly": "Telefondan kontrol kapalı (uygulamadan açılabilir)",

@@ -121,7 +121,8 @@ odpowiadają temu, co naprawdę zrobiłeś.
   pokazuje tachograf w przeglądarce, bez aplikacji: status, pozostały czas, paski, przebieg dnia, zlecenie z ETA,
   znaczniki, zdarzenia oraz karty historii i planera. Przerwa / Manewry / Pomiń / Pełny odpoczynek działają z telefonu
   (można wyłączyć); strona nie pozwala wygasić ekranu, przy ostrzeżeniach gra dźwięk i wibruje. Link zawiera losowy
-  klucz, nic nie jest wystawione do internetu, przy wyłączonym udostępnianiu nic nie nasłuchuje. Zapora Windows zapyta
+  klucz, nic nie jest wystawione do internetu, przy wyłączonym udostępnianiu i po zamknięciu
+  aplikacji nic nie nasłuchuje; po każdym uruchomieniu udostępnianie jest wyłączone, każde włączenie nadaje nowy kod. Zapora Windows zapyta
   raz — zezwól dla sieci prywatnych.
 - **Sprawdzanie aktualizacji**: przy starcie aplikacja pyta GitHub o najnowsze wydanie (można wyłączyć) i przy nowszej
   wersji pokazuje pasek z przyciskiem pobierania; Ustawienia → Aplikacja pokazują wersję, ręczne sprawdzenie i link.

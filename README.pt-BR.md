@@ -122,7 +122,8 @@ batem com o que você realmente fez.
   navegador, sem app: status, tempo restante, barras, fluxo do dia, frete com ETA, indicadores, eventos, além das abas de histórico e planejador.
   Pausa / Manobra / Pular / Descanso completo funcionam pelo celular (pode ser desativado); a página mantém a tela acesa
   e toca/vibra nos alertas. O link leva uma chave aleatória, nada é exposto à internet e nada
-  fica escutando com o compartilhamento desligado. O Firewall do Windows pergunta uma vez — permita para redes privadas.
+  fica escutando com o compartilhamento desligado ou depois de fechar o app; a cada reinício o compartilhamento fica desligado
+  e cada vez que é ligado gera um novo código. O Firewall do Windows pergunta uma vez — permita para redes privadas.
 - **Verificação de atualização**: ao iniciar, o app consulta o GitHub pela versão mais recente (pode ser desligado) e mostra uma
   faixa com botão de download quando há versão mais nova; Configurações → App mostra a versão, uma verificação manual
   e o link de download.

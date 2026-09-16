@@ -587,7 +587,7 @@
   "ui.lan.ip": "Síťová adresa",
   "ui.lan.off_hint": "Sdílení je vypnuté — zapněte ho a zde se objeví QR kód.",
   "ui.lan.error": "Server se nepodařilo spustit: {e}",
-  "ui.hint.lan": "<ul><li>Internet není potřeba; telefon a PC musí být ve stejné místní síti (stejný router/Wi-Fi nebo hotspot telefonu). V sítích pro hosty se zařízení nemusí vidět.</li><li>Při prvním použití se zeptá brána firewall Windows: povolte pro <b>soukromé sítě</b>.</li><li>Adresa obsahuje náhodný 16znakový klíč; bez něj se nikdo nepřipojí. <b>Nový kód</b> odpojí stará spojení. Při vypnutém sdílení nic nenaslouchá.</li><li>„Přidat na plochu“ otevře stránku jako aplikaci; stránka drží obrazovku zapnutou, při upozorněních pípne a vibruje a má záložky historie a plánovače.</li></ul>",
+  "ui.hint.lan": "<ul><li>Internet není potřeba; telefon a PC musí být ve stejné místní síti (stejný router/Wi-Fi nebo hotspot telefonu). V sítích pro hosty se zařízení nemusí vidět.</li><li>Při prvním použití se zeptá brána firewall Windows: povolte pro <b>soukromé sítě</b>.</li><li>Adresa obsahuje náhodný 16znakový klíč; bez něj se nikdo nepřipojí. <b>Nový kód</b> odpojí stará spojení. Při vypnutém sdílení a po zavření aplikace nic nenaslouchá. Sdílení platí jen pro danou relaci: po každém spuštění je vypnuté a každé zapnutí vydá nový kód a adresu.</li><li>„Přidat na plochu“ otevře stránku jako aplikaci; stránka drží obrazovku zapnutou, při upozorněních pípne a vibruje a má záložky historie a plánovače.</li></ul>",
   "mob.tap": "Klepnutím spusťte",
   "mob.offline": "Bez spojení — zkouším znovu…",
   "mob.readonly": "Ovládání z telefonu je vypnuté (zapněte v aplikaci)",

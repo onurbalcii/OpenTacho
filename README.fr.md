@@ -122,7 +122,8 @@ correspondent à ce que vous avez réellement fait.
   navigateur, sans appli : état, temps restant, barres, déroulé de la journée, mission avec ETA, indicateurs, événements, plus les onglets historique et planificateur.
   Pause / Manœuvre / Sauter / Repos complet fonctionnent depuis le téléphone (désactivable) ; la page garde l'écran allumé
   et sonne/vibre aux alertes. Le lien porte une clé aléatoire, rien n'est exposé sur internet et rien
-  n'écoute quand le partage est coupé. Le pare-feu Windows demande une fois — autorisez pour les réseaux privés.
+  n'écoute quand le partage est coupé ou l'appli fermée ; le partage est coupé à chaque redémarrage et chaque activation
+  délivre un nouveau code. Le pare-feu Windows demande une fois — autorisez pour les réseaux privés.
 - **Vérification des mises à jour** : au démarrage, l'appli interroge GitHub sur la dernière version (désactivable) et affiche un
   bandeau avec un bouton de téléchargement quand une version plus récente existe ; Paramètres → Appli montre la version, une vérification manuelle
   et le lien de téléchargement.

@@ -123,7 +123,8 @@ actually did.
   browser, no app needed: status, time left, bars, day flow, job with ETA, flags, events, plus history and planner
   tabs. Break / Yard move / Skip / Full rest work from the phone (can be disabled); the page keeps the screen awake
   and beeps/vibrates on alerts. The link carries a random key, nothing is exposed to the internet and nothing
-  listens while sharing is off. Windows Firewall asks once — allow it for private networks.
+  listens while sharing is off or after the app is closed; sharing is off after every restart and each switch-on issues a
+  new code. Windows Firewall asks once — allow it for private networks.
 - **Update check**: on start the app asks GitHub for the latest release (can be switched off) and shows a
   banner with a download button when a newer version exists; Settings → App shows the version, a manual check
   and the download link.

@@ -125,7 +125,8 @@ entsprechen genau dem, was du tatsächlich gemacht hast.
   zeigt den Tachographen im Browser, ohne App: Status, Restzeit, Balken, Tagesablauf, Auftrag mit ETA, Markierungen,
   Ereignisse sowie Verlaufs- und Planer-Reiter. Pause / Rangieren / Überspringen / Volle Ruhezeit funktionieren vom
   Handy (abschaltbar); die Seite hält den Bildschirm wach und piept/vibriert bei Warnungen. Der Link trägt einen
-  zufälligen Schlüssel, nichts ist im Internet erreichbar, bei ausgeschalteter Freigabe lauscht nichts. Die
+  zufälligen Schlüssel, nichts ist im Internet erreichbar, bei ausgeschalteter Freigabe und nach dem
+  Schließen der App lauscht nichts; nach jedem Neustart ist die Freigabe aus, jedes Einschalten vergibt einen neuen Code. Die
   Windows-Firewall fragt einmal — für private Netzwerke erlauben.
 - **Update-Prüfung**: beim Start fragt die App GitHub nach der neuesten Version (abschaltbar) und zeigt bei einer
   neueren Version ein Banner mit Download-Schaltfläche; Einstellungen → App zeigt Version, manuelle Prüfung und Download-Link.
