@@ -594,5 +594,6 @@
   "log.lan_err": "O compartilhamento móvel não pôde iniciar: {e}",
   "log.lan_new_key": "Código de acesso móvel renovado",
   "log.lan_control_on": "Controle pelo celular ativado",
-  "log.lan_control_off": "Controle pelo celular desativado"
+  "log.lan_control_off": "Controle pelo celular desativado",
+  "ui.lan.lock": "Mostrar / ocultar o endereço"
 }

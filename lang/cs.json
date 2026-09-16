@@ -594,5 +594,6 @@
   "log.lan_err": "Mobilní sdílení se nepodařilo spustit: {e}",
   "log.lan_new_key": "Kód mobilního přístupu obnoven",
   "log.lan_control_on": "Ovládání z telefonu zapnuto",
-  "log.lan_control_off": "Ovládání z telefonu vypnuto"
+  "log.lan_control_off": "Ovládání z telefonu vypnuto",
+  "ui.lan.lock": "Zobrazit / skrýt adresu"
 }

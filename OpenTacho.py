@@ -442,11 +442,21 @@ class _LanHandler(http.server.BaseHTTPRequestHandler):
     """Telefon/tablet için küçük HTTP arayüzü. Her istek erişim anahtarı ister; yalnızca beyaz listedeki eylemler."""
     server_version = "OpenTacho"
     sys_version = ""
-    protocol_version = "HTTP/1.1"
+    protocol_version = "HTTP/1.0"   # her istek yeni bağlantı: paylaşım kapatılınca açık kalan keep-alive bağlantısı kalmaz
     _HOST_RE = re.compile(r"^(\d{1,3}(\.\d{1,3}){3}|localhost)(:\d{1,5})?$")
 
     def log_message(self, *a):
         pass
+
+    def setup(self):
+        super().setup()
+        self.server.lan.conns.add(self.connection)
+
+    def finish(self):
+        try:
+            super().finish()
+        finally:
+            self.server.lan.conns.discard(self.connection)
 
     def _send(self, code, body, ctype="application/json; charset=utf-8"):
         if isinstance(body, str):
@@ -473,6 +483,8 @@ class _LanHandler(http.server.BaseHTTPRequestHandler):
 
     def _auth(self, q):
         lan = self.server.lan
+        if not lan.active:
+            return False
         key = (q.get("k") or [""])[0] or (self.headers.get("X-Key") or "")
         if lan.check_key(key):
             return True
@@ -593,6 +605,8 @@ class LanServer:
         self.thread = None
         self.error = None
         self.clients = {}       # ip → son görülme (time.time())
+        self.conns = set()      # açık istemci soketleri (kapatınca hepsi kesilir)
+        self.active = False
         self.bad_hits = 0
         self._qr = (None, None)
         self._ips = ([], 0.0)
@@ -623,6 +637,7 @@ class LanServer:
             httpd.daemon_threads = True
             httpd.lan = self
             self.httpd = httpd
+            self.active = True
             self.error = None
             self.thread = threading.Thread(target=httpd.serve_forever, daemon=True)
             self.thread.start()
@@ -634,6 +649,7 @@ class LanServer:
             return False
 
     def stop(self):
+        self.active = False
         httpd, self.httpd = self.httpd, None
         if httpd is not None:
             try:
@@ -641,6 +657,16 @@ class LanServer:
                 httpd.server_close()
             except Exception:
                 pass
+        for c in list(self.conns):   # süren/keep-alive bağlantılar da kesilsin: telefon anında "bağlantı yok" görür
+            try:
+                c.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            try:
+                c.close()
+            except Exception:
+                pass
+        self.conns = set()
         self.clients = {}
 
     def ips(self):

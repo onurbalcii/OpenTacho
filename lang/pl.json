@@ -594,5 +594,6 @@
   "log.lan_err": "Nie udało się uruchomić udostępniania mobilnego: {e}",
   "log.lan_new_key": "Kod dostępu mobilnego odnowiony",
   "log.lan_control_on": "Sterowanie z telefonu włączone",
-  "log.lan_control_off": "Sterowanie z telefonu wyłączone"
+  "log.lan_control_off": "Sterowanie z telefonu wyłączone",
+  "ui.lan.lock": "Pokaż / ukryj adres"
 }

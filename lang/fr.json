@@ -594,5 +594,6 @@
   "log.lan_err": "Le partage mobile n'a pas pu démarrer : {e}",
   "log.lan_new_key": "Code d'accès mobile renouvelé",
   "log.lan_control_on": "Contrôle depuis le téléphone activé",
-  "log.lan_control_off": "Contrôle depuis le téléphone désactivé"
+  "log.lan_control_off": "Contrôle depuis le téléphone désactivé",
+  "ui.lan.lock": "Afficher / masquer l'adresse"
 }

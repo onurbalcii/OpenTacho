@@ -594,5 +594,6 @@
   "log.lan_err": "Mobil paylaşım başlatılamadı: {e}",
   "log.lan_new_key": "Mobil erişim kodu yenilendi",
   "log.lan_control_on": "Telefondan kontrol açıldı",
-  "log.lan_control_off": "Telefondan kontrol kapatıldı"
+  "log.lan_control_off": "Telefondan kontrol kapatıldı",
+  "ui.lan.lock": "Adresi göster / gizle"
 }

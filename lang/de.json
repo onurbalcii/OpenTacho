@@ -594,5 +594,6 @@
   "log.lan_err": "Mobile Freigabe konnte nicht starten: {e}",
   "log.lan_new_key": "Mobiler Zugangscode erneuert",
   "log.lan_control_on": "Steuerung vom Handy aktiviert",
-  "log.lan_control_off": "Steuerung vom Handy deaktiviert"
+  "log.lan_control_off": "Steuerung vom Handy deaktiviert",
+  "ui.lan.lock": "Adresse anzeigen / verbergen"
 }

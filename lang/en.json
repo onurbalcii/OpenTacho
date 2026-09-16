@@ -594,5 +594,6 @@
   "log.lan_err": "Mobile sharing could not start: {e}",
   "log.lan_new_key": "Mobile access code renewed",
   "log.lan_control_on": "Control from the phone enabled",
-  "log.lan_control_off": "Control from the phone disabled"
+  "log.lan_control_off": "Control from the phone disabled",
+  "ui.lan.lock": "Show / hide the address"
 }

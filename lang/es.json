@@ -594,5 +594,6 @@
   "log.lan_err": "Compartir móvil no pudo iniciarse: {e}",
   "log.lan_new_key": "Código de acceso móvil renovado",
   "log.lan_control_on": "Control desde el móvil activado",
-  "log.lan_control_off": "Control desde el móvil desactivado"
+  "log.lan_control_off": "Control desde el móvil desactivado",
+  "ui.lan.lock": "Mostrar / ocultar la dirección"
 }

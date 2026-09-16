@@ -594,5 +594,6 @@
   "log.lan_err": "La condivisione mobile non è partita: {e}",
   "log.lan_new_key": "Codice di accesso mobile rinnovato",
   "log.lan_control_on": "Controllo dal telefono attivato",
-  "log.lan_control_off": "Controllo dal telefono disattivato"
+  "log.lan_control_off": "Controllo dal telefono disattivato",
+  "ui.lan.lock": "Mostra / nascondi l'indirizzo"
 }

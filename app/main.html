@@ -574,17 +574,25 @@
   .topbtns { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
   .quick { display: grid; grid-template-columns: 24px 24px; gap: 5px 6px; justify-items: center; }
   /* LAN / mobil */
-  .qr { display: grid; justify-items: center; gap: 8px; }
-  .qr .code { width: 188px; height: 188px; padding: 10px; background: #fff; border-radius: 14px; }
+  .qr { display: grid; justify-items: center; gap: 12px; margin: 14px 0 12px; }
+  .qr .code { width: 188px; height: 188px; padding: 10px; background: #fff; border-radius: 14px; box-shadow: 0 8px 24px -10px rgba(0,0,0,.6); }
   .qr .code svg { width: 100%; height: 100%; display: block; }
-  .qr .url { font-family: var(--display); font-size: 12.5px; color: var(--text); -webkit-user-select: text; user-select: text; word-break: break-all; text-align: center; }
+  .qr .urlrow { display: flex; align-items: center; gap: 8px; max-width: 100%; }
+  .qr .url { font-family: var(--display); font-size: 12.5px; color: var(--text); -webkit-user-select: text; user-select: text; word-break: break-all; text-align: center; transition: filter .25s; }
+  .qr .url.locked { filter: blur(5px); -webkit-user-select: none; user-select: none; pointer-events: none; }
   .qr .url b { color: var(--gold); }
-  .lan-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .ibtn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--gold); display: inline-grid; place-items: center; cursor: pointer; padding: 0; flex: none; transition: .2s; }
+  .ibtn .ic { font-size: 15px; }
+  .ibtn:hover { background: var(--gold); color: #1b1f2a; } html[data-theme="light"] .ibtn:hover, html.lum-light .ibtn:hover { color: #fff; }
+  .ibtn.spin .ic svg { animation: spin .7s linear infinite; }
+  .lan-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .lan-row .grow { flex: 1 1 auto; }
   .lan-row .dotc { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); } .lan-row .dotc.on { background: var(--sky); box-shadow: 0 0 8px var(--sky); }
   .lan-row select { font: inherit; font-size: 12px; color: var(--text); background: var(--input-bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
   .lanpick .lp-card { width: min(380px, 100%); }
   .lanpick .lp-card h2 { font-size: 22px; }
-  .lanpick .lp-card .x { position: absolute; top: 10px; right: 12px; background: none; border: 0; color: var(--dim); font: inherit; font-size: 16px; cursor: pointer; }
+  .lanpick .lp-card .x { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gold-line); background: var(--gold-soft); color: var(--gold); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; display: grid; place-items: center; z-index: 2; }
+  .lanpick .lp-card .x:hover { background: var(--gold); color: #1b1f2a; }
   .lanpick .lp-card { position: relative; }
   .lanpick .lp-card .check { text-align: left; justify-self: stretch; font-size: 12.5px; }
   .lan-row .dd { display: inline-block; min-width: 150px; }
@@ -1005,7 +1013,8 @@
       <div id="lanBox" hidden>
         <div class="hint" data-i18n="ui.lan.scan"></div>
         <div class="qr" id="lanQr"></div>
-        <div class="lan-row"><span class="dotc" id="lanDot"></span><span id="lanClients"></span><span id="lanIpWrap" hidden><span data-i18n="ui.lan.ip"></span> <select id="lanIp"></select></span><button class="sm" id="lanNewKey" data-i18n="ui.lan.newkey">Yeni kod</button></div>
+        <div class="lan-row"><span class="dotc" id="lanDot"></span><span id="lanClients"></span><span class="grow"></span><button class="ibtn" id="lanNewKey" data-i18n-title="ui.lan.newkey"><i class="ic" data-ic="refresh"></i></button></div>
+        <div class="lan-row" id="lanIpWrap" hidden><span data-i18n="ui.lan.ip"></span><select id="lanIp"></select></div>
         <div class="hnote bad" id="lanErr" hidden></div>
       </div>
       <div class="hint" id="lanOffHint" data-i18n="ui.lan.off_hint"></div>
@@ -1152,6 +1161,9 @@
     bell: SVG(`<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path d="M12 3.5v1.5"/>`),
     strip: SVG(`<rect x="2.5" y="8.5" width="19" height="7" rx="3.5"/><path d="M6.5 12h5M15 12h2.5"/>`),
     image: SVG(`<rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5.2-5.2L7 19.5"/>`),
+    lock: SVG(`<rect x="5" y="11" width="14" height="10" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>`),
+    unlock: SVG(`<rect x="5" y="11" width="14" height="10" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.7"/>`),
+    refresh: SVG(`<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5v5h-5"/>`),
     phone: SVG(`<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.5 5.2h3"/><circle cx="12" cy="18" r=".9" fill="currentColor" stroke="none"/>`),
     download: SVG(`<path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 19.5h15"/>`),
     history: SVG(`<path d="M4.2 12a7.8 7.8 0 1 0 2.3-5.5"/><path d="M4 4.2v4.4h4.4"/><path d="M12 8.2v4.2l2.7 1.6"/>`),
@@ -1183,7 +1195,7 @@
   const SEQ_ICON = { drive: "wheel", break: "cup", break1: "cup", part1: "bed", daily: "moon" };
   let seqSig = "";
   let curRules = null;   // etkin kural seti (eu | us): değişince metin varyantları yeniden yüklenir
-  let lanQrSig = "";
+  let lanQrSig = "", lanUrlOpen = false;   // adres varsayılan buğulu; kilit düğmesi açar
   function renderSeq(boxes) {
     const sig = JSON.stringify(boxes);
     if (sig === seqSig) return;
@@ -1420,7 +1432,8 @@
       if (document.activeElement !== $("lanOn2")) $("lanOn2").checked = on;
       if (document.activeElement !== $("lanControl")) $("lanControl").checked = !!ln.control;
       $("lanBox").hidden = !on; $("lanOffHint").hidden = on; $("lanOffHint2").hidden = on; $("lanQr2").hidden = !on; $("lanRow2").hidden = !on;
-      const qrHtml = ln.qr ? `<div class="code">${ln.qr}</div><div class="url">${esc(ln.url || "")}</div>` : (ln.error ? "" : `<div class="url">${esc(ln.url || "")}</div>`);
+      const urlRow = ln.url ? `<div class="urlrow"><span class="url${lanUrlOpen ? "" : " locked"}">${esc(ln.url)}</span><button class="ibtn lockbtn" title="${esc(T("ui.lan.lock"))}"><i class="ic">${lanUrlOpen ? ICONS.unlock : ICONS.lock}</i></button></div>` : "";
+      const qrHtml = (ln.qr ? `<div class="code">${ln.qr}</div>` : "") + urlRow;
       if (lanQrSig !== qrHtml) { lanQrSig = qrHtml; $("lanQr").innerHTML = qrHtml; $("lanQr2").innerHTML = qrHtml; }
       const cl = T("ui.lan.clients", { n: ln.clients || 0 });
       $("lanClients").textContent = cl; $("lanClients2").textContent = cl;
@@ -1909,7 +1922,8 @@
   $("lanOn").addEventListener("change", () => call("set_lan", $("lanOn").checked));
   $("lanOn2").addEventListener("change", () => call("set_lan", $("lanOn2").checked));
   $("lanControl").addEventListener("change", () => call("set_lan_control", $("lanControl").checked));
-  $("lanNewKey").addEventListener("click", () => call("lan_new_key"));
+  $("lanNewKey").addEventListener("click", async () => { const b = $("lanNewKey"); if (b.classList.contains("spin")) return; b.classList.add("spin"); const t0 = Date.now(); try { await call("lan_new_key"); } finally { setTimeout(() => b.classList.remove("spin"), Math.max(0, 800 - (Date.now() - t0))); } });
+  ["lanQr", "lanQr2"].forEach(id => $(id).addEventListener("click", e => { if (e.target.closest(".lockbtn")) { lanUrlOpen = !lanUrlOpen; lanQrSig = ""; if (last) render(last); } }));
   $("lanIp").addEventListener("change", () => call("set_lan_ip", $("lanIp").value));
   $("quickLan").addEventListener("click", () => { closeDrawer(); closeHist(); if (typeof closePlan === "function") closePlan(); $("lanPick").hidden = false; });
   $("lanPickClose").addEventListener("click", () => { $("lanPick").hidden = true; });
@@ -2119,7 +2133,7 @@
               ext: { auto: true, on: false, bonus: true, used: 1, max: 2 }, red: { auto: true, used: 0, max: 3 }, local: m.abs, day_left: 300 }) : { on: false },
         split: { part1: 0, need: 660, done: false, enabled: true, stored: 0 },
         split_break: true, break_part1: 0, sounds: true, hotkey: { mods: 2, vk: 96, name: "Ctrl + Num 0" }, mini: false, mini_opacity: .7, mini_scale: m.scale || 100,
-        lan: { on: !!m.lanOn, running: !!m.lanOn, control: m.lanCtl !== false, port: 17650, ip: "192.168.1.23", ips: ["192.168.1.23", "10.0.0.5"], url: m.lanOn ? "http://192.168.1.23:17650/?k=Ab12Cd34Ef56Gh78" : null,
+        lan: { on: !!m.lanOn, running: !!m.lanOn, control: m.lanCtl !== false, port: 17650, ip: "192.168.1.23", ips: ["192.168.1.23", "10.0.0.5"], url: m.lanOn ? "http://192.168.1.23:17650/?k=" + (m.lanKey || "Ab12Cd34Ef56Gh78") : null,
                qr: m.lanOn ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29"><rect width="29" height="29" fill="#fff"/><path fill="#000" d="M2 2h7v7H2zM20 2h7v7h-7zM2 20h7v7H2zM4 4h3v3H4zM22 4h3v3h-3zM4 22h3v3H4zM11 2h2v2h-2zM15 3h2v3h-2zM11 6h3v2h-3zM3 11h2v2H3zM7 12h3v2H7zM12 11h4v3h-4zM18 11h2v2h-2zM22 12h3v3h-3zM11 17h2v3h-2zM15 16h3v2h-3zM20 17h2v2h-2zM24 18h3v2h-3zM12 22h3v3h-3zM17 21h2v2h-2zM20 24h3v3h-3zM24 22h3v2h-3z"/></svg>' : null,
                clients: m.lanOn ? 1 : 0, error: null },
         version: "2.1.0", update: m.upd || { state: "ok", latest: "2.2.0", newer: true, url: "https://github.com/onurbalcii/OpenTacho/releases", zip: "https://github.com/onurbalcii/OpenTacho/releases/download/v2.2.0/OpenTacho-win64.zip", error: null, version: "2.1.0", check: true, seen: null },
@@ -2134,7 +2148,7 @@
       get_strings: async () => { try { const r = await fetch(`../lang/${m.lang}.json`); strings = await r.json(); if (m.rules === "us") for (const k of Object.keys(strings)) if (k.endsWith(".us")) strings[k.slice(0, -3)] = strings[k]; } catch (e) {} return strings; },
       set_ruleset: async v => { m.ruleset = v; m.rules = v === "auto" ? "eu" : v; return view(); },
       set_mini_scale: async v => { m.scale = +v; return view(); },
-      set_lan: async on => { m.lanOn = !!on; return view(); }, set_lan_control: async f => { m.lanCtl = !!f; return view(); }, lan_new_key: async () => view(), set_lan_ip: async () => view(), check_update: async () => { await new Promise(r => setTimeout(r, 1200)); return view(); }, open_update: async () => view(), set_update_check: async () => view(),
+      set_lan: async on => { m.lanOn = !!on; return view(); }, set_lan_control: async f => { m.lanCtl = !!f; return view(); }, lan_new_key: async () => { await new Promise(r => setTimeout(r, 500)); m.lanKey = Math.random().toString(36).slice(2, 10) + "Zz"; return view(); }, set_lan_ip: async () => view(), check_update: async () => { await new Promise(r => setTimeout(r, 1200)); return view(); }, open_update: async () => view(), set_update_check: async () => view(),
       set_update_seen: async v => { m.upd = Object.assign({}, m.upd || { state: "ok", latest: "2.2.0", newer: true, version: "2.1.0", check: true }, { seen: v }); return view(); },
       get_state: async () => { tickMock(); return view(); },
       set_status: async s => { if (s === "OFF_DUTY") m.status = m.status === "OFF_DUTY" ? "ON_DUTY" : "OFF_DUTY"; else if (s === "YARD_MOVE") m.status = m.status === "YARD_MOVE" ? "ON_DUTY" : "YARD_MOVE"; else m.status = s; return view(); },
